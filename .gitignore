@@ -696,6 +696,12 @@
 /templates/index.html
 /tmp/*
 /configuration.php
+/dist/
+/.local/
+*.dpapi
+*.log
+*.sql
+*.sqlite*
 /htaccess.txt
 /index.php
 /joomla.xml

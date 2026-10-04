@@ -1,0 +1,33 @@
+Nicode Web Monitor 0.1.0-dev - first functional increment
+
+Executed in a fresh, isolated local Joomla 6.1.4 installation, PHP 8.4.26,
+MariaDB 11.8.9, Windows. No production hosting or other project data accessed.
+The lab was installed from checksum-verified upstream release archives.
+
+Verified:
+- Native Joomla extension installation and upgrade of the development ZIP.
+- Plugin enabled in the disposable database and registered by Joomla's console.
+- nicode:inventory returned parseable JSON and exit code 0.
+- 252 extension records, including the enabled inventory plugin, matched the
+  database row count. This is the test site's inventory, not a product metric.
+- 21 integration assertions passed (tests/inventory.php): live versions,
+  count, UTC timestamp, absence of unsupported capabilities, redaction by field
+  allowlist, malformed/missing/non-scalar versions, missing-table failure,
+  independent sections retained, exception details suppressed, Joomla 5 rejected.
+- Six PHP files passed php -l.
+- Two successive builds produced identical ZIP bytes.
+- Every installed plugin file matched the final ZIP content.
+
+ZIP SHA256:
+0cb53a79a6842999a1398a409d400b9fbe33294569d8b90bc1b0c7d374c1ea2b
+
+One test setup initially called a nonexistent driver setPrefix method. Corrected
+to use a second database connection with a nonexistent table prefix; the final
+test exercises a genuine SELECT failure without changing any database tables.
+
+Limits: one Joomla/PHP/database/platform combination only. No browser UI,
+HTTP transport, credential lifecycle, central component, monitoring schedule,
+remote maintenance or backup implementation. No production readiness claim.
+The plugin currently rejects Joomla <6 when collecting, not at installation.
+The next increment is authenticated read-only remote inventory and revocation,
+followed by a central component connected to two disposable Joomla sites.

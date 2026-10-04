@@ -1,0 +1,42 @@
+Inventory contract v1 - development, 2026-10-04
+
+Producer: local console plugin, collector_version 0.1.0-dev.
+schema_version is an integer. Breaking changes require a new schema version.
+collected_at is UTC RFC3339; it is collection time, not proof of freshness at receipt.
+execution_context=local_cli. Future HTTP collectors must identify their context.
+
+Top-level status=complete means implemented collectors succeeded. Partial means
+at least one section failed. Unavailable hosting is an explicit capability limit
+and is not a collection error. Neither status is an overall site-health verdict.
+
+Sections contain status and data. Available means observed data. Error has
+reason=collection_failed and data=null. Unavailable has a stable reason and
+data=null. Never replace a failure with an empty array or a zero count.
+Extension versions have their own available/unknown status and value; absence or
+invalid manifest data does not imply version 0 or that an extension is current.
+
+Extensions: id, name (may be a language key), type, element, folder, client_id,
+enabled and version. IDs are local to the source site, not global identities.
+The enabled flag is the Joomla registry value, not proof of execution or health.
+Only the version is extracted from manifest_cache. Params, update URLs, download
+keys, site users, configuration, database host/name/user/password, SQL text and
+exception messages are never included. Treat all displayed strings as untrusted
+when a future panel renders them; HTML escaping is required there.
+
+Runtime: PHP version, SAPI, OS family, memory limit, execution time limit and
+loaded PHP extension names. No environment dump, phpinfo, hostname or file paths.
+Database: driver, server type and version only. No content or user records.
+Hosting: unavailable/provider_not_integrated. No access to a hosting control panel.
+Capabilities remote_inventory/remote_updates/remote_backups=false in this version.
+
+Next milestone: separately authorized site identity, revocable credentials and
+read-only remote transport; then principal-Joomla component with multiple sites.
+Remote maintenance needs separate permissions, operation history and verified
+effects. Uncertain outcomes must never trigger blind retries.
+
+Implementation references consulted:
+Joomla 6.1.4 packaged CMSPlugin, ConsoleApplication, DatabaseInterface and
+joomla/application ApplicationEvents sources; official documentation:
+https://manual.joomla.org/docs/next/building-extensions/plugins/methods-and-arguments/
+The next-version page is background guidance; the installed 6.1.4 code and tests
+determine the integration actually verified here.

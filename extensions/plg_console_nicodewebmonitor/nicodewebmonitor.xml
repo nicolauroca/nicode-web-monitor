@@ -4,11 +4,13 @@
   <author>Nicolau Roca</author>
   <creationDate>2026-10</creationDate>
   <license>GNU General Public License version 2 or later</license>
-  <version>0.1.0-dev</version>
+  <version>0.1.1-dev</version>
   <description>Development inventory collector. Local CLI only; no remote access or maintenance operations yet.</description>
   <namespace path="src">Nicode\Plugin\Console\NicodeWebMonitor</namespace>
+  <scriptfile>script.php</scriptfile>
   <files>
     <filename>LICENSE.txt</filename>
+    <filename>script.php</filename>
     <folder plugin="nicodewebmonitor">services</folder>
     <folder>src</folder>
   </files>

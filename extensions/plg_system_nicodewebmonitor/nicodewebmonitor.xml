@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+  <name>System - Nicode Web Monitor</name>
+  <author>Nicolau Roca</author>
+  <creationDate>2026-10</creationDate>
+  <license>GNU General Public License version 2 or later</license>
+  <version>0.2.0-dev</version>
+  <description>Read-only HTTPS inventory connector. Configure a unique site UUID and SHA-256 digest of a random 32-byte bearer credential. Empty digest revokes access. Development only.</description>
+  <namespace path="src">Nicode\Plugin\System\NicodeWebMonitor</namespace>
+  <scriptfile>script.php</scriptfile>
+  <files>
+    <filename>LICENSE.txt</filename>
+    <filename>script.php</filename>
+    <folder plugin="nicodewebmonitor">services</folder>
+    <folder>src</folder>
+  </files>
+  <config><fields name="params"><fieldset name="basic">
+    <field name="site_id" type="text" label="Site UUID" description="Unique UUID v4 for this installation. Keep it when rotating credentials; change it on clones." filter="string" />
+    <field name="token_hash" type="text" label="Credential SHA-256 digest" description="64 lowercase hex characters. Never paste the bearer credential here. Empty revokes access immediately." filter="string" />
+  </fieldset></fields></config>
+</extension>

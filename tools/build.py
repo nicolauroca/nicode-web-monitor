@@ -5,7 +5,7 @@ import zipfile
 
 root = Path(__file__).resolve().parents[1]
 source = root / 'extensions/plg_console_nicodewebmonitor'
-output = root / 'dist/plg_console_nicodewebmonitor-0.1.0-dev.zip'
+output = root / 'dist/plg_console_nicodewebmonitor-0.1.1-dev.zip'
 output.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for file in sorted(source.rglob('*')):
@@ -18,4 +18,21 @@ with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compressleve
     license_info.compress_type = zipfile.ZIP_DEFLATED
     license_info.external_attr = 0o100644 << 16
     archive.writestr(license_info, (root / 'LICENSE').read_bytes())
+print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
+
+# Bundle the same collector into the independent HTTP plugin, with its own namespace.
+# Generated copies live only in the ZIP: one reviewed source of inventory behavior.
+connector = root / 'extensions/plg_system_nicodewebmonitor'
+output = root / 'dist/plg_system_nicodewebmonitor-0.2.0-dev.zip'
+files = {p.relative_to(connector).as_posix(): p.read_bytes() for p in connector.rglob('*') if p.is_file()}
+for file in (source / 'src/Inventory').glob('*.php'):
+    files['src/Inventory/' + file.name] = file.read_bytes().replace(
+        b'Nicode\\Plugin\\Console\\NicodeWebMonitor', b'Nicode\\Plugin\\System\\NicodeWebMonitor')
+files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
+with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    for name, content in sorted(files.items()):
+        info = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o100644 << 16
+        archive.writestr(info, content)
 print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())

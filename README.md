@@ -14,10 +14,12 @@ Joomla version, installed extensions (including disabled ones), PHP runtime and
 database version into JSON. Collection failures are explicit, missing extension
 versions stay unknown, and hosting-provider information is marked unavailable.
 
-There is no HTTP endpoint yet. The central component, pairing/revocation, remote
-inventory, alerting, updates and backups are planned and are not implemented.
-No data is sent to external services. This local command uses the operating-system
-account's existing access to Joomla; it is not the future remote authorization model.
+A separate system plugin now serves read-only inventory over HTTPS, using a unique
+site UUID and a revocable bearer credential. The site stores only its SHA-256 digest.
+Rotation preserves site identity and rejects the old credential on the next request.
+The central component, guided pairing, alerting, updates and backups remain pending.
+No data is pushed to external services. The console command uses the operating-system
+account's existing access; the HTTP connector has its own read-only credential.
 
 ## Build and try in a disposable Joomla 6 installation
 
@@ -25,7 +27,7 @@ Requirements: Python 3 for packaging; an installed Joomla 6 with its supported P
 and database. First tested on Joomla 6.1.4, PHP 8.4.26 and MariaDB 11.8.9 on Windows.
 
 1. Run `python tools/build.py` from this repository.
-2. Install `dist/plg_console_nicodewebmonitor-0.1.0-dev.zip` using Joomla's extension
+2. Install `dist/plg_console_nicodewebmonitor-0.1.1-dev.zip` using Joomla's extension
    installer, or `php cli/joomla.php extension:install --path=/absolute/path/to/the.zip`
    from the disposable Joomla root.
 3. In System > Manage > Plugins, enable **Console - Nicode Web Monitor**.
@@ -48,3 +50,28 @@ installation and command checks and their limits.
 The ZIP has deterministic file order, timestamps and permissions. Generated packages,
 local installations, database dumps, credentials and collected inventories stay out
 of Git. License: GPL-2.0-or-later; see LICENSE.
+
+## Read-only connector (development)
+
+The build also produces `dist/plg_system_nicodewebmonitor-0.2.0-dev.zip`.
+Install it in a disposable Joomla 6 site. In **System - Nicode Web Monitor**,
+configure a unique lowercase UUID v4 and the SHA-256 digest of a cryptographically
+random 32-byte credential encoded as 64 hex characters. Hash the encoded text,
+not the decoded bytes. Keep the credential in a private secret store, never in Git,
+URLs, logs or the plugin form. Enable the plugin only after configuring it.
+
+The endpoint is `GET /index.php?option=com_nicodewebmonitor&task=inventory`, with
+`Authorization: Bearer <credential>` over HTTPS. A valid response includes the site
+UUID: clients must compare it with the identity they enrolled. Empty the digest
+or disable the plugin to revoke access. Replace the digest to rotate credentials;
+create a new UUID and credential for a cloned site before enabling its connector.
+
+The web server must pass Authorization to PHP and set its trusted `HTTPS` server
+variable. Client proxy headers are deliberately ignored. TLS termination through a
+reverse proxy requires a correctly restricted server configuration; no automatic
+proxy trust is implemented. Clients must verify certificates and must not forward
+credentials across redirects. Cookies and Joomla login do not grant connector access.
+
+This development version has one read-only credential per site; no maintenance
+permissions, pairing UI or production web-server rate limiting is supplied yet.
+See `docs/connector-contract.txt` and `docs/verification-2026-10-05.txt`.

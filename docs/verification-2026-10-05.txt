@@ -1,0 +1,44 @@
+Executed 2026-10-05: authenticated inventory connector increment
+
+Environment: isolated Windows Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9.
+No real hosting, production database, course installation or external service used.
+
+Executed checks:
+- 16 transport boundary checks: no collector access before authentication, HTTP
+  refusal, spoofed proxy headers, missing/wrong/malformed credentials, allowed
+  method and operation, identity, rotation/revocation, safe exception response.
+- 20 actual HTTPS/CGI/Joomla checks using Python's loopback TLS fixture and native
+  php-cgi: certificate verification enabled, real inventory, web runtime, no-store,
+  forbidden methods/operations, administrator separation, credential revocation,
+  rotation preserving identity, invalid configuration and disabled plugin.
+- 21 collector regression checks on the real disposable database.
+- 12 source PHP syntax checks, plus syntax of PHP files extracted by installation.
+- 4 installer guard checks (console/system, Joomla version constants 5.4/6.1.4).
+  These guard checks simulate version constants; no actual Joomla 5 install tested.
+- Native Joomla installation/upgrade; connector uninstall/reinstall; installed
+  files byte-identical to ZIP contents; both packages rebuilt twice identically.
+
+Package SHA-256:
+plg_console_nicodewebmonitor-0.1.1-dev.zip
+dcb064712d720fda9c5c04ef011fc30c949f937ed2f3863710f6e0b842a09270
+plg_system_nicodewebmonitor-0.2.0-dev.zip
+e66dc6aaf6122c74d196762629e945539b69a35e500fbb6c032167d8d2824ab5
+
+Reproduction in an explicitly disposable, installed Joomla:
+python tools/build.py
+Install both ZIPs with Joomla extension:install; enable the console plugin.
+php tests/transport.php
+php tests/inventory.php /path/to/joomla
+python tests/connector_http.py --site /path/to/joomla --php /path/to/php
+  --certificate /private/path/localhost.crt --private-key /private/path/localhost.key
+  --allow-disposable-writes
+The final command is one line. It needs php-cgi alongside php and a test certificate
+valid for localhost. The test trusts only that supplied certificate. It overwrites
+the disposable connector parameters and finally revokes/disables it. Credentials
+are random and in memory; no inventory or credentials are written by the test.
+
+Limits: not a production web-server/proxy or public network deployment test.
+No second Joomla site or central component yet. One read-only credential per site,
+manual configuration; central secure storage, pairing UI, rate limiting, alerts,
+updates and backups remain pending. Future Joomla majors/platforms are unverified.
+The product is a development prototype, not a finished monitoring service.

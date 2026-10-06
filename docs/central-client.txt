@@ -1,0 +1,52 @@
+Central inventory client / development increment 2026-10-06
+
+The PHP class under extensions/com_nicodewebmonitor/administrator/src/Service
+is the transport core for the forthcoming Joomla component. It is NOT yet an
+installable component, registration form, persistent registry or dashboard.
+Existing connector ZIPs are unchanged by this increment.
+
+Requires PHP 8.3+ with cURL (within the project's Joomla 6 baseline).
+Construct InventoryClient with defaults in production. Call fetch with the
+canonical HTTPS base URL, explicitly enrolled IP address, expected site UUID
+and read-only credential retrieved from private storage. It returns ok plus
+received_at and inventory on success; otherwise ok=false and a fixed error code.
+Do not log the credential, invocation arguments or returned inventory.
+
+Enrollment must verify ownership and resolve/select the intended IP before this
+call. The client pins that exact IP with CURLOPT_RESOLVE, while TLS authenticates
+the hostname. It does not perform unbounded DNS resolution, follow redirects,
+use environment proxies, retry or alter remote state. An IP change requires an
+explicit enrollment update. This prevents DNS changes from silently retargeting
+authenticated requests, but does not protect against a compromised enrolled site.
+
+Only global IPs are allowed by default. Private addresses require an exact list
+provided by trusted application configuration; never expose that override as a
+remote request parameter. Tests explicitly allow 127.0.0.1. Test CA files are also
+an application-only dependency. Neither override disables certificate/host checks.
+Base URLs cannot include credentials, queries, fragments, encoded paths, dot
+segments or IP literals; simple Joomla subdirectories are supported. IDN hosts
+must be supplied as ASCII. Broader URL/path support remains a future decision.
+
+Default bounds: 5-second connection, 15-second total transfer, 2 MiB body and
+32 KiB headers. Constructor permits total timeout 100-30000ms and body size
+1024-4194304 bytes. Responses are JSON objects with protocol 1, enrolled identity,
+schema 1, valid UTC collection date, explicit status/capabilities and five sections.
+Section presence/status and envelope are checked; individual extension records
+are still untrusted data, requiring validation/escaping before storage/display.
+Partial inventories remain partial. A successful request is not a health verdict;
+collected_at is a remote claim, received_at is central time. Future persistence
+must retain the last successful observation when a request fails and show its age.
+
+Reproduce transport tests:
+python tests/client_http.py --php /path/to/php --certificate /path/to/localhost.crt
+  --private-key /path/to/localhost.key
+(Join the above two lines.) Use a disposable, locally trusted test certificate
+for localhost; no trust store or security setting changes are required.
+To test real Joomla, use tests/connector_http.py with --client-checks in addition
+to its documented disposable-site arguments. It revokes/disables test access
+when finished. Never point the fixture at production.
+
+Primary references consulted:
+https://www.php.net/manual/en/function.curl-setopt.php
+https://www.php.net/manual/en/curl.constants.php
+https://curl.se/libcurl/c/CURLOPT_RESOLVE.html

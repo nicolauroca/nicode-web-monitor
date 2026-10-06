@@ -17,7 +17,10 @@ versions stay unknown, and hosting-provider information is marked unavailable.
 A separate system plugin now serves read-only inventory over HTTPS, using a unique
 site UUID and a revocable bearer credential. The site stores only its SHA-256 digest.
 Rotation preserves site identity and rejects the old credential on the next request.
-The central component, guided pairing, alerting, updates and backups remain pending.
+The central PHP client can now fetch and validate inventory with bounded HTTPS,
+an enrolled IP and expected identity. Its transport core is tested separately;
+the installable central component, guided pairing, alerting, updates and backups
+remain pending. See `docs/central-client.txt` for its contract and test commands.
 No data is pushed to external services. The console command uses the operating-system
 account's existing access; the HTTP connector has its own read-only credential.
 

@@ -35,7 +35,8 @@ Client contract for the upcoming central component: validate HTTPS certificate,
 reject redirects, use bounded timeouts/body size, check protocol and enrolled
 site UUID before storing data. Authentication failure is not a healthy/empty
 inventory. Preserve last successful observation with its age and latest error.
-Client-side storage, requests and UI are not implemented in this increment.
+Central HTTPS requests are implemented in InventoryClient (2026-10-06).
+Client-side storage and UI are not implemented yet.
 
 Implementation references consulted 2026-10-05:
 https://manual.joomla.org/docs/next/building-extensions/plugins/how-plugins-work/

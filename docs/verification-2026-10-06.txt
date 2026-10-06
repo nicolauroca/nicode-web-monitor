@@ -1,0 +1,29 @@
+Executed 2026-10-06, isolated Windows laboratory, PHP 8.4.26 / Joomla 6.1.4.
+
+39 client transport checks passed against a loopback TLS protocol fixture:
+valid/partial responses, protocol/schema/identity/date/section/capability rejection,
+HTTP failures, redirect refusal (destination never requested), content type/JSON,
+body/header/time limits, untrusted certificate, hostname mismatch, private/metadata/
+shared-address refusal, invalid enrollment rejected before connecting, subdirectory
+URL and connection refusal. Test credentials existed only in process memory/stdin.
+
+28 assertions passed in the actual disposable Joomla HTTPS/CGI integration:
+the prior 20 connector assertions plus four central-client executions and their
+four behavior assertions (real inventory/version/count, wrong site identity, wrong
+credential, revoked access). These are assertions, not 28 independent scenarios.
+The client receives real web-runtime inventory, not a stub or local CLI substitute.
+
+Initial negative TLS test exposed a PHP/libcurl constant alias absent in this
+Windows build. Switched to stable libcurl numeric codes 60/77, then reran and passed
+the complete 39-check client suite. No TLS verification was disabled. A fixture
+socket exception following intentional cancellation was handled as ConnectionError.
+
+No component installation or two-site dashboard is claimed. Only the transport
+service of the planned central component exists. Enrollment UI, encrypted
+credential storage, persistence/age display, central ACL, alerts, maintenance and
+backups remain pending. Existing plugin packages were unchanged; no packaging or
+installer regression was repeated without a relevant code change.
+
+No real hosting accessed, no production data, global security changes or new
+dependencies. This single Windows/Joomla/PHP combination and CGI fixture do not
+establish production-web-server, proxy or multi-platform compatibility.

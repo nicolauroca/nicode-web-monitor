@@ -19,8 +19,12 @@ site UUID and a revocable bearer credential. The site stores only its SHA-256 di
 Rotation preserves site identity and rejects the old credential on the next request.
 The central PHP client can now fetch and validate inventory with bounded HTTPS,
 an enrolled IP and expected identity. Its transport core is tested separately;
-the installable central component, guided pairing, alerting, updates and backups
-remain pending. See `docs/central-client.txt` for its contract and test commands.
+An installable central component now registers sites with separate read/create/delete
+permissions and authenticated encryption of credentials. Its administrator form
+supports enrollment and removal; it does not yet fetch or display inventory.
+Guided pairing, the monitoring dashboard, alerting, updates and backups remain
+pending. See `docs/central-client.txt` for the transport contract and test commands,
+and `docs/site-registry.txt` for central installation and credential limits.
 No data is pushed to external services. The console command uses the operating-system
 account's existing access; the HTTP connector has its own read-only credential.
 

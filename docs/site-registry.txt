@@ -1,0 +1,44 @@
+﻿Central site registry — development 0.3.0
+
+Start with a disposable Joomla 6 installation and PHP sodium enabled. Run
+python tools/build.py and install dist/com_nicodewebmonitor-0.3.0-dev.zip through
+System > Install > Extensions. Open Components > Nicode Web Monitor.
+
+Configure the remote connector first as described in README.md. Enroll its name,
+canonical HTTPS base URL, public IP, unique connector UUID and read-only credential.
+Use the credential itself here, not its SHA-256 digest. The central database stores
+it encrypted; the remote connector stores its digest. Enrollment saves settings
+only: availability remains unknown until actual monitoring is implemented.
+
+The administrator list never returns credentials. Removing a site removes its
+central registration but does not revoke the remote credential: clear the digest
+or disable the remote connector there. Do not enroll production sites in this
+prototype. Private IP enrollment is deliberately rejected by the public UI.
+A separate controlled test adapter is still needed for two local Joomla sites.
+
+Permissions are component-scoped: core.manage reads, core.create enrolls and
+core.delete removes. Component permissions can be edited from Joomla Global
+Configuration. POST operations require Joomla's session token; GET cannot mutate.
+No update or backup privilege exists yet.
+
+Credentials use sodium XChaCha20-Poly1305 with a random nonce and the site UUID
+as associated data. The key derives from Joomla's secret using HKDF. This protects
+against database-only disclosure; someone with both configuration.php and the
+database can decrypt them. Protect both. Changing Joomla's secret requires
+re-enrollment; key rotation/migration is not implemented. Database tables are
+currently retained on uninstall. For permanent removal, delete registrations
+before uninstalling and revoke the remote credentials independently.
+
+Verification in a disposable installation:
+php tests/registry.php /path/to/joomla --allow-disposable-writes
+This test rolls back database rows and checks encryption, ACL and rendered output.
+For the actual administrator form, run tests/registry_http.py with --base-url
+http://127.0.0.1:PORT and --allow-disposable-writes. Supply JSON with admin_user and
+admin_password via stdin from your private credential helper, never command-line
+arguments or tracked files. It enrolls and removes one temporary example.org row
+without contacting that address. An interrupted test may leave that row to remove.
+
+Validated 8 October 2026 on Windows, Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9:
+22 registry/encryption/permission checks and 6 actual HTTP form checks passed.
+Native ZIP installation and upgrade tested. This does not establish two-site
+monitoring, visual mobile QA, PostgreSQL support or production readiness.

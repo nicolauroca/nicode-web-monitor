@@ -123,7 +123,7 @@ final class InventoryClient
         }
     }
 
-    private function endpoint(string $base): ?string
+    public function endpoint(string $base): ?string
     {
         if (strlen($base) > 2048 || preg_match('/[\x00-\x20\x7f\\\\]/', $base)) {
             return null;

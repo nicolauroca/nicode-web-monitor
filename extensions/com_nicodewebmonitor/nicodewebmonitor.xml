@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="component" method="upgrade">
+ <name>com_nicodewebmonitor</name><author>Nicolau Roca</author>
+ <version>0.3.0-dev</version><description>Nicode Web Monitor — development site registry</description>
+ <license>GPL-2.0-or-later</license>
+ <namespace path="src">Nicode\Component\NicodeWebMonitor</namespace>
+ <scriptfile>script.php</scriptfile>
+ <install><sql><file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file></sql></install>
+ <administration><menu>Nicode Web Monitor</menu><files folder="administrator">
+ <folder>services</folder><folder>src</folder><folder>tmpl</folder><folder>sql</folder>
+ <filename>access.xml</filename><filename>config.xml</filename>
+ </files></administration>
+</extension>

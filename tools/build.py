@@ -20,6 +20,18 @@ with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compressleve
     archive.writestr(license_info, (root / 'LICENSE').read_bytes())
 print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
+component = root / 'extensions/com_nicodewebmonitor'
+output = root / 'dist/com_nicodewebmonitor-0.3.0-dev.zip'
+with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    files = {p.relative_to(component).as_posix(): p.read_bytes() for p in component.rglob('*') if p.is_file()}
+    files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
+    for name, content in sorted(files.items()):
+        info = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o100644 << 16
+        archive.writestr(info, content)
+print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
+
 # Bundle the same collector into the independent HTTP plugin, with its own namespace.
 # Generated copies live only in the ZIP: one reviewed source of inventory behavior.
 connector = root / 'extensions/plg_system_nicodewebmonitor'

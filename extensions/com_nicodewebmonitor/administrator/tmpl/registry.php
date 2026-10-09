@@ -5,11 +5,25 @@ use Joomla\CMS\HTML\HTMLHelper;
 $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 ?>
 <h1>Nicode Web Monitor</h1>
-<p>Development site registry. Sites are not yet checked here; monitoring and maintenance are pending.</p>
+<p>Development monitor. Check a site to read its inventory now. Results are not retained; automatic monitoring and maintenance are pending.</p>
+<?php if (isset($inspection)): ?>
+<section aria-label="Inventory result">
+<h2>Inventory check for site #<?= (int) $inspectedId ?></h2>
+<?php if (!$inspection['ok']): ?>
+<p role="alert">Inventory unavailable: <?= $escape($inspection['error']) ?>. This does not establish that the website is offline. No retry was made.</p>
+<?php else: $inventory = $inspection['inventory']; ?>
+<p>Collection: <?= $escape($inventory['collected_at']) ?>; received: <?= $escape($inspection['received_at']) ?>. Result: <?= $escape($inventory['status']) ?>. These are point-in-time observations, not a guarantee of current health.</p>
+<table class="table"><caption>Inventory section availability</caption><thead><tr><th scope="col">Section</th><th scope="col">Status</th></tr></thead><tbody>
+<?php foreach (['joomla','runtime','database','extensions','hosting'] as $section): $value=$inventory['sections'][$section]; ?>
+<tr><th scope="row"><?= $escape($section) ?></th><td><?= $escape($value['status']) ?></td></tr>
+<?php endforeach; ?></tbody></table>
+<?php endif; ?></section>
+<?php endif; ?>
 <div class="table-responsive"><table class="table"><caption>Enrolled sites — availability unknown</caption>
 <thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Pinned IP</th><th scope="col">Identity</th><th scope="col">Actions</th></tr></thead><tbody>
 <?php foreach ($sites as $site): ?>
 <tr><td><?= $escape($site['label']) ?></td><td><?= $escape($site['base_url']) ?></td><td><?= $escape($site['address']) ?></td><td><?= $escape($site['site_id']) ?></td><td>
+<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="inspect"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Check <?= $escape($site['label']) ?></button></form>
 <?php if ($user->authorise('core.delete', 'com_nicodewebmonitor')): ?>
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="remove"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-danger" type="submit">Remove <?= $escape($site['label']) ?></button></form>
 <?php endif; ?></td></tr>

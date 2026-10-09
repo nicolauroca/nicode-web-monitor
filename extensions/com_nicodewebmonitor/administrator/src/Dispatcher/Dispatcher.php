@@ -18,12 +18,21 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $user = $this->app->getIdentity();
         $registry = new SiteRegistry(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $task = $this->input->getCmd('task', 'display');
+        $inspection = null;
+        $inspectedId = 0;
         if ($task !== 'display') {
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
             }
-            if (!in_array($task, ['add', 'remove'], true)) {
+            if (!in_array($task, ['add', 'remove', 'inspect'], true)) {
                 throw new \RuntimeException('Unknown task', 404);
+            }
+            if ($task === 'inspect') {
+                $inspectedId = $this->input->post->getInt('id');
+                $inspection = $registry->inspect($inspectedId);
+                $sites = $registry->all();
+                require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
+                return;
             }
             try {
                 $post = $this->input->post;

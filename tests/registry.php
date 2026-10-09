@@ -47,6 +47,11 @@ try {
     rejects(fn()=>$registry->add('Token','https://example.org','93.184.216.34',$uuid,'bad'), 'invalid token rejected');
     $guest = new SiteRegistry($db,$vault,new User());
     rejects(fn()=>$guest->all(), 'guest read denied');
+    rejects(fn()=>$guest->inspect((int)$row['id']), 'guest inventory denied');
+    check($registry->inspect(-1)['error']==='site_not_found', 'missing site explicit');
+    $db->setQuery('UPDATE #__nwm_sites SET credential='.$db->quote('broken').' WHERE id='.(int)$row['id'])->execute();
+    check($registry->inspect((int)$row['id'])['error']==='credential_unavailable', 'corrupt credential does not connect');
+    $db->setQuery('UPDATE #__nwm_sites SET credential='.$db->quote($stored).' WHERE id='.(int)$row['id'])->execute();
     rejects(fn()=>$guest->add('x','https://example.org','93.184.216.34',$uuid,$token), 'guest enrollment denied');
     rejects(fn()=>$guest->remove((int)$row['id']), 'guest delete denied');
     $reader = new class extends User {
@@ -61,7 +66,10 @@ try {
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     check(!str_contains($html,'<script>') && str_contains($html,'&lt;script&gt;'), 'stored label escaped');
     check(!str_contains($html,$token) && !str_contains($html,$stored), 'template excludes secrets');
-    check(!str_contains($html,'<form'), 'reader has no mutation controls');
+    check(!str_contains($html,'value="remove"') && !str_contains($html,'value="add"') && str_contains($html,'value="inspect"'), 'reader can inspect without mutation controls');
+    $inspection=['ok'=>false,'error'=>'access_denied']; $inspectedId=(int)$row['id'];
+    ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
+    check(str_contains($html,'access_denied') && str_contains($html,'does not establish'), 'failed read not presented as offline');
     $registry->remove((int)$row['id']);
     check(count($registry->all())===count($rows)-1, 'site removed');
 } finally { $db->transactionRollback(); }

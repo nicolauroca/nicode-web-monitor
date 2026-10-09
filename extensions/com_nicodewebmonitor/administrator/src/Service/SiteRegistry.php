@@ -35,4 +35,20 @@ final class SiteRegistry
         $this->permit('core.delete');
         $this->db->setQuery('DELETE FROM #__nwm_sites WHERE id=' . (int) $id)->execute();
     }
+
+    /** One explicit read, no retries or persistence of remote inventory. */
+    public function inspect(int $id, ?InventoryClient $client = null): array
+    {
+        $this->permit('core.manage');
+        $row = $this->db->setQuery('SELECT * FROM #__nwm_sites WHERE id=' . (int) $id)->loadAssoc();
+        if (!$row) {
+            return ['ok'=>false, 'error'=>'site_not_found'];
+        }
+        try {
+            $token = $this->vault->open($row['site_id'], $row['credential']);
+        } catch (\Throwable) {
+            return ['ok'=>false, 'error'=>'credential_unavailable'];
+        }
+        return ($client ?? new InventoryClient())->fetch($row['base_url'], $row['address'], $row['site_id'], $token);
+    }
 }

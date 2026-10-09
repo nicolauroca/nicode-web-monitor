@@ -1,0 +1,20 @@
+Development increment: explicit inventory read from the enrolled-sites panel.
+
+Check uses POST with Joomla CSRF validation and core.manage permission. It reads
+only the selected site, decrypts its credential internally, and uses the existing
+bounded HTTPS client with pinned address and identity verification. No automatic
+retries, remote mutations, history or background polling are introduced.
+
+The result shows section availability, collection/receipt timestamps and partial
+status. Failed inventory reads do not imply that the website is offline. Reloading
+the registry discards the result. Site credentials are never rendered.
+
+Verification on disposable Joomla 6: 26 registry checks, 9 administrator HTTP
+checks, 4 registry-to-TLS integration scenarios and 39 existing transport checks.
+TLS integration covers complete/partial responses, revocation and wrong identity,
+using a simulated connector and real encrypted registry storage (rolled back).
+This is NOT verification against two independent Joomla installations. That
+milestone remains pending, as do persisted observations, alerts and maintenance.
+
+The initial TLS fixture omitted Content-Length and caused an SSL EOF; fixed the
+fixture framing without weakening certificate checks or production transport.

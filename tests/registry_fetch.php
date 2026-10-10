@@ -34,5 +34,11 @@ try {
     $sites=[]; $inspection=$result; $inspectedId=(int)$row->id;
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     if (str_contains($html, $input['token']) || str_contains($html, $row->credential) || str_contains($html, '<script>')) { throw new RuntimeException('Unsafe output'); }
-    echo json_encode(['ok'=>$result['ok'], 'error'=>$result['error']??null, 'status'=>$result['inventory']['status']??null, 'rendered'=>str_contains($html, $result['ok'] ? 'Inventory section availability' : 'Inventory unavailable')]);
+    $version=$result['inventory']['sections']['joomla']['data']['version']??null;
+    $extensions=$result['inventory']['sections']['extensions']['data']??[];
+    $details=$result['ok'] && is_string($version) && str_contains($html, htmlspecialchars($version, ENT_QUOTES, 'UTF-8')) && str_contains($html, 'Installed extensions');
+    foreach ($extensions as $extension) {
+        $details=$details && str_contains($html, htmlspecialchars($extension['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+    }
+    echo json_encode(['ok'=>$result['ok'], 'error'=>$result['error']??null, 'status'=>$result['inventory']['status']??null, 'joomla'=>$version, 'extensions'=>count($extensions), 'details_rendered'=>$details, 'rendered'=>str_contains($html, $result['ok'] ? 'Inventory section availability' : 'Inventory unavailable')]);
 } finally { $db->transactionRollback(); }

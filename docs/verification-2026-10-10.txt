@@ -1,0 +1,40 @@
+Nicode Web Monitor - independent Joomla inventory verification, 10 October 2026
+
+Added useful inventory details to the administrator view: Joomla, PHP, web SAPI,
+operating system, database version and installed extension versions/enabled state.
+Unknown and failed collections remain explicit. Remote strings are HTML escaped;
+malformed optional values cannot become markup or PHP array-conversion warnings.
+
+Environment: Windows, Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9. A second Joomla
+was installed from the previously verified official distribution, with a separate
+document root, database, table prefix and installer-generated site secret. Both
+share the isolated database server/PHP binaries. No real hosting was accessed.
+
+The existing HTTPS/CGI fixture now accepts --registry-site PRINCIPAL_JOOMLA.
+It exercises the installed SiteRegistry, encrypted credentials, InventoryClient
+and installed administrator template against the real connector and inventory.
+Run it separately for each disposable connector:
+python tests/connector_http.py --site CONNECTOR_ROOT --php PHP_EXECUTABLE
+  --certificate LOCAL_CERT --private-key LOCAL_KEY --registry-site PRINCIPAL_ROOT
+  --allow-disposable-writes
+
+The fixture overwrites and finally disables the test connector configuration.
+Registry rows are rolled back. Test credentials are ephemeral and passed through
+stdin; TLS verification remains enabled. Only the test harness inserts a loopback
+enrollment and permits that pinned address. Production retains public-IP rules.
+
+Each connector run checks real inventory, expected identity, wrong identity,
+incorrect credential, revocation, rotation, anonymous access, HTTP rejection,
+spoofed proxy headers and rendering of all returned extension names. The two
+sites are queried sequentially, not a load/concurrency test. The registry/template
+integration uses Joomla CLI bootstrap; this is not a browser visual review or a
+production HTTPS deployment. Native installation/upgrade was also executed.
+
+Additional view regression: php tests/inventory_view.php (7 assertions covering
+escaping, malformed/unknown values, disabled extensions and failure without
+stale data). Registry ACL/encryption regression: php tests/registry.php
+DISPOSABLE_JOOMLA --allow-disposable-writes.
+
+Remaining: history, freshness/availability dashboard, alerts, remote maintenance,
+backup provider, wider platform coverage, pairing UX and visual review. This is
+still a development prototype; the full-version target is not a release guarantee.

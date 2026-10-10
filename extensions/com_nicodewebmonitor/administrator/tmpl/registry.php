@@ -17,6 +17,24 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php foreach (['joomla','runtime','database','extensions','hosting'] as $section): $value=$inventory['sections'][$section]; ?>
 <tr><th scope="row"><?= $escape($section) ?></th><td><?= $escape($value['status']) ?></td></tr>
 <?php endforeach; ?></tbody></table>
+<h3>Software and runtime</h3>
+<dl>
+<?php foreach (['Joomla'=>['joomla','version'], 'PHP'=>['runtime','php_version'], 'PHP runtime'=>['runtime','sapi'], 'Operating system'=>['runtime','os_family'], 'Database'=>['database','version']] as $label=>$path):
+    $section=$inventory['sections'][$path[0]];
+    $detail=$section['status']==='available' ? ($section['data'][$path[1]] ?? null) : null;
+?>
+<dt><?= $escape($label) ?></dt><dd><?= is_scalar($detail) && (string)$detail !== '' ? $escape($detail) : 'Unknown / unavailable' ?></dd>
+<?php endforeach; ?></dl>
+<?php $extensionSection=$inventory['sections']['extensions']; if ($extensionSection['status']==='available' && is_array($extensionSection['data'])): ?>
+<div class="table-responsive"><table class="table"><caption>Installed extensions</caption>
+<thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Version</th><th scope="col">Enabled</th></tr></thead><tbody>
+<?php foreach ($extensionSection['data'] as $extension): if (!is_array($extension)) { continue; }
+    $text = static fn($value) => is_scalar($value) ? $escape($value) : 'Unknown';
+    $version=is_array($extension['version'] ?? null) ? $extension['version'] : [];
+?>
+<tr><th scope="row"><?= $text($extension['name'] ?? null) ?></th><td><?= $text($extension['type'] ?? null) ?></td><td><?= ($version['status'] ?? '')==='available' ? $text($version['value'] ?? null) : 'Unknown' ?></td><td><?= ($extension['enabled'] ?? null)===true ? 'Yes' : (($extension['enabled'] ?? null)===false ? 'No' : 'Unknown') ?></td></tr>
+<?php endforeach; ?></tbody></table></div>
+<?php else: ?><p>Extension inventory unavailable.</p><?php endif; ?>
 <?php endif; ?></section>
 <?php endif; ?>
 <div class="table-responsive"><table class="table"><caption>Enrolled sites — availability unknown</caption>

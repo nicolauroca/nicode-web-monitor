@@ -21,7 +21,9 @@ The central PHP client can now fetch and validate inventory with bounded HTTPS,
 an enrolled IP and expected identity. Its transport core is tested separately;
 An installable central component now registers sites with separate read/create/delete
 permissions and authenticated encryption of credentials. Its administrator form
-supports enrollment and removal; it does not yet fetch or display inventory.
+supports enrollment, removal and explicit inventory inspection. Results include
+Joomla/PHP/database versions, section availability and installed extensions with
+versions and enabled state. Unknown data stays explicit. Inventory is not retained.
 Guided pairing, the monitoring dashboard, alerting, updates and backups remain
 pending. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
@@ -53,6 +55,10 @@ It checks the real database inventory, malformed manifests, field allowlisting,
 unavailable hosting, a deliberately missing database table and Joomla 5 rejection.
 Tests do not write to Joomla. See `docs/verification-2026-10-04.txt` for executed
 installation and command checks and their limits.
+
+The central registry and rendered inventory have also been tested against two
+independently installed disposable Joomla sites over verified loopback TLS; see
+`docs/verification-2026-10-10.txt` for coverage and remaining limits.
 
 The ZIP has deterministic file order, timestamps and permissions. Generated packages,
 local installations, database dumps, credentials and collected inventories stay out

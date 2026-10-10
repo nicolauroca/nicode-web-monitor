@@ -25,6 +25,7 @@ parser.add_argument('--certificate', type=Path, required=True)
 parser.add_argument('--private-key', type=Path, required=True)
 parser.add_argument('--allow-disposable-writes', action='store_true', required=True)
 parser.add_argument('--client-checks', action='store_true', help='Also exercise the central PHP inventory client')
+parser.add_argument('--registry-site', type=Path, help='Disposable principal Joomla with central component; also test registry and rendered inventory')
 args = parser.parse_args()
 site = args.site.resolve()
 cgi = args.php.with_name('php-cgi.exe' if os.name == 'nt' else 'php-cgi')
@@ -126,12 +127,15 @@ try:
     check(inventory['capabilities']=={'remote_inventory':True,'remote_updates':False,'remote_backups':False},'read_only_capabilities')
     check('no-store' in headers['Cache-Control'] and 'application/json' in headers['Content-Type'],'no_cache_json_headers')
     check(token.encode() not in raw and b'token_hash' not in raw and b'password' not in raw,'no_credentials_in_inventory')
-    if args.client_checks:
+    if args.client_checks or args.registry_site:
         def central(credential, identity=site_id):
             payload = {'url':f'https://localhost:{secure.server_port}', 'address':'127.0.0.1',
                        'site_id':identity, 'token':credential, 'ca':str(args.certificate),
                        'allow_private':['127.0.0.1']}
-            p = subprocess.run([str(args.php), str(Path(__file__).with_name('client_fetch.php'))],
+            command=[str(args.php), str(Path(__file__).with_name('client_fetch.php'))]
+            if args.registry_site:
+                command=[str(args.php), str(Path(__file__).with_name('registry_fetch.php')), str(args.registry_site), '--allow-disposable-writes']
+            p = subprocess.run(command,
                                input=json.dumps(payload), text=True, capture_output=True,
                                timeout=25, creationflags=flags)
             check(p.returncode == 0, 'central_client_execution')
@@ -139,8 +143,10 @@ try:
         observed = central(token)
         check(observed['ok'] and observed['joomla'] == inventory['sections']['joomla']['data']['version']
               and observed['extensions'] == len(inventory['sections']['extensions']['data']), 'central_real_inventory')
-        check(central(token, str(uuid.uuid4())) == {'ok':False,'error':'identity_mismatch'}, 'central_wrong_identity')
-        check(central(secrets.token_hex(32)) == {'ok':False,'error':'access_denied'}, 'central_wrong_credential')
+        if args.registry_site:
+            check(observed['rendered'] and observed['details_rendered'], 'registry_real_inventory_details_rendered')
+        check(central(token, str(uuid.uuid4()))['error']=='identity_mismatch', 'central_wrong_identity')
+        check(central(secrets.token_hex(32))['error']=='access_denied', 'central_wrong_credential')
     check(request()[0]==401,'anonymous_rejected')
     check(request(secrets.token_hex(32))[0]==401,'wrong_token_rejected')
     check(request(suffix='&token='+token)[0]==401,'query_token_ignored')
@@ -152,8 +158,8 @@ try:
     check(request(token,tls=False,extra={'X-Forwarded-Proto':'https'})[0]==403,'spoofed_proxy_rejected')
     configure('')
     check(request(token)[0]==503,'revocation_immediate')
-    if args.client_checks:
-        check(central(token) == {'ok':False,'error':'connector_unavailable'}, 'central_revocation')
+    if args.client_checks or args.registry_site:
+        check(central(token)['error']=='connector_unavailable', 'central_revocation')
     replacement=secrets.token_hex(32)
     configure(replacement)
     check(request(token)[0]==401,'rotated_old_token_rejected')

@@ -1,7 +1,7 @@
 ﻿Central site registry — development 0.4.0
 
 Start with a disposable Joomla 6 installation and PHP sodium enabled. Run
-python tools/build.py and install dist/com_nicodewebmonitor-0.4.0-dev.zip through
+python tools/build.py and install dist/com_nicodewebmonitor-0.4.2-dev.zip through
 System > Install > Extensions. Open Components > Nicode Web Monitor.
 
 Configure the remote connector first as described in README.md. Enroll its name,

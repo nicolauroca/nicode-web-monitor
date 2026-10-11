@@ -47,7 +47,7 @@ check(status==200 and 'site_not_found' in html,'inventory result rendered throug
 status,html=request(url,{**data,formtoken:'1'})
 check(status==200 and label in html,'real enrollment form accepted')
 check(credential not in html,'credential not echoed in HTML')
-row=re.search(r'<tr><td>'+re.escape(label)+r'</td>.*?</tr>',html,re.S).group(0)
+row=re.search(r'<tr><td\b[^>]*>'+re.escape(label)+r'</td>.*?</tr>',html,re.S).group(0)
 rowid=re.search(r'name="id" value="(\d+)"',row).group(1)
 status,html=request(url,{'task':'remove','id':rowid,csrf(html):'1'})
 check(status==200 and label not in html,'real removal form accepted')

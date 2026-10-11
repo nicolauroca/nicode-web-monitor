@@ -5,6 +5,19 @@ use Joomla\CMS\HTML\HTMLHelper;
 $stateLabels = ['never_checked'=>'Never checked', 'recent_complete'=>'Recent complete inventory', 'recent_partial'=>'Recent partial inventory', 'stale'=>'Observation older than 24 hours', 'check_failed'=>'Latest check failed', 'clock_uncertain'=>'Observation time uncertain'];
 $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 ?>
+<style>
+.nwm-sites td { overflow-wrap: anywhere; vertical-align: top; }
+.nwm-sites .btn { margin-bottom: .5rem; }
+@media (max-width: 991.98px) {
+    .nwm-sites, .nwm-sites tbody, .nwm-sites tr, .nwm-sites td { display: block; width: 100%; }
+    .nwm-sites thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .nwm-sites tr { margin-bottom: 1rem; border: 1px solid var(--border-color, #adb5bd); }
+    .nwm-sites td { border: 0; padding: .75rem; }
+    .nwm-sites td::before { content: attr(data-label); display: block; font-weight: bold; margin-bottom: .25rem; }
+    .nwm-sites caption { display: block; }
+    .nwm-sites .btn { width: 100%; }
+}
+</style>
 <h1>Nicode Web Monitor</h1>
 <p>Development monitor. Check a site to read its inventory now. Check summaries are retained (last 100 per site). Recent means checked and collected within 24 hours. Automatic monitoring and maintenance are pending.</p>
 <?php if (isset($inspection)): ?>
@@ -39,10 +52,10 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php else: ?><p>Extension inventory unavailable.</p><?php endif; ?>
 <?php endif; ?></section>
 <?php endif; ?>
-<div class="table-responsive"><table class="table"><caption>Enrolled sites — connector observations</caption>
+<div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites — connector observations</caption>
 <thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Pinned IP</th><th scope="col">Identity</th><th scope="col">Check history (UTC)</th><th scope="col">Actions</th></tr></thead><tbody>
 <?php foreach ($sites as $site): ?>
-<tr><td><?= $escape($site['label']) ?></td><td><?= $escape($site['base_url']) ?></td><td><?= $escape($site['address']) ?></td><td><?= $escape($site['site_id']) ?></td><td>
+<tr><td data-label="Site"><?= $escape($site['label']) ?></td><td data-label="URL"><?= $escape($site['base_url']) ?></td><td data-label="Pinned IP"><?= $escape($site['address']) ?></td><td data-label="Identity"><?= $escape($site['site_id']) ?></td><td data-label="Check history (UTC)">
 <p><?= $escape($stateLabels[$site['check_state'] ?? 'never_checked'] ?? 'Unknown') ?></p>
 <p>Connector observations do not establish website availability.</p>
 <?php if (isset($site['alerts'])): $alerts = $site['alerts']; ?>
@@ -55,7 +68,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php if (!empty($site['checks'])): ?><details><summary>Recent checks</summary><ol>
 <?php foreach ($site['checks'] as $check): ?>
 <li><?= $escape(gmdate('Y-m-d H:i:s', (int)$check['checked_at'])) ?> — <?= $escape($check['outcome']) ?>: <?= $escape($check['detail']) ?></li>
-<?php endforeach; ?></ol></details><?php endif; ?></td><td>
+<?php endforeach; ?></ol></details><?php endif; ?></td><td data-label="Actions">
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="inspect"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Check <?= $escape($site['label']) ?></button></form>
 <?php if ($user->authorise('core.delete', 'com_nicodewebmonitor')): ?>
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="remove"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-danger" type="submit">Remove <?= $escape($site['label']) ?></button></form>

@@ -1,0 +1,40 @@
+Nicode Web Monitor 0.4.2-dev — browser verification, 11 October 2026
+
+Change
+The enrolled-sites table previously required horizontal scrolling on mobile;
+alert status and action buttons were initially off screen. Below 992px it now
+stacks labeled fields per site. Desktop retains column headers and the table.
+Long URLs wrap. No changes to stored observations, credentials or access rules.
+
+Executed in an isolated Windows / Joomla 6.1.4 / PHP 8.4.26 laboratory:
+- Microsoft Edge (Chromium), actual Joomla administrator, JavaScript enabled.
+- 1440, 390 and 320 CSS-pixel widths: 43 browser assertions covering component
+  navigation, layout, all five fixture states, action bounds and expansion of
+  recovery history. No browser JavaScript errors. Screenshots inspected locally.
+- Failed credential observation, partial inventory, recovered connection,
+  stale inventory and never-checked site are synthetic persisted observations.
+  These browser checks do not claim live network failure/recovery coverage.
+- Existing real HTTP administrator tests: 9 passed (CSRF, method restrictions,
+  inspection response, enrollment/removal and no credential echo).
+- Existing registry/history/inventory presentation tests: 26/24/7 passed.
+
+Reproduce only in a disposable Joomla with the component installed:
+1. Install Playwright for Python and Microsoft Edge if not already available.
+2. Run php tests/browser_fixture.php JOOMLA_PATH --allow-disposable-writes seed
+3. Run python tests/browser_dashboard.py --base-url http://127.0.0.1:PORT
+   --output PRIVATE_OUTPUT_DIRECTORY --allow-disposable-writes
+   Supply a JSON object with admin_user and admin_password on stdin from a
+   private credential helper. Never put passwords on the command line or in Git.
+4. Always clean, including after failure:
+   php tests/browser_fixture.php JOOMLA_PATH --allow-disposable-writes clean
+
+The fixture only touches sites whose label starts with NWM browser fixture.
+It never requests inventory from their example.invalid URLs. Browser requests
+are restricted to the supplied loopback origin. Test login dismisses Joomla's
+first-login tour and declines optional statistics for this disposable account.
+An active welcome tour can otherwise redirect navigation away from the panel;
+this is not a monitor dispatch failure.
+
+Screenshots stay in private output, not in the repository. Tests do not imply
+screen-reader validation, physical-device testing or other browser engines.
+Automatic monitoring, updates, backups and broader compatibility remain pending.

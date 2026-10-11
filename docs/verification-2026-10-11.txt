@@ -1,0 +1,33 @@
+11 October 2026 - history and freshness, development 0.4.0
+
+Scope: Windows, Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9; disposable loopback lab.
+Native component upgrade from 0.3.0 and installation in the second Joomla executed.
+Reinstallation of 0.4.0 also succeeds. The installation schema formerly ignored
+by Git is now versioned together with the native 0.4.0 migration.
+
+Verification commands (substitute local disposable paths):
+php tests/history.php JOOMLA --allow-disposable-writes
+php tests/registry.php JOOMLA --allow-disposable-writes
+php tests/inventory_view.php
+python tests/connector_http.py --site CONNECTOR --php PHP --certificate CERT
+  --private-key KEY --registry-site PRINCIPAL --allow-disposable-writes
+Run the last command on one line for each of the two independent connector sites.
+The connector fixture finally disables the test connector; it is not a production
+configuration procedure. Credentials stay in memory/stdin and outside Git.
+
+History coverage includes committed records after registry reload, retention,
+latest failure after success, partial results, expired observations, time boundary,
+future clocks, unknown timestamps, arbitrary error exclusion, caller rollback,
+dashboard rendering, persistence-warning rendering, removal and late responses.
+Registry tests cover ACL, encrypted credentials and untrusted labels. HTTPS tests
+assert persisted outcomes for actual inventory, identity mismatch, denied access
+and revoked credential. The historical one-day test certificate was expired and
+was replaced locally; TLS verification was never disabled.
+
+CLI test bootstrap now sets localhost request metadata explicitly so Joomla's
+router can boot with absolute Windows script paths. No runtime product workaround.
+
+Remaining: automatic monitoring, alerts, maintenance/backups, broader platform
+coverage and browser/visual review of the new history panel. CLI template tests
+and verified loopback TLS do not establish production readiness or public website
+availability. A recent complete inventory is only an observation.

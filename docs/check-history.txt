@@ -1,0 +1,36 @@
+Check history - development 0.4.0
+
+Each explicit inventory check now stores a summary in the principal Joomla:
+central check time, validated collection time, outcome and allowlisted detail.
+Full inventory, exception text, URLs, headers and credentials are never copied
+into this history. A failed local credential decryption is also recorded.
+An absent site is not recorded. No automatic polling or external alert is added.
+
+The dashboard shows the latest state and up to 10 recent checks per site. Storage
+is bounded to 100 summaries per site; removing a registration deletes its history.
+Tables are retained on uninstall as in 0.3.0. ACL remains core.manage for reading
+and checking, core.create for enrollment, core.delete for removal. CSRF checks
+remain in the dispatcher. Summary writes use a transaction and a per-site lock;
+late responses cannot recreate a removed site's history. No blind retries.
+
+Freshness is 24 hours, inclusive, from BOTH the local check and the remote
+collection timestamp. Older observations are stale. A timestamp more than five
+minutes in the future is uncertain. This detects obvious clock skew, not a lying
+connector. Complete and partial inventories have separate states. A recent failed
+check supersedes earlier successes; old failures become stale. Neither successful
+inventory nor failed authentication establishes public website availability.
+If persistence fails, the current response explicitly warns that history was not
+saved. Retained summaries are observations, not a tamper-proof audit log.
+
+The native installer uses install.mysql.utf8.sql for first installation and the
+0.4.0.sql migration for upgrades. Both are tracked source, explicitly excepted
+from the repository's database-dump ignore rule. Previous published revisions
+omitted the installation schema even though local builds contained it.
+Migration structure follows Joomla's manifest documentation:
+https://manual.joomla.org/docs/next/building-extensions/install-update/installation/manifest/
+
+Tests: php tests/history.php DISPOSABLE_JOOMLA --allow-disposable-writes.
+This creates a committed disposable registration, exercises summary persistence,
+retention, freshness, clock skew, failures, nested rollback and deletion, then
+cleans it up. Connector integration additionally asserts actual inspection history
+with verified TLS. See verification-2026-10-11.txt for executed coverage and limits.

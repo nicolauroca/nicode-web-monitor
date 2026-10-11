@@ -15,7 +15,13 @@ final class SiteRegistry
     public function all(): array
     {
         $this->permit('core.manage');
-        return $this->db->setQuery('SELECT id, site_id, label, base_url, address FROM #__nwm_sites ORDER BY id')->loadAssocList();
+        $sites = $this->db->setQuery('SELECT id, site_id, label, base_url, address FROM #__nwm_sites ORDER BY id')->loadAssocList();
+        $history = new CheckHistory($this->db);
+        foreach ($sites as &$site) {
+            $site['checks'] = $history->recent((int)$site['id']);
+            $site['check_state'] = CheckHistory::state($site['checks'][0] ?? null);
+        }
+        return $sites;
     }
     public function add(string $label, string $url, string $address, string $siteId, #[\SensitiveParameter] string $token): void
     {
@@ -33,10 +39,19 @@ final class SiteRegistry
     public function remove(int $id): void
     {
         $this->permit('core.delete');
-        $this->db->setQuery('DELETE FROM #__nwm_sites WHERE id=' . (int) $id)->execute();
+        $this->db->transactionStart(true);
+        try {
+            $this->db->setQuery('SELECT id FROM #__nwm_sites WHERE id=' . $id . ' FOR UPDATE')->loadResult();
+            $this->db->setQuery('DELETE FROM #__nwm_checks WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_sites WHERE id=' . $id)->execute();
+            $this->db->transactionCommit(true);
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback(true);
+            throw $e;
+        }
     }
 
-    /** One explicit read, no retries or persistence of remote inventory. */
+    /** One explicit read; retain only a bounded check summary, not remote inventory. */
     public function inspect(int $id, ?InventoryClient $client = null): array
     {
         $this->permit('core.manage');
@@ -47,8 +62,15 @@ final class SiteRegistry
         try {
             $token = $this->vault->open($row['site_id'], $row['credential']);
         } catch (\Throwable) {
-            return ['ok'=>false, 'error'=>'credential_unavailable'];
+            $result = ['ok'=>false, 'error'=>'credential_unavailable'];
         }
-        return ($client ?? new InventoryClient())->fetch($row['base_url'], $row['address'], $row['site_id'], $token);
+        $result ??= ($client ?? new InventoryClient())->fetch($row['base_url'], $row['address'], $row['site_id'], $token);
+        try {
+            (new CheckHistory($this->db))->record($id, $result);
+            $result['history_saved'] = true;
+        } catch (\Throwable) {
+            $result['history_saved'] = false;
+        }
+        return $result;
     }
 }

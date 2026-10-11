@@ -23,8 +23,10 @@ An installable central component now registers sites with separate read/create/d
 permissions and authenticated encryption of credentials. Its administrator form
 supports enrollment, removal and explicit inventory inspection. Results include
 Joomla/PHP/database versions, section availability and installed extensions with
-versions and enabled state. Unknown data stays explicit. Inventory is not retained.
-Guided pairing, the monitoring dashboard, alerting, updates and backups remain
+versions and enabled state. Unknown data stays explicit. Full inventory is not retained.
+Bounded check summaries and freshness states persist across visits; the dashboard
+shows recent history (see `docs/check-history.txt`).
+Guided pairing, automatic monitoring, alerting, updates and backups remain
 pending. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
 No data is pushed to external services. The console command uses the operating-system

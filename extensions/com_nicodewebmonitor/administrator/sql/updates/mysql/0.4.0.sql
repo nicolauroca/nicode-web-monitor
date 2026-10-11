@@ -1,0 +1,19 @@
+CREATE TABLE IF NOT EXISTS `#__nwm_sites` (
+ `id` int unsigned NOT NULL AUTO_INCREMENT,
+ `site_id` char(36) NOT NULL,
+ `label` varchar(120) NOT NULL,
+ `base_url` varchar(2048) NOT NULL,
+ `address` varchar(45) NOT NULL,
+ `credential` text NOT NULL,
+ PRIMARY KEY (`id`), UNIQUE KEY `site_identity` (`site_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `#__nwm_checks` (
+ `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+ `site` int unsigned NOT NULL,
+ `checked_at` bigint NOT NULL,
+ `collected_at` bigint NULL,
+ `outcome` varchar(16) NOT NULL,
+ `detail` varchar(40) NOT NULL,
+ PRIMARY KEY (`id`), KEY `site_history` (`site`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

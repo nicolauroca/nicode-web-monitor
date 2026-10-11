@@ -1,20 +1,20 @@
-﻿Central site registry — development 0.3.0
+﻿Central site registry — development 0.4.0
 
 Start with a disposable Joomla 6 installation and PHP sodium enabled. Run
-python tools/build.py and install dist/com_nicodewebmonitor-0.3.0-dev.zip through
+python tools/build.py and install dist/com_nicodewebmonitor-0.4.0-dev.zip through
 System > Install > Extensions. Open Components > Nicode Web Monitor.
 
 Configure the remote connector first as described in README.md. Enroll its name,
 canonical HTTPS base URL, public IP, unique connector UUID and read-only credential.
 Use the credential itself here, not its SHA-256 digest. The central database stores
 it encrypted; the remote connector stores its digest. Enrollment saves settings
-only: availability remains unknown until actual monitoring is implemented.
+only: use Check to observe the connector. Website availability remains unproven.
 
 The administrator list never returns credentials. Removing a site removes its
 central registration but does not revoke the remote credential: clear the digest
 or disable the remote connector there. Do not enroll production sites in this
 prototype. Private IP enrollment is deliberately rejected by the public UI.
-A separate controlled test adapter is still needed for two local Joomla sites.
+The disposable test adapter exercises two local Joomla sites; production enrollment rules are unchanged.
 
 Permissions are component-scoped: core.manage reads, core.create enrolls and
 core.delete removes. Component permissions can be edited from Joomla Global

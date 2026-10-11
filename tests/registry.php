@@ -1,6 +1,9 @@
 <?php
 /** Integration against an installed component in a disposable Joomla. Rolls back test rows. */
 if (($argv[2] ?? '') !== '--allow-disposable-writes') { exit(2); }
+$_SERVER['HTTP_HOST'] = 'localhost';
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['REQUEST_URI'] = '/index.php';
 define('_JEXEC', 1);
 define('JPATH_BASE', realpath($argv[1]));
 require JPATH_BASE . '/includes/defines.php';

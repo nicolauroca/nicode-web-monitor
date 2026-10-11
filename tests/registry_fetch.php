@@ -31,6 +31,13 @@ try {
     $row = (object)['site_id'=>$input['site_id'], 'label'=>'TLS fixture', 'base_url'=>$input['url'], 'address'=>'127.0.0.1', 'credential'=>$vault->seal($input['site_id'], $input['token'])];
     $db->insertObject('#__nwm_sites', $row, 'id');
     $result = $registry->inspect((int)$row->id, new InventoryClient($input['ca'], ['127.0.0.1'], 2000));
+    $reloaded = new SiteRegistry($db, $vault, $user);
+    $savedSite = array_values(array_filter($reloaded->all(), fn($s)=>(int)$s['id']===(int)$row->id))[0];
+    if (!$result['history_saved'] || count($savedSite['checks']) !== 1
+        || $savedSite['checks'][0]['outcome'] !== ($result['ok'] ? 'received' : 'failed')
+        || (!$result['ok'] && $savedSite['check_state'] !== 'check_failed')) {
+        throw new RuntimeException('History not persisted correctly');
+    }
     $sites=[]; $inspection=$result; $inspectedId=(int)$row->id;
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     if (str_contains($html, $input['token']) || str_contains($html, $row->credential) || str_contains($html, '<script>')) { throw new RuntimeException('Unsafe output'); }

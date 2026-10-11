@@ -709,3 +709,7 @@
 /README.txt
 /robots.txt.dist
 /web.config.txt
+
+# Extension schema sources (not database dumps).
+!/extensions/com_nicodewebmonitor/administrator/sql/**/*.sql
+!/extensions/com_nicodewebmonitor/administrator/sql/*.sql

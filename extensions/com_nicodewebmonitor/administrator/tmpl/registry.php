@@ -45,6 +45,13 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <tr><td><?= $escape($site['label']) ?></td><td><?= $escape($site['base_url']) ?></td><td><?= $escape($site['address']) ?></td><td><?= $escape($site['site_id']) ?></td><td>
 <p><?= $escape($stateLabels[$site['check_state'] ?? 'never_checked'] ?? 'Unknown') ?></p>
 <p>Connector observations do not establish website availability.</p>
+<?php if (isset($site['alerts'])): $alerts = $site['alerts']; ?>
+<p><strong><?= $alerts['active'] ? 'Active inventory alert' : ($alerts['state'] === 'never_checked' ? 'Awaiting first check' : 'No active inventory alert') ?></strong></p>
+<?php if ($alerts['transitions']): ?><details><summary>Alert transitions (retained history)</summary><ol>
+<?php foreach ($alerts['transitions'] as $event): ?>
+<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['at'])) ?> UTC: <?= $escape($event['kind']) ?> — <?= $escape($stateLabels[$event['from']] ?? 'Unknown') ?> → <?= $escape($stateLabels[$event['to']] ?? 'Unknown') ?></li>
+<?php endforeach; ?></ol></details><?php endif; ?>
+<?php endif; ?>
 <?php if (!empty($site['checks'])): ?><details><summary>Recent checks</summary><ol>
 <?php foreach ($site['checks'] as $check): ?>
 <li><?= $escape(gmdate('Y-m-d H:i:s', (int)$check['checked_at'])) ?> — <?= $escape($check['outcome']) ?>: <?= $escape($check['detail']) ?></li>

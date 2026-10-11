@@ -1,0 +1,30 @@
+Internal inventory alerts - development 0.4.1
+
+The administrator dashboard projects alerts from the last 100 persisted checks
+per site. Failed checks (including revoked credentials), partial inventories,
+observations older than 24 hours and uncertain clocks are active alerts. A first
+successful complete observation is a baseline, not a recovery. A new complete,
+fresh observation clears an existing alert and shows a recovered transition.
+Repeated checks in the same state do not create duplicate transitions. A change
+between alert states stays active; partial data does not count as full recovery.
+
+Expiry is calculated on reading the dashboard and between retained observations.
+A complete result after a gap longer than 24 hours therefore shows recovery from
+staleness. The expiry timestamp uses the earlier local/remote observation time.
+The dashboard exposes the last ten transitions, with UTC times and both states.
+This is a replay of bounded history, not a durable incident ledger: transitions
+can disappear when their observations pass the existing 100-check retention.
+The first retained observation cannot establish recovery from discarded history.
+Failure reasons remain in the adjacent recent-check history. Distinct error
+reasons within the failed state do not generate additional state transitions.
+
+No notification, polling, acknowledgement or background task is implemented here.
+Reading the panel makes no database writes. Existing ACL, CSRF and retention
+controls are unchanged; removing a site also removes the data behind its alerts.
+Inventory alerts never establish whether the public website is available.
+Existing SQL schema is sufficient; native component upgrade adds the service.
+
+Verification commands:
+php tests/alerts.php
+php tests/history.php DISPOSABLE_JOOMLA --allow-disposable-writes
+See verification-2026-10-11-extra.txt for executed coverage and remaining work.

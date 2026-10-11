@@ -21,7 +21,7 @@ with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compressleve
 print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
 component = root / 'extensions/com_nicodewebmonitor'
-output = root / 'dist/com_nicodewebmonitor-0.4.0-dev.zip'
+output = root / 'dist/com_nicodewebmonitor-0.4.1-dev.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(component).as_posix(): p.read_bytes() for p in component.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()

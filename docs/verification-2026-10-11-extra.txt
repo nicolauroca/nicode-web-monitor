@@ -1,0 +1,26 @@
+11 October 2026 - internal alerts reinforcement
+
+Component 0.4.1-dev installed through Joomla's native extension upgrade in the
+isolated Windows/Joomla 6.1.4/PHP 8.4.26/MariaDB 11.8.9 laboratory.
+
+Executed successfully:
+- 16 alert projection checks: baseline, failures/revocation, deduplication,
+  partial data, recovery, inclusive freshness boundary, expiry without polling,
+  stable expiry timestamp, recovery across gaps, old remote data, uncertain
+  remote/central clocks, bounded display and database string-valued timestamps.
+- 26 registry/credential/ACL checks.
+- 24 history integration checks including persisted alert and recovery after
+  registry reload and rendered recovery in the installed administrator template.
+- 7 inventory template checks.
+- 29 HTTPS/CGI connector checks against each of two isolated Joomla instances,
+  through the updated central registry. TLS verification remained enabled.
+- 11 PHP syntax checks, Git whitespace check, repeated package build with the
+  same checkout bytes, and installed administrator files matched to ZIP/source.
+
+TLS fixture preflight verified validity with at least one hour remaining before
+integration; no renewal was necessary. No production hosting was accessed.
+
+Not claimed: browser visual QA, automatic polling, outbound notification delivery,
+remote updates/backups, compatibility beyond the tested environment or identical
+ZIP bytes across different checkout line endings. Transitions are a bounded
+projection, not a permanent incident ledger. Browser mobile/desktop QA is next.

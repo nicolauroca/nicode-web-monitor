@@ -18,7 +18,9 @@ final class SiteRegistry
         $sites = $this->db->setQuery('SELECT id, site_id, label, base_url, address FROM #__nwm_sites ORDER BY id')->loadAssocList();
         $history = new CheckHistory($this->db);
         foreach ($sites as &$site) {
-            $site['checks'] = $history->recent((int)$site['id']);
+            $retained = $history->recent((int)$site['id'], 100);
+            $site['checks'] = array_slice($retained, 0, 10);
+            $site['alerts'] = CheckAlerts::summarize($retained);
             $site['check_state'] = CheckHistory::state($site['checks'][0] ?? null);
         }
         return $sites;

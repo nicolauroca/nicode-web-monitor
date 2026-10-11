@@ -61,6 +61,14 @@ try {
     check(!$result['ok'] && $result['history_saved'],'credential failure recorded without connection');
     $last=$history->recent($id)[0];
     check($last['detail']==='credential_unavailable' && $class::state($last)==='check_failed','latest failure supersedes old success');
+    $alertRow = array_values(array_filter($registry->all(), fn($r)=>(int)$r['id']===$id))[0];
+    check($alertRow['alerts']['active'] && $alertRow['alerts']['state']==='check_failed','persisted failed check opens panel alert');
+    $history->record($id,$good);
+    $alertRow = array_values(array_filter((new SiteRegistry($db,$vault,$admin))->all(), fn($r)=>(int)$r['id']===$id))[0];
+    check(!$alertRow['alerts']['active'] && $alertRow['alerts']['transitions'][0]['kind']==='recovered','recovery survives registry reload');
+    $sites=[$alertRow]; $user=new class extends User { public function authorise($a,$asset=null) { return $a==='core.manage'; } };
+    ob_start();require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php';$alertHtml=ob_get_clean();
+    check(str_contains($alertHtml,'Alert transitions (retained history)') && str_contains($alertHtml,'recovered') && str_contains($alertHtml,'No active inventory alert'),'panel renders recovery transition');
     check($class::state($last,(int)$last['checked_at']+86401)==='stale','old failure becomes stale');
     $history->record($id,['ok'=>false,'error'=>$token]);
     check($history->recent($id)[0]['detail']==='transport_failed','arbitrary error excluded');

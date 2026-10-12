@@ -1,0 +1,45 @@
+Automatic inventory monitoring (development, 12 October 2026)
+
+Install central component 0.5.0-dev and task plugin 0.1.0-dev, then enable
+Task - Nicode Web Monitor in a disposable Joomla 6 installation first.
+Create one Nicode: check enrolled sites task in System > Scheduled Tasks.
+The task creator must remain an enabled component administrator (core.admin).
+Choose an enabled monitoring user with core.manage and nwm.monitor on the
+component. A reader without nwm.monitor cannot run batches. Only trusted
+administrators should have access to edit scheduler tasks or their run-as users.
+Installation does not create or enable a recurring task.
+
+Choose the desired interval and use one native Joomla scheduler trigger.
+Joomla's lazy scheduler depends on site traffic; it does not guarantee timely
+execution. Official trigger guidance:
+https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler
+
+Each run selects oldest or never-checked sites first, at most 5 by default
+(configurable 1-10). A failure is still a recorded check, so other sites progress.
+The default network budget is 20 seconds (1-30); each HTTPS read gets at most
+3 seconds and no more than the remaining budget. Database operations and PHP
+overhead are outside that network budget: it is not a hard wall-clock SLA.
+Large registries need enough batches within the desired freshness interval.
+The existing panel considers observations stale after 24 hours.
+
+A database advisory lock prevents concurrent automatic batches across task
+definitions on the same installation, even when native task locks differ.
+Manual inspections remain possible. Requires MySQL/MariaDB, as does this
+development component's schema. Lock contention, persistence errors and failed
+reads produce a failed native task result. A partial inventory remains a partial
+panel alert; a task can complete successfully while finding partial inventory.
+No email, external notification, update or backup is performed.
+
+The plugin records aggregate counts only in task output; credentials and remote
+inventory are excluded. Check history and alerts use the existing bounded store.
+Disable the task/plugin or revoke the monitoring user's permission to stop batches.
+
+Verified: native ZIP installation/upgrade, task form and native execution event,
+failed-credential history, oldest-first progress, permission denial, competing
+database connection exclusion, safe empty batch. Tests leave no recurring task.
+Not yet verified: an elapsed-time recurring native trigger, live TLS success /
+revocation / partial / recovery through this batch path, hard timeout timing,
+other database/platform combinations. Earlier transport tests are separate evidence.
+
+Reproduce: php tests/monitor.php /path/to/disposable/joomla --allow-disposable-writes
+Use an empty disposable registry; fixture rows and plugin enabled state are restored.

@@ -21,7 +21,7 @@ with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compressleve
 print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
 component = root / 'extensions/com_nicodewebmonitor'
-output = root / 'dist/com_nicodewebmonitor-0.4.2-dev.zip'
+output = root / 'dist/com_nicodewebmonitor-0.5.0-dev.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(component).as_posix(): p.read_bytes() for p in component.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
@@ -42,6 +42,19 @@ for file in (source / 'src/Inventory').glob('*.php'):
         b'Nicode\\Plugin\\Console\\NicodeWebMonitor', b'Nicode\\Plugin\\System\\NicodeWebMonitor')
 files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    for name, content in sorted(files.items()):
+        info = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o100644 << 16
+        archive.writestr(info, content)
+print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
+
+# Native Joomla scheduler plugin; no tasks are created during installation.
+source = root / 'extensions/plg_task_nicodewebmonitor'
+output = root / 'dist/plg_task_nicodewebmonitor-0.1.0-dev.zip'
+with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    files = {p.relative_to(source).as_posix(): p.read_bytes() for p in source.rglob('*') if p.is_file()}
+    files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
     for name, content in sorted(files.items()):
         info = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
         info.compress_type = zipfile.ZIP_DEFLATED

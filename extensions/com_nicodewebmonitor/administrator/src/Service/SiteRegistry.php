@@ -25,6 +25,36 @@ final class SiteRegistry
         }
         return $sites;
     }
+    /** Bounded, oldest-first monitoring. All task definitions share one database lock. */
+    public function monitor(int $limit = 5, int $budgetSeconds = 20): array
+    {
+        $this->permit('nwm.monitor');
+        if ($this->user->guest || $this->user->block || $limit < 1 || $limit > 10 || $budgetSeconds < 1 || $budgetSeconds > 30) {
+            throw new \InvalidArgumentException('Invalid monitoring configuration');
+        }
+        $lock = $this->db->quote('nwm:' . substr(hash('sha256', $this->db->getPrefix() . JPATH_ROOT), 0, 48));
+        if ((int) $this->db->setQuery('SELECT GET_LOCK(' . $lock . ', 0)')->loadResult() !== 1) {
+            return ['status'=>'busy', 'checked'=>0, 'failed'=>0, 'partial'=>0];
+        }
+        $summary = ['status'=>'complete', 'checked'=>0, 'failed'=>0, 'partial'=>0];
+        $deadline = hrtime(true) + $budgetSeconds * 1000000000;
+        try {
+            $ids = $this->db->setQuery('SELECT s.id FROM #__nwm_sites s LEFT JOIN #__nwm_checks c ON c.site=s.id GROUP BY s.id ORDER BY COALESCE(MAX(c.checked_at),0), COALESCE(MAX(c.id),0), s.id', 0, $limit)->loadColumn();
+            foreach ($ids as $id) {
+                $remainingMs = (int) (($deadline - hrtime(true)) / 1000000);
+                if ($remainingMs < 100) { $summary['status'] = 'budget_exhausted'; break; }
+                $result = $this->inspect((int)$id, new InventoryClient(timeoutMs: min(3000, $remainingMs)));
+                $summary['checked']++;
+                if (!($result['ok'] ?? false) || !($result['history_saved'] ?? false)) { $summary['failed']++; }
+                elseif (($result['inventory']['status'] ?? '') !== 'complete') { $summary['partial']++; }
+                // Persistence failure must not keep selecting the same site silently forever.
+                if (!($result['history_saved'] ?? false)) { $summary['status']='history_failed'; break; }
+            }
+            return $summary;
+        } finally {
+            $this->db->setQuery('SELECT RELEASE_LOCK(' . $lock . ')')->loadResult();
+        }
+    }
     public function add(string $label, string $url, string $address, string $siteId, #[\SensitiveParameter] string $token): void
     {
         $this->permit('core.create');

@@ -1,0 +1,24 @@
+12 October 2026: bounded native Joomla monitoring, development.
+Component 0.5.0-dev; task plugin 0.1.0-dev.
+Environment: existing isolated Windows Joomla 6.1.4/PHP 8.4.26/MariaDB lab.
+
+94 assertions passed: monitor 21, registry 26, history 24, inventory view 7,
+alerts 16. Five changed/new PHP files pass syntax checks.
+Both ZIPs installed/upgraded through the native installer. Rebuilding in the
+same checkout preserves SHA256; installed files match ZIP and source bytes.
+
+New behavior exercised through the real Joomla task plugin execution event:
+bounded batch, failed-check history, oldest-first progress, active panel alerts,
+invalid/blocked user rejection, read-vs-monitor ACL separation, unauthorized
+task-owner rejection, empty result success. Two actual database connections
+prove lock contention causes no inspection and later execution can resume.
+Task parameter form loaded through the native trait. No recurring task created.
+Fixture rows removed and plugin enabled state restored by the test.
+
+The batch's failed-credential fixtures intentionally make no network requests.
+This is not evidence of an elapsed native recurrence or live TLS success in
+the new batch path. Those are next integration checks. No TLS fixture used or
+renewed today; preflight its expiry before the next TLS run.
+Existing transport integrations are previous evidence, not rerun claims.
+Database time is outside the network budget; other platforms remain untested.
+No real hosting, user inventories, tokens, databases or secrets published.

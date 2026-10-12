@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form><fields name="params"><fieldset name="task_params" label="Inventory checks">
+<field name="user_id" type="user" label="Monitoring user" description="Requires component access and Run automatic inventory checks. Disabled users are rejected." required="true" />
+<field name="limit" type="number" label="Maximum sites per run" default="5" min="1" max="10" required="true" />
+<field name="budget" type="number" label="Network time budget (seconds)" default="20" min="1" max="30" required="true" />
+</fieldset></fields></form>

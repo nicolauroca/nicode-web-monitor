@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="plugin" group="task" method="upgrade">
+<name>Task - Nicode Web Monitor</name><version>0.1.0-dev</version>
+<author>Nicode</author><license>GPL-2.0-or-later</license>
+<description>Bounded inventory checks for the central Nicode component. Configure an authorized monitoring user.</description>
+<namespace path="src">Nicode\Plugin\Task\NicodeWebMonitor</namespace>
+<scriptfile>script.php</scriptfile>
+<files><folder plugin="nicodewebmonitor">services</folder><folder>src</folder><folder>forms</folder><folder>language</folder></files>
+</extension>

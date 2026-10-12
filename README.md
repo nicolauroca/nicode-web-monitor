@@ -30,7 +30,10 @@ Internal inventory alerts and bounded state transitions are now shown in the
 dashboard (see `docs/check-alerts.txt`). On narrow screens, each site's details,
 alerts and actions stack vertically without hiding columns off screen. Browser
 coverage and reproduction: `docs/verification-2026-10-11-browser.txt`.
-Guided pairing, automatic monitoring, external notifications, updates and backups remain
+An optional native Joomla task plugin now performs bounded automatic inventory
+batches with explicit permissions and oldest-first selection. Setup and current
+verification limits: `docs/automatic-monitoring.txt`.
+Guided pairing, external notifications, updates and backups remain
 pending. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
 No data is pushed to external services. The console command uses the operating-system

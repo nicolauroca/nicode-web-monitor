@@ -1,0 +1,29 @@
+Verification - 13 October 2026 (development)
+
+Joomla 6.1.4 / PHP 8.4.26 / MariaDB 11.8.9, isolated Windows laboratory.
+65 assertions passed: 10 native scheduler, 10 TLS batch, 21 monitor regression,
+24 history regression; three PHP files linted. Component 0.5.1-dev and task plugin
+0.1.0-dev installed using the native installer; ZIP bytes match source and the
+installed registry service matches source. Temporary sites/checks/tasks removed.
+
+The CLI scheduler trigger was run without --id: future task skipped, due task
+executed, next minute calculated, early repeat skipped, second natural recurrence
+executed and failed on an unusable stored credential. Counts, release of lock and
+persisted history were checked. Existing lab tasks were disabled temporarily and
+restored. No OS cron or recurring task was left behind.
+
+Real Joomla batch with simulated HTTPS connectors: complete / revoked / partial
+in one batch, persisted alerts, complete recovery, and delayed response exhausting
+the one-second budget before another site. Observed delayed batch: 1.0239309 seconds.
+Certificate renewed locally before testing and verification remained enabled.
+The test-only client factory keeps the actual timeout derived from batch budget;
+production default still rejects private IPs, including directly stored loopback.
+
+Limits: CLI trigger and TLS batch are separate integration tests. No lazy/webcron
+or deployed cron test, real hosting, cross-platform coverage or production SLA.
+Network budget excludes DB latency. Updates and backups remain unimplemented.
+No product behavior change beyond a constructor-only transport test dependency.
+This session closes previously untested monitoring paths, not a new product module.
+
+Reproduce using docs/automatic-monitoring.txt. Native trigger reference checked:
+https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler

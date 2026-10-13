@@ -5,7 +5,8 @@ use Joomla\Database\DatabaseInterface;
 use Joomla\CMS\User\User;
 final class SiteRegistry
 {
-    public function __construct(private DatabaseInterface $db, private CredentialVault $vault, private User $user) {}
+    /** Client factory is an application/test dependency, never remote or form configuration. */
+    public function __construct(private DatabaseInterface $db, private CredentialVault $vault, private User $user, private ?\Closure $clientFactory = null) {}
     private function permit(string $action): void
     {
         if (!$this->user->authorise('core.manage', 'com_nicodewebmonitor') || !$this->user->authorise($action, 'com_nicodewebmonitor')) {
@@ -43,7 +44,9 @@ final class SiteRegistry
             foreach ($ids as $id) {
                 $remainingMs = (int) (($deadline - hrtime(true)) / 1000000);
                 if ($remainingMs < 100) { $summary['status'] = 'budget_exhausted'; break; }
-                $result = $this->inspect((int)$id, new InventoryClient(timeoutMs: min(3000, $remainingMs)));
+                $timeoutMs = min(3000, $remainingMs);
+                $client = $this->clientFactory ? ($this->clientFactory)($timeoutMs) : new InventoryClient(timeoutMs: $timeoutMs);
+                $result = $this->inspect((int)$id, $client);
                 $summary['checked']++;
                 if (!($result['ok'] ?? false) || !($result['history_saved'] ?? false)) { $summary['failed']++; }
                 elseif (($result['inventory']['status'] ?? '') !== 'complete') { $summary['partial']++; }

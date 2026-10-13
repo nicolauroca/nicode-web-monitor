@@ -1,6 +1,6 @@
-Automatic inventory monitoring (development, 12 October 2026)
+Automatic inventory monitoring (development, 13 October 2026)
 
-Install central component 0.5.0-dev and task plugin 0.1.0-dev, then enable
+Install central component 0.5.1-dev and task plugin 0.1.0-dev, then enable
 Task - Nicode Web Monitor in a disposable Joomla 6 installation first.
 Create one Nicode: check enrolled sites task in System > Scheduled Tasks.
 The task creator must remain an enabled component administrator (core.admin).
@@ -37,9 +37,23 @@ Disable the task/plugin or revoke the monitoring user's permission to stop batch
 Verified: native ZIP installation/upgrade, task form and native execution event,
 failed-credential history, oldest-first progress, permission denial, competing
 database connection exclusion, safe empty batch. Tests leave no recurring task.
-Not yet verified: an elapsed-time recurring native trigger, live TLS success /
-revocation / partial / recovery through this batch path, hard timeout timing,
-other database/platform combinations. Earlier transport tests are separate evidence.
+Verified additionally on 13 October: native CLI due-queue selection, a second
+natural one-minute recurrence, persisted execution/failure counters, and no early
+repeat. Live loopback TLS batch tests cover mixed success/revocation/partial,
+recovery and a one-second network budget against a delayed connector fixture.
+The batch fixture uses a constructor-only client factory for private loopback
+and a local CA. Default enrollment and runtime private-IP rejection stay intact.
+Not yet verified: lazy/webcron triggers, deployed OS cron, real remote hosting,
+other database/platform combinations. TLS connectors in this batch test are
+simulated; earlier real two-Joomla connector tests are separate evidence.
 
 Reproduce: php tests/monitor.php /path/to/disposable/joomla --allow-disposable-writes
 Use an empty disposable registry; fixture rows and plugin enabled state are restored.
+
+Additional disposable tests:
+php tests/scheduler.php JOOMLA_ROOT --allow-disposable-writes
+python tests/monitor_tls.py --php PHP --site JOOMLA_ROOT --certificate CERT --private-key KEY
+The scheduler test takes about 70 seconds. It temporarily disables existing tasks,
+restores their states and the plugin state, and removes its own task/site records.
+Do not run it against a live installation or concurrently with another trigger.
+The TLS test checks certificate dates before writes and removes all fixture sites.

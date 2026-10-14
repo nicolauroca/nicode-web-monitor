@@ -1,0 +1,30 @@
+Local database recovery primitive — 14 October 2026
+
+Environment: isolated Windows lab, Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9.
+The web listener was stopped before capture; no application scheduler was running.
+Snapshots stayed outside Git/web roots in a directory with inheritance removed and
+an explicit current-user Windows ACL. No production hosting or customer data used.
+
+tests/database_snapshot.php: 25 assertions passed.
+Captured/restored 79 tables and 994 rows (78 Joomla tables plus one edge-case fixture).
+Compared every CREATE TABLE schema and every row multiset after restoration, including
+binary bytes, null vs empty strings, Unicode, uint64 maximum and precise decimals.
+The 541,726-byte artifact is private and is not part of this repository.
+
+Negative cases: missing quiescence/target acknowledgements, traversal in operation
+ID, unsupported views/MyISAM/triggers, size limit, corrupt snapshot, occupied target,
+duplicate completed and uncertain operations, injected SQL failure after one table.
+An interrupted restore leaves its partial target and uncertain record for inspection;
+session foreign-key settings are restored even on failure. Test finally removes the
+disposable target database and source fixture. Snapshot evidence is retained locally.
+
+Issues found and resolved during development:
+- Standard Joomla includes two MEMORY tables, so an InnoDB-only preflight rejected
+  the real installation. Added MEMORY under the explicit stopped-writer condition.
+- A statement closed before failed DDL was closed twice in finally, skipping session
+  setting restoration. Clearing the closed handle fixes the path; failure test passes.
+
+No application boot from the restored database was tested. Site files, config,
+cross-database references, generated columns, arbitrary SQL objects, large datasets,
+remote permissions, remote execution and updates remain outside this verified unit.
+No complete backup/restore, compatibility matrix or production readiness claim.

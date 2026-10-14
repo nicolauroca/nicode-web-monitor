@@ -1,0 +1,77 @@
+Local database snapshots — development provider, 14 October 2026
+
+Purpose
+tools/DatabaseSnapshot.php is the first recovery building block. It captures a
+database and restores its schemas/data into a separately provisioned empty database.
+It is NOT a full Joomla backup, an installed extension or a remote endpoint.
+Files, configuration, application boot after restoration, retention, encryption,
+download and remote maintenance authorization are not implemented here.
+The inventory connector remains read-only and has no access to this provider.
+
+Preconditions and scope
+Use only in a disposable lab for now. Pass authenticated mysqli connections to
+capture/restore; use utf8mb4 connections. No credentials go in command arguments
+or results. The source connection needs complete visibility of tables, triggers,
+events and routines: a restricted account that silently hides metadata cannot
+establish these preconditions. The target needs DDL/INSERT privileges only for its
+isolated database. Public integration tests need a disposable database administrator
+to provision and remove that target; do not run them on a production installation.
+
+Before capture stop ALL writers, including web workers, CLI tasks, queues, cron,
+database jobs and DDL. Joomla's offline setting does not establish this condition.
+The quiesced boolean records the caller's acknowledgement; it does not enforce it.
+The InnoDB read-only consistent transaction covers rows, not concurrent DDL or
+Joomla's MEMORY tables. MEMORY contents are included only under stopped writers.
+Other engines, views, triggers, events, routines, generated columns and references
+to another database are rejected. This bounded provider is not a generic SQL backup.
+
+Supply an existing private storage directory OUTSIDE every document root and Git
+checkout. Snapshots contain sensitive database contents, including account hashes
+and application secrets. They are not encrypted. Restrict the directory to the
+operator with OS ACLs (0700 on POSIX; explicit ACLs on Windows). The provider does
+not infer web roots, validate inherited ACLs or manage encryption keys.
+
+API
+require 'tools/DatabaseSnapshot.php';
+$provider = new Nicode\Maintenance\DatabaseSnapshot($privateDirectory);
+$capture = $provider->capture($sourceConnection, 'unique-capture-id', true);
+$restore = $provider->restore($emptyTargetConnection, 'unique-capture-id',
+    'unique-restore-id', true);
+
+Operation IDs must be 8–64 lowercase ASCII letters/digits/hyphens. A directory is
+reserved exclusively before effects; reuse is rejected. started.json means the
+result is uncertain unless completed.json exists. A crash or exception leaves the
+operation for inspection; do not automatically retry under a new ID. Restore uses
+DDL with implicit commits, so a failure can leave tables in the target. It never
+cleans, drops or overwrites that target. Operator recovery is required.
+
+database.jsonl streams schemas and base64-encoded field values. Null stays distinct
+from an empty value. The default 128 MiB output limit stops oversized captures;
+this is not a memory, duration or disk-space guarantee. A single large row still
+has to fit PHP memory and the server's packet limit. This version has no streaming
+BLOB restoration or resumable operations. The caller owns connection lifetime and
+must provide dedicated connections without an existing transaction.
+
+Restore checks completion metadata, byte size and SHA-256 before writing. Hashes
+detect accidental corruption; they are not authentication. Only restore snapshots
+created and kept in trusted local storage: schemas are executable SQL. Restore
+preserves sql_mode, temporarily disables foreign-key checks and restores session
+settings afterwards. Re-enabling foreign keys does not revalidate existing rows.
+The provider records captured/restored, never application_verified or a claim that
+the site is recoverable. Independent schema/content and application checks follow.
+
+Reproduce the integration test
+Stop all writers in an installed disposable Joomla, create a private output
+directory, then run:
+php tests/database_snapshot.php /path/to/joomla /private/output --allow-disposable-writes
+Provide a JSON object through stdin from your secret store, with host, port, user,
+password for the disposable DB administrator. Do not save it in Git or shell history.
+The test creates a randomly named nwm_restore_* database and a temporary source
+fixture table. finally removes both; an abrupt process kill requires lab cleanup.
+Use an empty output directory for each test run, because operation IDs cannot repeat.
+
+Limits
+This is a recovery primitive, not permission to update a site. Maintenance still
+needs separate enrollment/capability, explicit operation confirmation, durable
+remote identity/idempotency and result reconciliation. Windows/PHP 8.4/MariaDB 11.8
+is the sole tested combination; other engines and platforms remain unverified.

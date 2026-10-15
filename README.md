@@ -36,10 +36,12 @@ verification limits: `docs/automatic-monitoring.txt`.
 Guided pairing, external notifications, updates and backups remain
 pending. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
-A local development recovery primitive now captures/restores database schemas and
-rows into a separate empty database, with corruption checks and explicit uncertain
-operations. It is not a complete site backup or remote feature. Preconditions,
-private storage requirements and reproduction: `docs/local-database-snapshot.txt`.
+A local development recovery primitive captures/restores files, configuration and
+database schemas/rows into a separate directory and empty database, with corruption
+checks and explicit uncertain operations. Restored Joomla CLI/frontend/login boot
+has been tested in the disposable lab. This is not yet a remote backup feature or
+integrated backup workflow. Preconditions and reproduction:
+`docs/local-site-recovery.txt` and `docs/local-database-snapshot.txt`.
 No data is pushed to external services. The console command uses the operating-system
 account's existing access; the HTTP connector has its own read-only credential.
 

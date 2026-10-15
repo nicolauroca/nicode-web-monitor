@@ -1,0 +1,66 @@
+Local site recovery development primitive — 15 October 2026
+
+FileSnapshot.php complements DatabaseSnapshot.php with a bounded directory copy,
+including configuration.php and empty directories. It is a local PHP API, not an
+installed backup button or remote maintenance endpoint. No extra runtime dependency.
+
+Before capture, stop every writer for BOTH files and database and keep them stopped
+until both captures finish. Joomla offline mode is insufficient. Capture files and
+database under that same maintenance window; their separate operation records do
+not establish an atomic combined backup automatically.
+
+Use existing operator-only storage outside all document roots and repositories.
+Explicit Windows ACLs are needed; chmod alone does not restrict inherited ACLs.
+Copies contain secrets and account data, are not encrypted, and must not be uploaded
+as test evidence. The caller must validate access and space. All source, storage and
+target paths and ancestors must be trusted and protected from concurrent changes.
+Hashes detect corruption, not malicious replacement of both payload and metadata.
+
+API (after requiring tools/FileSnapshot.php):
+$files = new Nicode\Maintenance\FileSnapshot($privateDirectory);
+$capture = $files->capture($stoppedSiteRoot, 'unique-files-capture', true);
+$restore = $files->restore('unique-files-capture', 'unique-files-restore',
+    $nonexistentIsolatedDirectory, true);
+
+The default limits are 1 GiB and 100,000 entries including directories. Override
+constructor limits deliberately for larger sites. Capture scans and hashes the
+source, copies it, then compares both source and result. Restore validates the entire
+payload and manifest before creating the target, then verifies restored bytes.
+Links, detected resolved-path escapes, special files, case collisions and Windows
+reserved/ambiguous names are rejected. No exclusions: unsupported content fails
+the operation instead of silently omitting files. This is not a hostile-filesystem
+sandbox; callers must exclude concurrent path substitution and symlink races.
+
+Operation IDs are exclusive. started.json without a valid completed.json means
+uncertain: inspect retained files before recovery; never retry automatically under
+another ID. Failures leave partial private output for diagnosis. Existing targets
+are never overwritten. Permissions, ACLs, timestamps, ownership, extended attributes,
+hard-link relationships and NTFS alternate streams are not preserved. Configure
+the restored server's permissions separately. This provider copies ordinary file
+contents, not a full operating-system image or a production deployment configuration.
+
+Reproduce small failure/round-trip tests:
+php tests/file_snapshot.php /existing/private/disposable-test-directory
+
+Reproduce Joomla integration on a disposable loopback MariaDB lab only:
+1. Stop source web/CLI/scheduled writers. Create private storage and choose a new
+   clone path and a unique database name nwm_recovery_ plus ten lowercase hex digits.
+2. Run php tests/site_recovery.php SOURCE STORAGE CLONE DATABASE --allow-disposable-writes
+   Supply host, port, user and password JSON on stdin from a secret store for the
+   disposable database administrator. Never put secrets in command arguments.
+3. The harness captures files/database, restores to the new database/directory,
+   grants the source database user access to that clone database, and relocates
+   clone configuration. It disables mail, cloned connector identity and scheduled
+   tasks before boot. Source files/configuration are not rewritten.
+4. Run php CLONE/cli/joomla.php nicode:inventory and check its successful result.
+   Serve CLONE on an unused LOOPBACK port with PHP's development server. Check
+   frontend and administrator login HTTP responses/content. Stop that server.
+5. Run the same step-2 command with --cleanup appended, supplying the same stdin
+   authentication. It drops only the named disposable database and revokes its
+   grant. On failure inspect partial effects before cleanup; there is no automatic
+   retry. Retain/remove the private clone and snapshots under operator control.
+
+Executed on Windows, Joomla 6.1.4 / PHP 8.4 / MariaDB 11.8. Application boot proves
+this lab recovery path; it does not test authenticated administration, every plugin,
+external integrations or production recovery. Remote authorization, updates, backup
+orchestration/retention and broader platform validation remain pending.

@@ -1,0 +1,30 @@
+Local file/database recovery — executed 15 October 2026
+
+Windows, Joomla 6.1.4, PHP 8.4, MariaDB 11.8; isolated loopback lab.
+No real hosting, external accounts, new dependencies or costs.
+
+19 small functional assertions passed in tests/file_snapshot.php: binary data,
+configuration and empty directory recovery; stopped-writer consent; exclusive
+operation IDs; no overwrite; byte/entry limits; recursive storage rejection;
+payload/manifest corruption; extra payload; forged path with matching manifest
+hash rejected before target writes; no unearned application verification claim.
+A separate native Windows directory junction fixture was rejected before copying.
+All three added PHP files passed syntax checks.
+
+Real recovery captured 9,812 files and 3,503 directories, 87,989,159 file bytes,
+including Joomla configuration. Source and captured tree matched; restored tree
+matched before lab configuration relocation. Database capture/restore completed
+for 78 tables and 992 rows. The previous database regression used an additional
+synthetic table/two rows; those fixtures are not present in this source snapshot.
+
+After explicit clone-only DB/path changes and disabling mail, scheduled tasks and
+the cloned connector identity, Joomla CLI nicode:inventory exited successfully.
+Frontend and administrator login returned HTTP 200 with expected content and no
+fatal error. Source configuration SHA-256 remained unchanged. Clone DB and grant
+were removed, and loopback web/database processes stopped. Sensitive snapshots and
+clone remain in operator-only private storage outside Git and source document root.
+
+These checks do not establish authenticated administration, all integrations,
+production recovery, encrypted backups, remote orchestration, ACL preservation or
+cross-platform compatibility. See local-site-recovery.txt for preconditions and
+reproduction. Remote maintenance authorization, reconciliation and updates are next.

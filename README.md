@@ -42,6 +42,11 @@ checks and explicit uncertain operations. Restored Joomla CLI/frontend/login boo
 has been tested in the disposable lab. This is not yet a remote backup feature or
 integrated backup workflow. Preconditions and reproduction:
 `docs/local-site-recovery.txt` and `docs/local-database-snapshot.txt`.
+A separate experimental backup operation core now reserves operation IDs before
+capture, authenticates with a backup-only credential and retains receipts or
+uncertain outcomes across process restarts without automatically rerunning capture.
+It is not yet wired into a Joomla route or panel. Contract and executed checks:
+`docs/backup-operations.txt` and `docs/verification-2026-10-16.txt`.
 No data is pushed to external services. The console command uses the operating-system
 account's existing access; the HTTP connector has its own read-only credential.
 

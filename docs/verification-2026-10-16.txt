@@ -1,0 +1,20 @@
+Backup operation core — executed 16 October 2026
+
+Windows and existing portable PHP 8.4 runtime; no installation or hosting access.
+tools/BackupOperations.php and tests/backup_operations.php passed PHP syntax checks.
+26 functional assertions passed, including a real synthetic FileSnapshot capture,
+duplicate receipt replay, fresh-instance status, overlapping invocation, credential
+revocation, independent backup authentication, site mismatch and cloned identity,
+path/extra-field rejection, explicit confirmation and method checks.
+
+A separate PHP process wrote an effect and exited with code 17 before returning
+completion. Subsequent capture/status calls preserved uncertainty without invoking
+the provider again. Exceptions, invalid receipts, corrupt completion JSON and an
+empty reservation directory also prevented repeat execution. No error diagnostic,
+provider path or restoration claim is returned as successful capture evidence.
+
+This is a locally tested contract core, not deployed remote maintenance. No actual
+HTTP requests, native Joomla ACL changes, power-loss tests, multi-process race
+stress tests or full-site remote backup were performed. Overlap is exercised by
+re-entering the handler while the first provider is active. See backup-operations.txt
+for boundaries and reproduction. Existing monitoring and recovery files unchanged.

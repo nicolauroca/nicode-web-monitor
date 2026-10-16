@@ -1,0 +1,49 @@
+Backup operation contract (development core, 16 October 2026)
+
+tools/BackupOperations.php is a callable transport core, NOT an installed HTTP
+endpoint. No existing connector route or credential gains maintenance permission.
+The operator supplies a separate backup-only credential digest, a site UUID and
+an existing private operation directory outside web roots. Empty digest disables
+access. Never use the inventory credential as the backup credential. Joomla UI,
+credential provisioning and central maintenance ACL integration remain pending.
+
+The handle method accepts trusted HTTPS server metadata and an already parsed
+request. Future adapters must bound body size, parse JSON strictly, protect
+credentials, set response cache controls and perform actual TLS verification.
+No HTTP deployment, proxy configuration or actual wire-level TLS is tested here.
+
+POST capture requires site_id, operation, action=capture and confirmed=true.
+GET status requires the same identity/operation and action=status. Authentication
+applies to both. Other fields are rejected: no caller-selected paths or commands.
+The provider closure is locally bound to a single capture implementation; changing
+it does not authorize replay of retained IDs. An operation ID identifies one
+capture for the lifetime of its journal. Do not delete reservations to retry.
+
+Before invoking the provider, the core atomically reserves a directory and writes,
+flushes and fsyncs a started record. Completion records contain only site/operation,
+status, manifest digest and restoration_verified=false. Capture is not proof of
+restoration or of current artifact availability. Status reads the retained receipt,
+not the backup bytes: fresh integrity checks are needed before recovery.
+
+A duplicate sees its persisted receipt or HTTP-style 202 uncertain, never a second
+invocation. A provider exception, malformed receipt, incomplete record, process
+death or overlapping call stays uncertain. A missing operation is 404. Site
+identity conflict is 409. Provider error details are never returned or retained.
+Captured receipts reconcile a lost response; unresolved uncertainty still requires
+operator investigation. No automatic repair, deletion, expiry or retry is supplied.
+
+Storage is trusted local operator-only storage; callers must enforce OS permissions
+(including Windows ACLs), capacity and backup retention. Network filesystems and
+hostile local writers are outside the tested contract. fsync does not establish
+directory-entry durability on every filesystem or protection against power loss.
+Only process exit/restart has been tested. Incomplete reservations fail closed.
+
+The provider must enforce writer quiescence, private storage and capture limits.
+The executed fixture invokes FileSnapshot against synthetic files. Database and
+file capture as one operation, maintenance-mode coordination, remote HTTP wiring,
+central UI/history and native extension/core updates remain pending. Do not expose
+this core as a production route or claim a recoverable full-site remote backup.
+
+Reproduce with an existing fresh private directory outside Git/web roots:
+  php tests/backup_operations.php /absolute/private/fresh-directory
+Requires PHP with fsync and proc_open. No database or Joomla processes are needed.

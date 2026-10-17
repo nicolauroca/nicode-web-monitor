@@ -1,0 +1,19 @@
+Combined site capture: executed 17 October 2026
+
+Windows / existing PHP 8.4 and MariaDB 11.8 disposable Joomla 6.1.4 lab.
+20 functional assertions passed, plus all 26 backup operation regression checks
+and two PHP syntax checks. Database capture read 78 actual Joomla tables / 992
+rows; file capture used synthetic binary data and an empty directory.
+
+Verified combined manifest binds the file manifest and actual database dump;
+successful duplicate reuses the retained receipt without invoking capture;
+missing quiescence, invalid identity and recursive storage fail before reservation.
+A forced database size failure after successful file capture leaves both partial
+artifacts but no combined completion. Status stays uncertain and duplicate calls
+do not repeat capture. No source database rows were written. Lab web stayed stopped;
+the database was stopped after testing. Test payloads remain in private local storage.
+
+No HTTP/TLS integration, central backup ACL/UI, automatic writer stopping, combined
+restore or native updates tested in this session. Previous full Joomla file/database
+restore evidence is separate (15 October), not a restore test of this new provider.
+No hosting access, new dependencies, expenses or new schedules.

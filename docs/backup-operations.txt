@@ -39,8 +39,10 @@ directory-entry durability on every filesystem or protection against power loss.
 Only process exit/restart has been tested. Incomplete reservations fail closed.
 
 The provider must enforce writer quiescence, private storage and capture limits.
+The local SiteSnapshot provider now combines files and database under one receipt;
+see combined-site-snapshot.txt for its caller-enforced maintenance preconditions.
 The executed fixture invokes FileSnapshot against synthetic files. Database and
-file capture as one operation, maintenance-mode coordination, remote HTTP wiring,
+file capture over HTTP, maintenance-mode coordination, remote HTTP wiring,
 central UI/history and native extension/core updates remain pending. Do not expose
 this core as a production route or claim a recoverable full-site remote backup.
 

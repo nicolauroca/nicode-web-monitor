@@ -1,0 +1,44 @@
+Combined site capture (development provider, 17 October 2026)
+
+SiteSnapshot combines FileSnapshot and DatabaseSnapshot under one operation ID.
+Require those three PHP files, construct SiteSnapshot with an existing private
+directory, then call capture($mysqli, $sourceRoot, $operationId, true). The last
+argument acknowledges that ALL file and database writers have been stopped and
+will remain stopped until the call returns. Joomla offline mode alone does not
+stop CLI jobs, scheduled tasks or external writers. This provider does not acquire
+maintenance mode or detect all concurrent changes; it is not an online snapshot.
+
+The storage must be outside the source, all web roots and repositories, with OS
+permissions restricted to the operator. Constructor limits are file bytes (1 GiB),
+file/directory entries (100,000) and database bytes (128 MiB). They are separate
+limits, not a disk-space reservation. The caller checks free capacity and access.
+Source and storage paths/ancestors must remain trusted and stable during capture.
+All restrictions of the underlying providers still apply, including unsupported
+database objects/engines and filesystem metadata that is not preserved.
+
+The operation directory is reserved before either capture. Inside it, files/ID
+contains the file snapshot and database/ID contains the database snapshot. A final
+manifest binds both child digests and counts. The returned manifest_sha256 binds
+that combined manifest and can be consumed by BackupOperations. Neither manifest
+nor receipt exposes absolute paths, database names, credentials or row contents.
+Payloads themselves contain sensitive data and must stay private.
+
+If either capture fails, partial output and the uncertain reservation remain.
+There is no rollback or automatic retry; a completed file half is not a completed
+site backup. Inspect partial effects before any operator recovery. Never remove
+reservations merely to reuse an operation ID. BackupOperations returns 202 for
+uncertainty and deduplicates both successful and uncertain calls. Provider errors
+alone are exceptions; use the operation core for persisted status reconciliation.
+
+Capture does not establish restoration or continued artifact availability. Before
+recovery, verify the combined manifest against its retained receipt and each child
+digest; the individual restore methods also validate their payloads. Automated
+combined restore/verification, Joomla HTTP route, central ACL/UI, maintenance-window
+coordination, retention and remote updates remain pending. No new endpoint is
+enabled by adding this local provider. fsync of site records does not certify
+power-loss durability of child payloads or directory entries on every filesystem.
+
+Reproduction in a stopped-writer disposable Joomla lab with its DB running:
+php tests/site_snapshot.php JOOMLA_ROOT FRESH_PRIVATE_DIRECTORY --allow-disposable-writes
+The test reads the actual Joomla database and uses synthetic source files; it does
+not modify database rows. All generated data must remain outside Git/web roots.

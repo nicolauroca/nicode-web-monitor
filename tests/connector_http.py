@@ -152,7 +152,7 @@ try:
     check(request(suffix='&token='+token)[0]==401,'query_token_ignored')
     check(request(token,method='POST')[0]==405,'post_rejected')
     check(request(token,task='update')[0]==404,'update_unavailable')
-    check(request(token,task='backup')[0]==404,'backup_unavailable')
+    check(request(token,task='backup')[0]==503,'backup_disabled_by_default')
     check(request(token,path='/administrator/index.php')[2] is None,'administrator_not_connector')
     check(request(token,tls=False)[0]==403,'plain_http_rejected')
     check(request(token,tls=False,extra={'X-Forwarded-Proto':'https'})[0]==403,'spoofed_proxy_rejected')

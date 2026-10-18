@@ -4,8 +4,8 @@
   <author>Nicolau Roca</author>
   <creationDate>2026-10</creationDate>
   <license>GNU General Public License version 2 or later</license>
-  <version>0.2.0-dev</version>
-  <description>Read-only HTTPS inventory connector. Configure a unique site UUID and SHA-256 digest of a random 32-byte bearer credential. Empty digest revokes access. Development only.</description>
+  <version>0.3.0-dev</version>
+  <description>HTTPS inventory and experimental opt-in backup connector. Backups require separate credentials, private storage and a locally armed maintenance window. Development only.</description>
   <namespace path="src">Nicode\Plugin\System\NicodeWebMonitor</namespace>
   <scriptfile>script.php</scriptfile>
   <files>
@@ -17,5 +17,7 @@
   <config><fields name="params"><fieldset name="basic">
     <field name="site_id" type="text" label="Site UUID" description="Unique UUID v4 for this installation. Keep it when rotating credentials; change it on clones." filter="string" />
     <field name="token_hash" type="text" label="Credential SHA-256 digest" description="64 lowercase hex characters. Never paste the bearer credential here. Empty revokes access immediately." filter="string" />
+    <field name="backup_token_hash" type="text" label="Backup credential SHA-256 digest" description="Separate from inventory. Empty disables backups. Never paste the credential itself." filter="string" />
+    <field name="backup_storage" type="text" label="Private backup directory" description="Absolute directory outside every web root, restricted to the service account. Pre-create operations and snapshots subdirectories. See backup-http.txt before enabling." filter="string" />
   </fieldset></fields></config>
 </extension>

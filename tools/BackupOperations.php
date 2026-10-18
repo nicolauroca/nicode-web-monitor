@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Nicode\Maintenance;
 
-/** Experimental transport core. Not registered as a Joomla HTTP route. */
+/** Operation journal core; the optional Joomla HTTP adapter supplies its provider. */
 final class BackupOperations
 {
     public function __construct(private readonly string $storage, private readonly string $siteId,

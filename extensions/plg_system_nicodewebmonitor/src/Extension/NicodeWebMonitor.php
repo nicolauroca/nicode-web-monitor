@@ -9,6 +9,8 @@ use Joomla\Database\DatabaseInterface;
 use Joomla\Event\SubscriberInterface;
 use Nicode\Plugin\System\NicodeWebMonitor\Inventory\Collector;
 use Nicode\Plugin\System\NicodeWebMonitor\Transport\Endpoint;
+use Nicode\Plugin\System\NicodeWebMonitor\Transport\BackupEndpoint;
+use Nicode\Plugin\System\NicodeWebMonitor\Maintenance\SiteSnapshot;
 
 defined('_JEXEC') or die;
 
@@ -30,12 +32,42 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
         if (!$app->isClient('site') || $app->getInput()->get->getString('option') !== 'com_nicodewebmonitor') {
             return;
         }
-        $endpoint = new Endpoint((string) $this->params->get('site_id', ''), (string) $this->params->get('token_hash', ''));
-        [$status, $body] = $endpoint->handle(
-            $_SERVER,
-            $app->getInput()->get->getString('task', ''),
-            fn () => (new Collector($this->database, (new Version())->getShortVersion()))->collect()
-        );
+        $task = $app->getInput()->get->getString('task', '');
+        if ($task === 'backup') {
+            $storage = (string) $this->params->get('backup_storage', '');
+            $endpoint = new BackupEndpoint((string) $this->params->get('site_id', ''),
+                (string) $this->params->get('backup_token_hash', ''),
+                (string) $this->params->get('token_hash', ''), $storage, JPATH_ROOT);
+            // Bound the read even when Content-Length is missing or false.
+            $body = file_get_contents('php://input', false, null, 0, 4097);
+            [$status, $body] = $endpoint->handle($_SERVER, $_GET, $body === false ? '' : $body,
+                function (string $id) use ($app, $storage): array {
+                    // Offline alone does not stop cron/admin/external writers. A local operator
+                    // must stop them and arm this single operation for a short maintenance window.
+                    $arm = $storage . '/armed.json';
+                    if (!$app->get('offline') || !is_file($arm) || is_link($arm) || filesize($arm) > 1024) {
+                        throw new \RuntimeException('Maintenance preconditions required');
+                    }
+                    $permit = json_decode(file_get_contents($arm), true, 8, JSON_THROW_ON_ERROR);
+                    if (($permit['operation'] ?? null) !== $id || ($permit['writers_stopped'] ?? null) !== true
+                        || !is_int($permit['expires_at'] ?? null) || $permit['expires_at'] < time()
+                        || $permit['expires_at'] > time() + 900) {
+                        throw new \RuntimeException('Operation not armed');
+                    }
+                    BackupEndpoint::privateDirectory($storage . '/snapshots', JPATH_ROOT);
+                    $this->database->connect();
+                    $connection = $this->database->getConnection();
+                    if (!$connection instanceof \mysqli) { throw new \RuntimeException('Unsupported database driver'); }
+                    return (new SiteSnapshot($storage . '/snapshots'))->capture($connection, JPATH_ROOT, $id, true);
+                });
+        } else {
+            $endpoint = new Endpoint((string) $this->params->get('site_id', ''), (string) $this->params->get('token_hash', ''));
+            [$status, $body] = $endpoint->handle(
+                $_SERVER,
+                $app->getInput()->get->getString('task', ''),
+                fn () => (new Collector($this->database, (new Version())->getShortVersion()))->collect()
+            );
+        }
         // Send directly and close before Joomla page rendering or page caching.
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
@@ -43,7 +75,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
         header('Pragma: no-cache');
         header('X-Content-Type-Options: nosniff');
         if ($status === 401) { header('WWW-Authenticate: Bearer realm="Nicode Web Monitor"'); }
-        if ($status === 405) { header('Allow: GET'); }
+        if ($status === 405) { header('Allow: ' . ($task === 'backup' ? 'GET, POST' : 'GET')); }
         echo json_encode($body, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         $app->close();
     }

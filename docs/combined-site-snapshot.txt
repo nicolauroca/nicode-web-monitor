@@ -33,9 +33,10 @@ alone are exceptions; use the operation core for persisted status reconciliation
 Capture does not establish restoration or continued artifact availability. Before
 recovery, verify the combined manifest against its retained receipt and each child
 digest; the individual restore methods also validate their payloads. Automated
-combined restore/verification, Joomla HTTP route, central ACL/UI, maintenance-window
-coordination, retention and remote updates remain pending. No new endpoint is
-enabled by adding this local provider. fsync of site records does not certify
+combined restore/verification, central ACL/UI, automatic maintenance-window
+coordination, retention and remote updates remain pending. The experimental Joomla
+HTTP adapter is documented in backup-http.txt and disabled by default.
+fsync of site records does not certify
 power-loss durability of child payloads or directory entries on every filesystem.
 
 Reproduction in a stopped-writer disposable Joomla lab with its DB running:

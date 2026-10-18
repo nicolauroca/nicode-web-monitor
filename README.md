@@ -84,9 +84,9 @@ The ZIP has deterministic file order, timestamps and permissions. Generated pack
 local installations, database dumps, credentials and collected inventories stay out
 of Git. License: GPL-2.0-or-later; see LICENSE.
 
-## Read-only connector (development)
+## HTTPS connector (development)
 
-The build also produces `dist/plg_system_nicodewebmonitor-0.2.0-dev.zip`.
+The build also produces `dist/plg_system_nicodewebmonitor-0.3.0-dev.zip`.
 Install it in a disposable Joomla 6 site. In **System - Nicode Web Monitor**,
 configure a unique lowercase UUID v4 and the SHA-256 digest of a cryptographically
 random 32-byte credential encoded as 64 hex characters. Hash the encoded text,
@@ -105,6 +105,8 @@ reverse proxy requires a correctly restricted server configuration; no automatic
 proxy trust is implemented. Clients must verify certificates and must not forward
 credentials across redirects. Cookies and Joomla login do not grant connector access.
 
-This development version has one read-only credential per site; no maintenance
-permissions, pairing UI or production web-server rate limiting is supplied yet.
+This development version has one read-only inventory credential per site.
+An experimental backup route uses a separate credential and a locally armed
+maintenance window; see `docs/backup-http.txt` before enabling it in a disposable
+site. Central backup UI/ACL, pairing UI and production rate limiting remain pending.
 See `docs/connector-contract.txt` and `docs/verification-2026-10-05.txt`.

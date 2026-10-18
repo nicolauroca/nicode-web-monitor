@@ -1,0 +1,33 @@
+Verification 18 October 2026 / request -150
+
+Native Joomla6.1.4 upgrade of system connector0.3.0-dev succeeded in an isolated
+Windows/PHP8.4/MariaDB laboratory. Nine installed PHP source files match the ZIP.
+ZIP SHA256: 74781998ce1081845eeeae8333eddabe7d47affe1ff587add080fc8394e3ef00
+
+73 assertions passed: 19 real HTTPS/CGI integration, 12 adapter input/storage
+checks, 26 operation-journal regressions and 16 inventory-transport regressions.
+Nine PHP syntax checks passed. Loopback TLS certificate validation remained on.
+The HTTPS test captured the actual Joomla tree and database, checked the returned
+manifest digest, reconciled status and duplicate POST, and revoked backup access.
+Inventory still works; its credential is denied backup access. Unarmed operations
+remain uncertain without producing a snapshot. Malformed/oversized requests and
+reuse of the inventory credential fail closed.
+
+Captured counts: {"file_entries": 13321, "file_bytes": 88022790, "database_tables": 78, "database_rows": 989}
+
+An initial run hit PHP's120-second execution limit while scanning files. Its
+reservation was retained; it was not retried. A new isolated fixture with a new
+site identity/private store passed using a CGI-only600-second budget. No PHP
+settings were changed on real hosting. This is evidence for a synchronous
+laboratory adapter, not production suitability under short HTTP time limits.
+
+The fixture revoked/disabled its connector and the lab database was stopped.
+Snapshots, keys, inventories and diagnostics remain private and outside Git.
+No restoration was attempted in this session. Writer stoppage was enforced by
+the disposable lab operator, not automatically by the product. Central backup
+client/ACL/UI, resumable bounded execution and native updates remain pending.
+The1November release target remains at risk. No compatibility claim beyond the
+executed Windows/Joomla6.1.4 environment, no production deployment or new schedule.
+
+Reproduction and safety preconditions: docs/backup-http.txt. Pure adapter tests:
+php tests/backup_endpoint.php EXTRACTED_CONNECTOR_ZIP FRESH_PRIVATE_DIRECTORY

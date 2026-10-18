@@ -1,0 +1,68 @@
+Experimental Joomla backup route / connector 0.3.0-dev
+
+This is a development interface for disposable Joomla 6 installations. It is
+not yet available from the central panel and is not a production backup service.
+The existing inventory credential cannot authorize it.
+
+Install the system connector ZIP built by tools/build.py. Inventory setup is
+unchanged. To opt in, create a separate random 32-byte credential encoded as 64
+hex characters; put only its SHA-256 digest in backup_token_hash. Reusing the
+inventory digest is rejected. Empty backup_token_hash revokes both capture and
+status immediately, without disabling inventory.
+
+Create a service-account-only private directory with operations and snapshots
+subdirectories. Set backup_storage to its absolute path. It must be outside ALL
+web roots: the connector checks its own Joomla root, but cannot discover other
+virtual hosts. Apply restrictive OS permissions (Windows ACLs or Unix mode 0700).
+The connector neither creates this root nor changes permissions. Storage contains
+configuration credentials and database contents; never publish it or put it in Git.
+
+Use HTTPS with certificate verification and Authorization: Bearer <backup token>.
+The trusted PHP environment must set HTTPS; forwarded client headers do not count.
+POST /index.php?option=com_nicodewebmonitor&task=backup
+Content-Type: application/json
+Body: {"site_id":"<enrolled UUID>","operation":"<unique operation id>",
+       "action":"capture","confirmed":true}
+The operation ID has 8-64 lowercase letters/digits/hyphens, starting alphanumeric.
+No extra fields or query values are accepted for POST; input is limited to 4096
+bytes. The caller cannot choose filesystem paths, providers or commands.
+
+Before capture, a local operator must stop every writer, including cron, admin
+sessions, external DB writers and deployment processes, and set Joomla offline.
+Offline alone is insufficient. In private backup_storage, create armed.json:
+{"operation":"<same operation id>","writers_stopped":true,"expires_at":<Unix seconds>}
+The expiry must be current and no more than 900 seconds ahead at capture start.
+This is an operator acknowledgement, not automatic proof or enforcement of writer
+quiescence. Keep writers stopped until capture has finished or been reconciled.
+The HTTP caller cannot arm an operation. Do not re-arm or retry an uncertain
+operation under another ID without investigating its effects first.
+
+GET /index.php?option=com_nicodewebmonitor&task=backup&site_id=<UUID>&operation=<id>&action=status
+reads the durable journal with the same backup credential. A duplicate POST
+returns the existing result without capturing again. Status works without a
+current armed file and while Joomla is online. 404 means unknown operation;
+202 means uncertain, including failure after reservation. Even a failed local
+maintenance precondition leaves that ID reserved. 200/captured means both file
+and database artifacts completed, bound by manifest_sha256. It does not establish
+restoration, ongoing availability or consistency against uncooperative writers.
+Do not treat a timeout as a safe retry. Reconcile using GET and the original ID.
+Response bodies never include provider errors, paths, dumps or credentials.
+
+Current provider is mysqli with bounded synchronous file/database capture;
+see combined-site-snapshot.txt and the file/database contracts for limits.
+Production HTTP timeouts, external writer coordination, central permissions/UI,
+retention, full combined restore and native Joomla/extension updates are pending.
+The integration fixture explicitly allows 600 seconds in its PHP CGI process;
+it does not change the site's PHP settings. A 120-second laboratory request timed
+out during file scanning and left an uncertain reservation. This synchronous
+implementation is unsuitable for hosts whose request budget is shorter than the
+capture. A bounded resumable execution design is still required for those hosts.
+Inventory remote_backups remains false: it describes the inventory credential's
+capability, not whether a separate maintenance credential has been configured.
+
+Reproduce in a disposable offline Joomla with no other writers and the ZIP installed:
+python tests/backup_http.py --site JOOMLA_ROOT --php PHP_BINARY --certificate CERT
+  --private-key KEY --storage FRESH_PRIVATE_DIRECTORY --allow-disposable-writes
+The certificate must be valid for localhost and is verified. The fixture enables
+the connector, captures the whole site and DB, then revokes and disables it. It
+does not restore previous plugin settings. Never run it against a production site.

@@ -1,7 +1,8 @@
 Backup operation contract (development core, 16 October 2026)
 
-tools/BackupOperations.php is a callable transport core, NOT an installed HTTP
-endpoint. No existing connector route or credential gains maintenance permission.
+tools/BackupOperations.php is a callable transport core. Connector 0.3.0-dev
+bundles it behind the opt-in HTTP adapter documented in backup-http.txt. The
+inventory credential never gains maintenance permission.
 The operator supplies a separate backup-only credential digest, a site UUID and
 an existing private operation directory outside web roots. Empty digest disables
 access. Never use the inventory credential as the backup credential. Joomla UI,
@@ -42,9 +43,10 @@ The provider must enforce writer quiescence, private storage and capture limits.
 The local SiteSnapshot provider now combines files and database under one receipt;
 see combined-site-snapshot.txt for its caller-enforced maintenance preconditions.
 The executed fixture invokes FileSnapshot against synthetic files. Database and
-file capture over HTTP, maintenance-mode coordination, remote HTTP wiring,
-central UI/history and native extension/core updates remain pending. Do not expose
-this core as a production route or claim a recoverable full-site remote backup.
+file capture over HTTP now have an experimental opt-in Joomla adapter described
+in backup-http.txt. Automatic maintenance coordination, central UI/history and
+native extension/core updates remain pending. Do not expose this development
+interface in production or claim a verified full-site restoration.
 
 Reproduce with an existing fresh private directory outside Git/web roots:
   php tests/backup_operations.php /absolute/private/fresh-directory

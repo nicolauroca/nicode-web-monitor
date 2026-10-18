@@ -36,7 +36,10 @@ reject redirects, use bounded timeouts/body size, check protocol and enrolled
 site UUID before storing data. Authentication failure is not a healthy/empty
 inventory. Preserve last successful observation with its age and latest error.
 Central HTTPS requests are implemented in InventoryClient (2026-10-06).
-Client-side storage and UI are not implemented yet.
+Client-side storage and UI are implemented; see site-registry.txt and subsequent
+verification records. The separate backup credential and opt-in route added in
+connector 0.3.0-dev are documented in backup-http.txt; they do not change this
+inventory credential's scope.
 
 Implementation references consulted 2026-10-05:
 https://manual.joomla.org/docs/next/building-extensions/plugins/how-plugins-work/

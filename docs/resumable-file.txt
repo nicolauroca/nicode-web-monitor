@@ -1,0 +1,42 @@
+Resumable file capture primitive (development), 19 October 2026
+
+The full HTTPS site backup is still synchronous. This local primitive is the first
+bounded unit for replacing it; it does NOT fix that route's timeout yet.
+
+ResumableFile::step(source, operation, manifest, quiesced) copies or verifies one
+block of at most 1 MiB. The caller supplies a trusted frozen manifest with exactly
+bytes (integer, 0..1 GiB) and chunks (ordered lowercase SHA-256 digests, one per
+1 MiB block; final block may be shorter). It must keep writers stopped throughout
+manifest creation, all steps and verification. The helper does not freeze writers.
+Manifest collection and tree traversal are not implemented here. Do not compute
+an entire large-site manifest inside a future bounded HTTP request.
+
+Use separate private storage outside the web root. Source paths and manifests
+must be locally bound configuration, never unauthenticated request parameters.
+Each operation binds the canonical source path and exact manifest. Reusing the ID
+with another source/manifest fails. Concurrent steps fail without waiting on an
+exclusive OS lock. Process exit releases the lock. A fully committed checkpoint
+resumes in another process; an interrupted block is replaced, never appended.
+Partial initialization or corrupt checkpoints fail closed and require inspection.
+Temporary data is flushed/fsynced before atomic rename. Power-loss durability of
+directory entries and network-filesystem semantics have NOT been demonstrated.
+
+After copying, each call validates one source block and captured block against
+the frozen manifest. Same-size source changes and damaged captured blocks fail.
+This is not an atomic snapshot of a live source: violating the stopped-writer
+precondition can change a previously verified block afterwards. Completed receipts
+are historical evidence, not an ongoing integrity scan. No restore is claimed.
+
+The artifact consists of chunk-0, chunk-1, ... plus private state. Retain the trusted
+manifest separately. Concatenating ordered chunks reconstructs the original file;
+the tests verify the entire result. A complete site backup still needs bounded
+tree discovery, manifest persistence, database consistency, orchestration,
+authenticated resume/status integration, central ACL/history and recovery tests.
+Neither existing operation-journal semantics nor the HTTP route is changed.
+
+Reproduce with a fresh private directory outside Git and the web root:
+  php tests/resumable_file.php /absolute/private/fresh-directory
+The test makes separate PHP processes for successive steps and checks a partial
+uncommitted block fixture. It does not claim an actual OS kill during fsync/rename.
+The byte/work bound is structural; five seconds is only a local test acceptance
+budget, not a wall-clock guarantee for slow or stalled filesystem I/O.

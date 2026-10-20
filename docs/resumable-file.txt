@@ -8,7 +8,8 @@ block of at most 1 MiB. The caller supplies a trusted frozen manifest with exact
 bytes (integer, 0..1 GiB) and chunks (ordered lowercase SHA-256 digests, one per
 1 MiB block; final block may be shorter). It must keep writers stopped throughout
 manifest creation, all steps and verification. The helper does not freeze writers.
-Manifest collection and tree traversal are not implemented here. Do not compute
+Manifest collection and tree traversal are separate: see tree-manifest.txt for
+the bounded local builder added on 20 October. Do not compute
 an entire large-site manifest inside a future bounded HTTP request.
 
 Use separate private storage outside the web root. Source paths and manifests

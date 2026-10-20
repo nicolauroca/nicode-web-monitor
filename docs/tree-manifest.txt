@@ -1,0 +1,42 @@
+Bounded local tree manifest (development), 20 October 2026
+
+TreeManifest::step(source, operation, quiesced) persists discovery and SHA-256
+block manifests across separate PHP processes. One call visits one directory,
+discovers one file, or hashes/verifies one block of at most 1 MiB. Directory
+enumeration stops and refuses after 2048 children; the whole operation permits
+2048 entries INCLUDING the root and 1 GiB of file bytes. These are explicit
+prototype limits, not claimed coverage of arbitrary Joomla installations.
+Checkpoint serialization is bounded by those caps; slow filesystem I/O has no
+guaranteed wall-clock deadline. State is read/written on each step.
+
+Keep storage private, outside both the source and the web root. Paths and IDs
+come from trusted local configuration. No HTTP route exposes this class.
+The caller MUST stop all filesystem writers throughout discovery, verification
+and subsequent capture. This class does not enforce maintenance or coordinate
+database writers. It is not a snapshot mechanism for a live changing tree.
+
+The second pass checks directory membership and hashes every file block again.
+Additions, missing paths, size changes, same-size byte changes, links/resolved
+redirects, special files, nonportable names and case collisions are refused.
+A previously verified entry can still change if the caller violates quiescence.
+Completed receipts are historical results, not continuous integrity checks.
+
+The canonical source is bound to the operation ID. An OS lock excludes parallel
+steps, releasing on exit. Atomic flushed checkpoints permit process restart.
+An orphan initialization and invalid JSON fail closed. Inspect private evidence
+before recovery; never silently restart an uncertain ID. Private checkpoint
+storage is trusted, not a signed interchange format or hostile-input interface.
+Power-loss durability and network filesystem rename/locking are unverified.
+
+state.json retains entries: directories have child names; files have bytes and
+ordered chunks. After status=complete, select bytes/chunks for ResumableFile.
+The tests exercise this handoff and reconstruct the exact original bytes.
+No whole-tree copy orchestration, database capture, restore, authenticated
+resume/status or central ACL/history is added. The synchronous HTTPS route
+is unchanged and its timeout remains an open product limitation.
+
+Run with a fresh private directory outside Git:
+  php tests/tree_manifest.php /absolute/private/fresh-directory
+The test uses separate processes, partial-checkpoint fixtures, changed sources,
+lock contention and a directory over the cap. It does not kill a process during
+fsync. See the session verification record for measured local durations.

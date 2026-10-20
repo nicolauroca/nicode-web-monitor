@@ -1,0 +1,20 @@
+20 October 2026 - bounded tree manifest, development
+
+18 tree-manifest checks passed, with 32 separate PHP process steps:
+quiescence, ID and storage boundaries, one-entry discovery, one-block hashing,
+exclusive lock, source identity binding, restart/partial-checkpoint recovery,
+nested tree and numeric empty filename, stable receipt, exact hashes, actual
+ResumableFile handoff and byte reconstruction, directory addition and same-size
+content change rejection, orphan/corrupt state refusal and directory size cap.
+Maximum measured process step: 0.0574 seconds on the local Windows PHP lab.
+This measurement is not a hosting latency promise.
+
+Existing resumable-file regression: all 18 checks passed.
+PHP lint: both new files passed. Git whitespace check passed.
+No services were started, no hosting accessed and no dependencies installed.
+
+This closes bounded local manifest discovery/persistence, with explicit limits
+of 2048 tree entries and 1 GiB. It does not close the synchronous HTTPS timeout.
+Whole-tree capture orchestration, database consistency, authenticated resume,
+central backup ACL/history and native updates remain pending. Maintenance
+milestone 24 October and complete release 1 November remain at risk.

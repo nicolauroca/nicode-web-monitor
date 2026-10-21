@@ -1,0 +1,41 @@
+Resumable whole-tree capture (local development), 21 October 2026
+Package: Nicode.joomla.webmonitor
+
+ResumableTree::step(source, operation, quiesced) coordinates the frozen
+TreeManifest and ResumableFile primitives. Keep the storage private outside
+the source and web root; all inputs and checkpoints are trusted local data.
+Keep ALL filesystem writers stopped throughout every call. The boolean is
+an assertion by the caller, not a mechanism that stops Joomla or cron.
+
+Phases: initial bounded manifest, capture one directory/file block step,
+then a separate bounded manifest of the source. Completion requires identical
+initial and final tree hashes. This detects late additions/removals and file
+changes; it does not make a live filesystem transactional. A completed receipt
+is historical, not a fresh integrity scan. Private captured storage must also
+remain protected from other writers.
+
+Each call makes at most one primitive step. Limits remain 2048 entries including
+root and 1 GiB total; filesystem latency has no guaranteed wall-clock deadline.
+The coordinator serializes processes using an OS lock, binds the canonical
+source to the operation ID, and persists each phase/cursor atomically. If the
+file step commits before the coordinator checkpoint, its completed receipt can
+be replayed on the next call. Orphan initialization fails closed. No automatic
+restart of an uncertain operation ID. Power-loss durability remains untested.
+
+Private layout: state.json; manifests/initial-tree/state.json retains directory
+membership, file lengths and ordered SHA-256 chunks; files/file-NNNN contains
+each file's chunks, where NNNN is its zero-based manifest entry index. Empty
+files have no chunks; empty directories remain in the manifest. The final-tree
+manifest independently checks source membership/content. This is a development
+chunk format, not an installable backup archive or a restoration tool.
+
+Test: php tests/resumable_tree.php /absolute/private/fresh-directory
+21 October: 12 checks passed across 97 fresh PHP subprocesses; maximum measured
+process time 0.085725 seconds locally. Exact reconstruction of all file bytes,
+empty directory retention, lock contention, identity binding, partial checkpoint,
+source mutations, orphan initialization and corrupt checkpoints tested.
+
+Database consistency, database capture orchestration, authenticated HTTP resume,
+central backup UI/ACL/history and native updates remain pending. The existing
+synchronous HTTP route is unchanged; its timeout is NOT resolved by this local
+coordinator. No complete backup/restore or release claim.

@@ -1,0 +1,37 @@
+Local chunk capture recovery, 22 October 2026
+Package: Nicode.joomla.webmonitor
+
+TreeRestore::restore(captureDirectory, emptyTargetDirectory, confirmed)
+recovers a completed ResumableTree capture into an existing EMPTY isolated
+directory. Supply canonical absolute paths. This is an offline development
+tool for trusted local captures, with no HTTP entry point or Joomla installer
+integration. Never point it at a live web root. Keep exclusive access to the
+capture and destination throughout the operation; it does not stop writers.
+
+It validates completion, manifest hash, portable relative paths, entry/byte
+limits and every stored chunk before writing target content. During writing
+it checks chunks again and creates files exclusively without overwriting.
+Binary files, empty files, numeric filenames and empty directories are
+preserved. Memory for file contents is bounded to a 1 MiB block; execution
+time is NOT bounded or resumable. The same 2048-entry/1-GiB limits apply.
+
+The returned files_restored receipt identifies the source manifest and counts.
+application_verified remains false: database restoration, permissions,
+timestamps, Joomla boot and full-site consistency are not covered. This is
+not a full backup recovery claim. Captured configuration may contain secrets;
+both capture and recovered target must remain private outside served paths.
+
+On a write error or interruption, the target may be partial. Do not retry in
+that directory, automatically delete it, or assume rollback. Inspect it and
+provision another empty isolated target. No power-loss durability claim.
+Concurrent hostile filesystem mutation is outside this local trusted-storage
+model; canonical path checks do not replace exclusive filesystem ownership.
+
+Test: php tests/tree_restore.php /absolute/private/fresh-directory
+20 checks passed on the existing Windows/PHP laboratory on 22 October:
+actual multi-block capture/recovery, exact binary comparison, empty paths,
+confirmation/overlap/replay refusal, corrupted late block preflight with no
+target effects, incomplete capture and seven unsafe manifest paths rejected.
+
+Database consistency and bounded HTTP resume remain the next integration
+gate. Central maintenance UI/ACL and native updates are still pending.

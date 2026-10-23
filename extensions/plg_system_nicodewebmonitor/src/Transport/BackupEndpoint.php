@@ -8,7 +8,7 @@ use Nicode\Plugin\System\NicodeWebMonitor\Maintenance\BackupOperations;
 final class BackupEndpoint
 {
     public function __construct(private string $siteId, private string $tokenHash,
-        private string $inventoryHash, private string $storage, private string $webRoot) {}
+        private string $inventoryHash, private string $storage, private string $webRoot, private bool $tree = false) {}
 
     public function handle(array $server, array $query, string $body, \Closure $capture): array
     {
@@ -41,6 +41,11 @@ final class BackupEndpoint
         }
         try {
             self::privateDirectory($this->storage, $this->webRoot);
+            if ($this->tree) {
+                self::privateDirectory($this->storage . '/tree-operations', $this->webRoot);
+                return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\TreeOperations($this->storage . '/tree-operations', $this->siteId))
+                    ->handle($server, $request, $capture);
+            }
             self::privateDirectory($this->storage . '/operations', $this->webRoot);
             return (new BackupOperations($this->storage . '/operations', $this->siteId, $this->tokenHash))
                 ->handle($server, $request, $capture);

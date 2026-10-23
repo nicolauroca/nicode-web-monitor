@@ -35,13 +35,13 @@ print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 # Bundle the same collector into the independent HTTP plugin, with its own namespace.
 # Generated copies live only in the ZIP: one reviewed source of inventory behavior.
 connector = root / 'extensions/plg_system_nicodewebmonitor'
-output = root / 'dist/plg_system_nicodewebmonitor-0.3.0-dev.zip'
+output = root / 'dist/plg_system_nicodewebmonitor-0.4.0-dev.zip'
 files = {p.relative_to(connector).as_posix(): p.read_bytes() for p in connector.rglob('*') if p.is_file()}
 for file in (source / 'src/Inventory').glob('*.php'):
     files['src/Inventory/' + file.name] = file.read_bytes().replace(
         b'Nicode\\Plugin\\Console\\NicodeWebMonitor', b'Nicode\\Plugin\\System\\NicodeWebMonitor')
 files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
-for name in ['BackupOperations', 'FileSnapshot', 'DatabaseSnapshot', 'SiteSnapshot']:
+for name in ['BackupOperations', 'FileSnapshot', 'DatabaseSnapshot', 'SiteSnapshot', 'TreeOperations', 'TreeManifest', 'ResumableFile', 'ResumableTree']:
     files['src/Maintenance/' + name + '.php'] = (root / 'tools' / (name + '.php')).read_bytes().replace(
         b'Nicode\\Maintenance', b'Nicode\\Plugin\\System\\NicodeWebMonitor\\Maintenance')
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

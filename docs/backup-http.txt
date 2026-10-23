@@ -1,5 +1,8 @@
 Experimental Joomla backup route / connector 0.3.0-dev
 
+Connector 0.4.0-dev adds a separate experimental file-only resumable route;
+see tree-http.txt. The combined route below retains its synchronous limitation.
+
 This is a development interface for disposable Joomla 6 installations. It is
 not yet available from the central panel and is not a production backup service.
 The existing inventory credential cannot authorize it.

@@ -1,0 +1,75 @@
+Experimental file-tree HTTPS capture — connector 0.4.0-dev
+
+This route captures FILES ONLY. It cannot replace the combined site/database
+backup, and is not a production backup service. The central UI is not integrated.
+The native Joomla route is task=backup_tree; task=backup remains the older
+synchronous site/database route with its documented timeout limitation.
+
+Install the system connector ZIP from tools/build.py in a disposable Joomla 6.
+Use the separate backup credential, verified HTTPS, private storage and local
+maintenance acknowledgement described in backup-http.txt. Additionally create
+tree-operations and trees directories under backup_storage, restricted to the
+service account and outside ALL web roots. The HTTP caller cannot choose paths.
+Stop ALL writers and set Joomla offline before arming the operation locally.
+The armed.json window and stopped writers are required before EACH new step.
+An expired/removed acknowledgement prevents further provider execution. Offline
+mode alone does not enforce quiescence. No automatic shutdown of writers exists.
+
+POST /index.php?option=com_nicodewebmonitor&task=backup_tree
+Authorization: Bearer <separate backup credential>
+Content-Type: application/json
+{"site_id":"<site UUID>","operation":"<unique ID>","action":"step",
+ "confirmed":true,"sequence":0}
+
+Each successful call executes one ResumableTree step. Start at sequence 0; use
+the returned next_sequence for the next call. POST accepts no extra fields or
+query values. IDs and the 4096-byte body limit match backup-http.txt.
+
+GET /index.php?option=com_nicodewebmonitor&task=backup_tree&site_id=<UUID>&operation=<ID>&action=status
+
+GET never advances capture. After a timeout, reconcile with GET using the SAME
+ID. A repeat of the most recently acknowledged sequence returns the stored
+receipt without advancing. Other out-of-order requests return 409. Completion
+is immutable. A lock rejects overlapping requests with 409 operation_busy.
+Journal identity binds the operation to its site UUID. Rotating the backup
+credential preserves identity; removing it revokes both step and status.
+
+Before invoking the provider, the journal persists uncertain. If the process
+dies or the provider fails before its receipt is committed, GET returns 202
+uncertain and subsequent POSTs do not invoke the provider. Inspect private
+journal/checkpoints locally; do not create another ID or replay the provider
+blindly. Recovery from this journal/provider commit gap is not automated.
+
+200 progress is not completion. 200 complete, scope=files_only binds the final
+file manifest, with restoration_verified=false. It says nothing about database
+consistency or Joomla boot. Paths, provider diagnostics and credentials are not
+returned. HTTP responses are private/no-store.
+
+Resource and acceptance limits
+Each provider step processes one entry/directory or one 1 MiB block. Prototype
+limits remain 2048 manifest entries and 1 GiB total; a larger Joomla tree may be
+refused. These limits have NOT been raised to claim full Joomla coverage.
+Bounded work is not a hard wall-clock guarantee on arbitrary storage. Keep the
+site quiesced across all requests and allow adequate operator-managed maintenance
+windows. Journal checkpoints and manifests still have finite serialization cost.
+
+23 October verification: extracted production package exercised over real TLS
+and PHP CGI with max_execution_time=5; 40 requests, slowest 2.417 seconds locally.
+Lost-response replay, status, auth separation, TLS requirement, revocation, input
+limits and failure after provider checkpoint were tested. A 1 MiB-plus-tail binary
+file and empty directory were captured and restored exactly with TreeRestore.
+Native Joomla installation and four real HTTPS steps were verified separately;
+slowest 2.281 seconds. Removal of the local arm prevented the next step and left
+an uncertain journal. These native checks did NOT capture the entire Joomla tree
+or its database. Lab stopped after testing; no real hosting accessed.
+
+Reproduce small-tree transport/recovery with tests/tree_http.py --php PHP_BINARY
+--package EXTRACTED_CONNECTOR --root FRESH_PRIVATE_DIRECTORY
+--certificate LOCALHOST_CERT --private-key PRIVATE_KEY.
+For the disposable Joomla route use tests/backup_http.py arguments from
+backup-http.txt plus --tree-smoke. That fixture changes connector settings and
+disables it afterwards; never use it on a production installation.
+
+Next acceptance: database consistency across bounded requests, realistic whole
+Joomla capacity and complete recovery, then central maintenance ACL/UI/history
+and native Joomla/extension updates. None is implied by this file-only route.

@@ -4,7 +4,7 @@
   <author>Nicolau Roca</author>
   <creationDate>2026-10</creationDate>
   <license>GNU General Public License version 2 or later</license>
-  <version>0.3.0-dev</version>
+  <version>0.4.0-dev</version>
   <description>HTTPS inventory and experimental opt-in backup connector. Backups require separate credentials, private storage and a locally armed maintenance window. Development only.</description>
   <namespace path="src">Nicode\Plugin\System\NicodeWebMonitor</namespace>
   <scriptfile>script.php</scriptfile>

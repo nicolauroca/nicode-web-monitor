@@ -17,6 +17,8 @@ import threading
 import urllib.error
 import urllib.request
 import uuid
+import sys
+import time
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--site', type=Path, required=True)
@@ -25,6 +27,7 @@ parser.add_argument('--certificate', type=Path, required=True)
 parser.add_argument('--private-key', type=Path, required=True)
 parser.add_argument('--allow-disposable-writes', action='store_true', required=True)
 parser.add_argument('--storage', type=Path, required=True)
+parser.add_argument('--tree-smoke', action='store_true', help='Bounded native file-tree route only; does not capture a complete Joomla or database')
 args = parser.parse_args()
 site = args.site.resolve()
 cgi = args.php.with_name('php-cgi.exe' if os.name == 'nt' else 'php-cgi')
@@ -34,7 +37,7 @@ site_id = str(uuid.uuid4())
 token = secrets.token_hex(32)
 backup = secrets.token_hex(32)
 storage = args.storage.resolve()
-for name in ['operations','snapshots']: (storage/name).mkdir()
+for name in ['operations','snapshots','tree-operations','trees']: (storage/name).mkdir()
 
 def check(ok, name):
     if not ok:
@@ -76,7 +79,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         env['CONTENT_TYPE'] = self.headers.get('Content-Type','')
         env['CONTENT_LENGTH'] = self.headers.get('Content-Length','0')
         payload = self.rfile.read(int(env['CONTENT_LENGTH']))
-        p = subprocess.run([str(cgi), '-d', 'max_execution_time=600'], env=env, cwd=site, input=payload, capture_output=True, timeout=660, creationflags=flags)
+        p = subprocess.run([str(cgi), '-d', 'max_execution_time=5' if args.tree_smoke else 'max_execution_time=600'], env=env, cwd=site, input=payload, capture_output=True, timeout=8 if args.tree_smoke else 660, creationflags=flags)
         headers, sep, body = p.stdout.partition(b'\r\n\r\n')
         if not sep:
             self.send_error(502)
@@ -144,6 +147,35 @@ try:
     check(result[0]==202 and result[2]['status']=='uncertain', 'unarmed_capture_fails_closed')
     check(not (storage/'snapshots/unarmed-capture').exists(), 'unarmed_has_no_snapshot')
     check(backup_request(operation='unarmed-capture')[0]==202, 'unarmed_result_persisted')
+    if args.tree_smoke:
+        def tree(method='GET', seq=0, credential=backup, tls=True):
+            payload = {'site_id':site_id,'operation':'native-tree','action':'step','sequence':seq,'confirmed':True}
+            return request(credential, task='backup_tree', method=method, tls=tls,
+                suffix='&site_id='+site_id+'&operation=native-tree&action=status' if method=='GET' else '',
+                data=json.dumps(payload).encode() if method=='POST' else None,
+                extra={'Content-Type':'application/json'})
+        check(tree()[0]==404, 'native_tree_unknown')
+        check(tree(credential=token)[0]==401, 'native_tree_inventory_denied')
+        check(tree(tls=False)[0]==403, 'native_tree_tls_required')
+        (storage/'armed.json').write_text(json.dumps({'operation':'native-tree','writers_stopped':True,'expires_at':int(time.time())+900}))
+        durations=[]
+        first=None
+        for seq in range(4):
+            start=time.monotonic(); result=tree('POST',seq); durations.append(time.monotonic()-start)
+            check(result[0]==200 and result[2]['next_sequence']==seq+1, 'native_tree_step_'+str(seq))
+            if seq==0: first=result[2]
+        check(tree('POST',3)[2]==result[2], 'native_duplicate_no_advance')
+        check(tree()[2]==result[2], 'native_get_reconciles')
+        check(result[2]['scope']=='files_only' and result[2]['status']=='progress', 'native_not_complete_backup')
+        check('no-store' in result[1]['Cache-Control'], 'native_private_response')
+        (storage/'armed.json').unlink()
+        check(tree('POST',4)[0]==202, 'native_expired_arm_stops_resume')
+        check(tree()[2]['status']=='uncertain', 'native_failed_resume_persisted')
+        configure(token, backup_credential='')
+        check(tree()[0]==503, 'native_revoked')
+        check(max(durations)<5, 'native_requests_under_five_seconds')
+        print(json.dumps({'passed':len(checks),'checks':checks,'max_request_seconds':max(durations),'tls_certificate_verified':True,'full_backup_verified':False},indent=2))
+        sys.exit(0)
     # The runner keeps the disposable site offline, with no web/cron writers.
     (storage/'armed.json').write_text(json.dumps({'operation':'http-capture','writers_stopped':True,'expires_at':int(__import__('time').time())+900}))
     result=backup_request(method='POST')

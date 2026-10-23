@@ -33,15 +33,15 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
             return;
         }
         $task = $app->getInput()->get->getString('task', '');
-        if ($task === 'backup') {
+        if (in_array($task, ['backup', 'backup_tree'], true)) {
             $storage = (string) $this->params->get('backup_storage', '');
             $endpoint = new BackupEndpoint((string) $this->params->get('site_id', ''),
                 (string) $this->params->get('backup_token_hash', ''),
-                (string) $this->params->get('token_hash', ''), $storage, JPATH_ROOT);
+                (string) $this->params->get('token_hash', ''), $storage, JPATH_ROOT, $task === 'backup_tree');
             // Bound the read even when Content-Length is missing or false.
             $body = file_get_contents('php://input', false, null, 0, 4097);
             [$status, $body] = $endpoint->handle($_SERVER, $_GET, $body === false ? '' : $body,
-                function (string $id) use ($app, $storage): array {
+                function (string $id) use ($app, $storage, $task): array {
                     // Offline alone does not stop cron/admin/external writers. A local operator
                     // must stop them and arm this single operation for a short maintenance window.
                     $arm = $storage . '/armed.json';
@@ -53,6 +53,10 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
                         || !is_int($permit['expires_at'] ?? null) || $permit['expires_at'] < time()
                         || $permit['expires_at'] > time() + 900) {
                         throw new \RuntimeException('Operation not armed');
+                    }
+                    if ($task === 'backup_tree') {
+                        BackupEndpoint::privateDirectory($storage . '/trees', JPATH_ROOT);
+                        return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/trees'))->step(JPATH_ROOT, $id, true);
                     }
                     BackupEndpoint::privateDirectory($storage . '/snapshots', JPATH_ROOT);
                     $this->database->connect();
@@ -75,7 +79,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
         header('Pragma: no-cache');
         header('X-Content-Type-Options: nosniff');
         if ($status === 401) { header('WWW-Authenticate: Bearer realm="Nicode Web Monitor"'); }
-        if ($status === 405) { header('Allow: ' . ($task === 'backup' ? 'GET, POST' : 'GET')); }
+        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree'], true) ? 'GET, POST' : 'GET')); }
         echo json_encode($body, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         $app->close();
     }

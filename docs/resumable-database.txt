@@ -1,0 +1,84 @@
+Experimental resumable database capture — 23 October 2026
+
+Status: local provider in tools/ResumableDatabase.php, not wired to the Joomla
+HTTP route or central panel. task=backup still uses the synchronous provider.
+This closes a database primitive, not complete remote site backup acceptance.
+
+Operator contract
+Use only private storage outside every web root, restricted to the service
+account. Chunks, checkpoints and exports contain database content. Never commit,
+serve, log or publish them. Stop ALL application writers, CLI jobs, schedulers,
+database events and schema changes for the whole operation. Joomla offline alone
+is not sufficient. Supply an explicit quiescence acknowledgement at every step.
+The provider does not enforce a server-wide write freeze.
+
+Starting from source
+Require tools/ResumableDatabase.php and create a mysqli connection to the source
+database using a private credential mechanism. Set its charset to utf8mb4.
+Create an existing private directory and instantiate ResumableDatabase(directory).
+Call step(connection, uniqueOperationId, true) until status=complete. Each call
+can use a fresh connection/process. IDs use 8–64 lowercase letters, digits and
+hyphens, starting with a letter or digit. Keep the SAME ID when resuming.
+Statuses schema/capture/verify are progress, not a usable completed backup.
+Receipts contain counts and a manifest hash, never row data or connection details.
+
+How the result is checked
+The provider freezes table names, schemas and SQL mode, then captures pages in a
+stable order. A second complete pass must reproduce the chunks byte for byte.
+Catalog/engine/auxiliary-object preconditions are checked on every active step.
+This detects changes observed between passes; it is NOT a database transaction
+spanning requests and cannot make arbitrary concurrent writes consistent. Changes
+after a page was verified, or changes reverted between reads, are not a protected
+snapshot. Keep all writers stopped until the combined site operation finishes.
+
+Primary keys or non-null unique keys provide ordering where available. Joomla
+also has keyless tables: these sort by SHA-256 of each binary column value, with
+NULL distinct. Exact duplicate rows are interchangeable. This shares the chunk
+integrity assumption that SHA-256 collisions do not occur; no byte-prefix sort
+is used. SHA2 support is checked against a known local digest before execution.
+Official references consulted 23 October:
+https://mariadb.com/docs/server/reference/sql-functions/string-functions/cast
+https://mariadb.com/docs/server/reference/sql-functions/secondary-functions/encryption-hashing-and-compression-functions/sha2
+
+Resource limits and remaining performance work
+One step checks a schema or emits at most 128 rows and 1 MiB of JSONL. A row or
+schema that cannot fit is refused. Limits: 512 tables, 8192 chunks, 128 MiB encoded
+snapshot. Only InnoDB and quiesced MEMORY tables; views, triggers, routines, events,
+generated columns and cross-database references are refused. No support claim
+for arbitrary extensions, MySQL versions or future Joomla versions follows.
+OFFSET and sorting of keyless tables can scan substantially more data than the
+returned page; output is bounded but query duration and server sort memory are
+not. A single oversized BLOB may be materialized before rejection. Large-database
+load tests and database query budgets are still required before HTTP integration.
+
+Crash semantics
+A per-operation lock rejects overlap. Chunks are flushed before checkpoint commit.
+An orphan chunk is adopted only if the same source page reproduces its exact hash;
+a partial/conflicting chunk is refused and preserved. Initialization without its
+first checkpoint is uncertain. Do not delete evidence or restart under a new ID
+to conceal a failed operation. Completed receipts do not advance capture again.
+
+Offline restore verification
+After completion call export(captureId, NEW exportId). It verifies every private
+chunk and assembles the existing nwm-db-1 format. This export is synchronous.
+Use DatabaseSnapshot(directory)->restore(targetConnection, exportId, NEW restoreId,
+true) only on a separately provisioned EMPTY disposable database. Restore is also
+synchronous and can partially commit DDL: never retry it blindly. Compare all
+schemas and row multisets afterwards. Neither capture nor restore proves Joomla
+boots, and this does not yet coordinate files/database recovery.
+
+Reproduction
+tests/resumable_database.php LAB_JOOMLA_DIRECTORY PRIVATE_DIRECTORY
+--allow-disposable-writes accepts database-admin connection fields as JSON on
+stdin (host/user/password/port). Supply them through the existing lab secret
+helper, never CLI arguments or committed files. It creates temporary fixture
+tables in the disposable source and a random restore database, cleans those up,
+and emits only checks/counts/times. Run with lab web/schedulers stopped. The test
+opens a fresh mysqli connection for each step and compares the entire restored
+Joomla database plus binary, Unicode, null, decimal, uint64 and keyless fixtures.
+
+Next integration gate
+Wire database steps into the authenticated operation journal with reconciliation,
+combine them with the same quiesced file operation, resolve realistic Joomla tree
+capacity, and prove full application recovery. Central maintenance ACL/UI/history
+and native updates remain separate pending work. No production-ready claim.

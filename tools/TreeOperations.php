@@ -2,12 +2,14 @@
 declare(strict_types=1);
 namespace Nicode\Maintenance;
 
-/** Sequenced HTTP journal for file-only captures. Authentication belongs to the adapter.
+/** Sequenced HTTP journal for separately scoped file or database captures. Authentication belongs to the adapter.
  * @package Nicode.joomla.webmonitor
  */
 final class TreeOperations
 {
-    public function __construct(private readonly string $storage, private readonly string $siteId) {}
+    public function __construct(private readonly string $storage, private readonly string $siteId, private readonly string $scope = 'files_only') {
+        if (!in_array($scope, ['files_only', 'database_only'], true)) { throw new \InvalidArgumentException('Invalid scope'); }
+    }
 
     public function handle(array $server, array $request, \Closure $step): array {
         if (!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/D', $this->siteId)) {
@@ -34,14 +36,14 @@ final class TreeOperations
         if (is_link($dir) || !is_dir($dir) || is_link($dir . '/lock')) { return [503, ['error' => 'storage_unavailable']]; }
         $lock = fopen($dir . '/lock', 'c+b');
         if (!$lock) { return [503, ['error' => 'storage_unavailable']]; }
-        $unknown = ['site_id'=>$this->siteId, 'operation'=>$id, 'status'=>'uncertain', 'scope'=>'files_only'];
+        $unknown = ['site_id'=>$this->siteId, 'operation'=>$id, 'status'=>'uncertain', 'scope'=>$this->scope];
         try {
             if (!flock($lock, LOCK_EX | LOCK_NB)) { return [409, ['error'=>'operation_busy']]; }
             $path = $dir . '/state.json';
             if (is_file($path)) {
                 if (is_link($path) || filesize($path) > 4096) { throw new \RuntimeException('Invalid journal'); }
                 $s = json_decode(file_get_contents($path), true, 16, JSON_THROW_ON_ERROR);
-                if (($s['site_id'] ?? null) !== $this->siteId || ($s['operation'] ?? null) !== $id) {
+                if (($s['site_id'] ?? null) !== $this->siteId || ($s['operation'] ?? null) !== $id || ($s['scope'] ?? null) !== $this->scope) {
                     return [409, ['error'=>'operation_identity_conflict']];
                 }
                 if (!is_int($s['next_sequence'] ?? null) || !in_array($s['status'] ?? null, ['ready','progress','complete','uncertain'], true)) {
@@ -61,7 +63,7 @@ final class TreeOperations
             // Do not advance again automatically after losing the journal receipt.
             $s['status'] = 'uncertain'; self::save($path, $s);
             $r = $step($id);
-            if (($r['operation'] ?? null) !== $id || !in_array($r['status'] ?? null, ['manifest','capture','final','complete'], true)
+            if (($r['operation'] ?? null) !== $id || !in_array($r['status'] ?? null, ($this->scope === 'files_only' ? ['manifest','capture','final','complete'] : ['schema','capture','verify','complete']), true)
                 || !is_int($r['cursor'] ?? null) || $r['cursor'] < 0
                 || (($r['manifest_sha256'] ?? null) !== null && (!is_string($r['manifest_sha256']) || !preg_match('/^[a-f0-9]{64}$/D', $r['manifest_sha256'])))
                 || ($r['status'] === 'complete' && !is_string($r['manifest_sha256'] ?? null))) { throw new \RuntimeException('Invalid receipt'); }

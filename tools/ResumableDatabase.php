@@ -166,7 +166,7 @@ final class ResumableDatabase
 
     private static function receipt(string $id, array $s): array {
         return ['operation' => $id, 'status' => $s['phase'], 'tables' => count($s['tables']), 'rows' => $s['rows'],
-            'chunks' => count($s['chunks']), 'bytes' => $s['bytes'], 'restoration_verified' => false,
+            'cursor' => $s['cursor'], 'chunks' => count($s['chunks']), 'bytes' => $s['bytes'], 'restoration_verified' => false,
             'manifest_sha256' => $s['phase'] === 'complete' ? hash('sha256', self::line($s['chunks'])) : null];
     }
 

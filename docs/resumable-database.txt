@@ -1,8 +1,8 @@
 Experimental resumable database capture — 23 October 2026
 
-Status: local provider in tools/ResumableDatabase.php, not wired to the Joomla
-HTTP route or central panel. task=backup still uses the synchronous provider.
-This closes a database primitive, not complete remote site backup acceptance.
+Status: packaged provider with native Joomla task=backup_database over HTTPS.
+Central panel and combined files/database recovery remain pending. task=backup
+still uses the synchronous provider. This is experimental database-only capture.
 
 Operator contract
 Use only private storage outside every web root, restricted to the service
@@ -49,7 +49,7 @@ for arbitrary extensions, MySQL versions or future Joomla versions follows.
 OFFSET and sorting of keyless tables can scan substantially more data than the
 returned page; output is bounded but query duration and server sort memory are
 not. A single oversized BLOB may be materialized before rejection. Large-database
-load tests and database query budgets are still required before HTTP integration.
+load tests and database query budgets are still required before production use.
 
 Crash semantics
 A per-operation lock rejects overlap. Chunks are flushed before checkpoint commit.
@@ -78,7 +78,42 @@ opens a fresh mysqli connection for each step and compares the entire restored
 Joomla database plus binary, Unicode, null, decimal, uint64 and keyless fixtures.
 
 Next integration gate
-Wire database steps into the authenticated operation journal with reconciliation,
-combine them with the same quiesced file operation, resolve realistic Joomla tree
+Combine authenticated database steps with the same quiesced file operation, resolve realistic Joomla tree
 capacity, and prove full application recovery. Central maintenance ACL/UI/history
 and native updates remain separate pending work. No production-ready claim.
+
+Native HTTPS route
+Install the generated system plugin ZIP in a disposable Joomla first. Set a
+separate backup credential digest and private backup_storage as documented for
+the connector. Create database-operations and databases below that private root;
+both must be outside the web root. Before capture, the local operator must set
+Joomla session_handler=filesystem and session_metadata=false as well as stopping
+all other writers. Joomla starts sessions before this plugin event; its default
+database session handler otherwise changes the source on every backup request.
+The route refuses to capture under that configuration; it never changes global
+session settings itself. Review the effect on active user sessions and restore
+your chosen settings after maintenance. Set Joomla offline and arm
+armed.json for the operation with writers_stopped=true and expires_at no more
+than 900 seconds ahead. The permit is checked again on EVERY advancing step.
+Do not expose the storage or permit file through a web server.
+
+POST index.php?option=com_nicodewebmonitor&task=backup_database with the backup
+Bearer credential, Content-Type application/json, and JSON containing site_id,
+operation, action="step", confirmed=true and sequence=0 initially. Use the returned
+next_sequence for the next step. GET the same route with site_id, operation and
+action=status to reconcile a lost response. Duplicate last sequence returns its
+receipt without advancing. Future/stale sequences are rejected. A process death
+between provider progress and journal commit leaves status=uncertain: do not
+retry the provider or remove that journal. Scope is always database_only; neither
+status=complete nor manifest_sha256 claims application recovery. HTTP returns no
+row data, paths or credentials. File and database journals are isolated.
+
+Reproduce native integration with tests/backup_http.py --database-full, passing
+--site, --php, --certificate, --private-key, --storage and
+--allow-disposable-writes. This is destructive disposable-lab QA: it changes
+connector settings, then disables the connector. Supply temporary database-admin
+connection JSON on stdin for exact offline restore comparison, never arguments.
+It checks TLS authentication, sequence reconciliation, full database capture,
+restoration schema/row equality, unarmed rejection and revocation. The harness
+uses five-second CGI and eight-second process budgets; these are test budgets,
+not portable database query cancellation guarantees.

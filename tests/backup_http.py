@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import secrets
 import ssl
+import socket
 import subprocess
 import threading
 import urllib.error
@@ -28,6 +29,8 @@ parser.add_argument('--private-key', type=Path, required=True)
 parser.add_argument('--allow-disposable-writes', action='store_true', required=True)
 parser.add_argument('--storage', type=Path, required=True)
 parser.add_argument('--tree-smoke', action='store_true', help='Bounded native file-tree route only; does not capture a complete Joomla or database')
+parser.add_argument('--database-guard-only', action='store_true')
+parser.add_argument('--database-full', action='store_true', help='Capture entire disposable database in sequenced HTTPS requests')
 args = parser.parse_args()
 site = args.site.resolve()
 cgi = args.php.with_name('php-cgi.exe' if os.name == 'nt' else 'php-cgi')
@@ -37,7 +40,7 @@ site_id = str(uuid.uuid4())
 token = secrets.token_hex(32)
 backup = secrets.token_hex(32)
 storage = args.storage.resolve()
-for name in ['operations','snapshots','tree-operations','trees']: (storage/name).mkdir()
+for name in ['operations','snapshots','tree-operations','trees','database-operations','databases']: (storage/name).mkdir()
 
 def check(ok, name):
     if not ok:
@@ -79,7 +82,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         env['CONTENT_TYPE'] = self.headers.get('Content-Type','')
         env['CONTENT_LENGTH'] = self.headers.get('Content-Length','0')
         payload = self.rfile.read(int(env['CONTENT_LENGTH']))
-        p = subprocess.run([str(cgi), '-d', 'max_execution_time=5' if args.tree_smoke else 'max_execution_time=600'], env=env, cwd=site, input=payload, capture_output=True, timeout=8 if args.tree_smoke else 660, creationflags=flags)
+        p = subprocess.run([str(cgi), '-d', 'max_execution_time=5' if (args.tree_smoke or args.database_full) else 'max_execution_time=600'], env=env, cwd=site, input=payload, capture_output=True, timeout=8 if (args.tree_smoke or args.database_full) else 660, creationflags=flags)
         headers, sep, body = p.stdout.partition(b'\r\n\r\n')
         if not sep:
             self.send_error(502)
@@ -104,6 +107,12 @@ plain = http.server.HTTPServer(('127.0.0.1',0),Handler)
 threads = [threading.Thread(target=s.serve_forever,daemon=True) for s in [secure,plain]]
 for thread in threads:
     thread.start()
+# The fixture listens only on IPv4. Avoid Windows IPv6 localhost fallback delays
+# while preserving TLS hostname validation for localhost.
+resolve = socket.getaddrinfo
+def fixture_resolve(host, port, family=0, type=0, proto=0, flags=0):
+    return resolve(host, port, socket.AF_INET if host == 'localhost' else family, type, proto, flags)
+socket.getaddrinfo = fixture_resolve
 client = ssl.create_default_context(cafile=str(args.certificate))
 
 def request(credential=None, task='inventory', method='GET', tls=True, extra=None, path='/index.php', suffix='', data=None):
@@ -147,6 +156,51 @@ try:
     check(result[0]==202 and result[2]['status']=='uncertain', 'unarmed_capture_fails_closed')
     check(not (storage/'snapshots/unarmed-capture').exists(), 'unarmed_has_no_snapshot')
     check(backup_request(operation='unarmed-capture')[0]==202, 'unarmed_result_persisted')
+    if args.database_full or args.database_guard_only:
+        def database(method='GET', seq=0, credential=backup, tls=True, operation='native-database'):
+            payload = {'site_id':site_id,'operation':operation,'action':'step','sequence':seq,'confirmed':True}
+            return request(credential, task='backup_database', method=method, tls=tls,
+                suffix='&site_id='+site_id+'&operation='+operation+'&action=status' if method=='GET' else '',
+                data=json.dumps(payload).encode() if method=='POST' else None,
+                extra={'Content-Type':'application/json'})
+        check(database()[0]==404, 'database_unknown')
+        check(database(credential=token)[0]==401, 'database_inventory_denied')
+        check(database(tls=False)[0]==403, 'database_tls_required')
+        (storage/'armed.json').write_text(json.dumps({'operation':'native-database','writers_stopped':True,'expires_at':int(time.time())+900}))
+        if args.database_guard_only:
+            refused=database('POST')
+            check(refused[0]==202 and refused[2]['status']=='uncertain', 'database_session_writer_refused')
+            check(not (storage/'databases/native-database').exists(), 'database_session_writer_no_capture')
+            check(database('POST')[2]==refused[2], 'database_session_writer_not_replayed')
+            (storage/'armed.json').unlink()
+            print(json.dumps({'passed':len(checks),'checks':checks,'database_writer_guard':True},indent=2))
+            sys.exit(0)
+        durations=[]
+        for seq in range(3000):
+            start=time.monotonic(); result=database('POST',seq); durations.append(time.monotonic()-start)
+            check(result[0]==200 and result[2]['next_sequence']==seq+1, 'database_step_'+str(seq))
+            check(str(storage).encode() not in result[3] and backup.encode() not in result[3], 'database_redacted_'+str(seq))
+            if seq==0:
+                check(database('POST',seq)[2]==result[2], 'database_lost_response_no_advance')
+                check(database()[2]==result[2], 'database_get_reconciles')
+                check(database('POST',seq+2)[0]==409, 'database_cannot_skip')
+            if result[2]['status']=='complete': break
+        check(result[2]['status']=='complete' and result[2]['scope']=='database_only', 'database_completed')
+        check(database()[2]==result[2] and database('POST',seq+1)[2]==result[2], 'database_completion_stable')
+        check(not result[2]['restoration_verified'], 'database_no_false_restore_claim')
+        check('no-store' in result[1]['Cache-Control'], 'database_private_response')
+        verify = subprocess.run([str(args.php), str(Path(__file__).with_name('database_http_restore.php')), str(site), str(storage/'databases'), '--allow-disposable-writes'], input=sys.stdin.read(), text=True, capture_output=True, creationflags=flags)
+        if verify.returncode: raise RuntimeError('Database restore comparison failed: '+verify.stderr)
+        restored=json.loads(verify.stdout)
+        check(restored['tables']>50, 'https_capture_restored_and_compared')
+        (storage/'armed.json').unlink()
+        check(database('POST',operation='unarmed-database')[0]==202, 'database_unarmed_refused')
+        check(not (storage/'databases/unarmed-database').exists(), 'database_unarmed_no_capture')
+        configure(token, backup_credential='')
+        check(database()[0]==503, 'database_revoked')
+        check(max(durations)<5, 'database_requests_under_five_seconds')
+        print(json.dumps({'passed':len(checks),'checks':checks,'requests':len(durations),'max_request_seconds':max(durations),'tls_certificate_verified':True,'restore':restored,'full_backup_verified':False},indent=2))
+        sys.exit(0)
     if args.tree_smoke:
         def tree(method='GET', seq=0, credential=backup, tls=True):
             payload = {'site_id':site_id,'operation':'native-tree','action':'step','sequence':seq,'confirmed':True}

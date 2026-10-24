@@ -28,6 +28,7 @@ parser.add_argument('--certificate', type=Path, required=True)
 parser.add_argument('--private-key', type=Path, required=True)
 parser.add_argument('--allow-disposable-writes', action='store_true', required=True)
 parser.add_argument('--storage', type=Path, required=True)
+parser.add_argument('--site-full', action='store_true', help='Full joint sequenced capture; disposable stopped-writer lab only')
 parser.add_argument('--tree-smoke', action='store_true', help='Bounded native file-tree route only; does not capture a complete Joomla or database')
 parser.add_argument('--database-guard-only', action='store_true')
 parser.add_argument('--database-full', action='store_true', help='Capture entire disposable database in sequenced HTTPS requests')
@@ -40,7 +41,7 @@ site_id = str(uuid.uuid4())
 token = secrets.token_hex(32)
 backup = secrets.token_hex(32)
 storage = args.storage.resolve()
-for name in ['operations','snapshots','tree-operations','trees','database-operations','databases']: (storage/name).mkdir()
+for name in ['operations','snapshots','tree-operations','trees','database-operations','databases','site-operations','sites','site-trees','site-databases','site-verify']: (storage/name).mkdir()
 
 def check(ok, name):
     if not ok:
@@ -82,7 +83,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         env['CONTENT_TYPE'] = self.headers.get('Content-Type','')
         env['CONTENT_LENGTH'] = self.headers.get('Content-Length','0')
         payload = self.rfile.read(int(env['CONTENT_LENGTH']))
-        p = subprocess.run([str(cgi), '-d', 'max_execution_time=5' if (args.tree_smoke or args.database_full) else 'max_execution_time=600'], env=env, cwd=site, input=payload, capture_output=True, timeout=8 if (args.tree_smoke or args.database_full) else 660, creationflags=flags)
+        p = subprocess.run([str(cgi), '-d', 'max_execution_time=5' if (args.tree_smoke or args.database_full or args.site_full) else 'max_execution_time=600'], env=env, cwd=site, input=payload, capture_output=True, timeout=8 if (args.tree_smoke or args.database_full or args.site_full) else 660, creationflags=flags)
         headers, sep, body = p.stdout.partition(b'\r\n\r\n')
         if not sep:
             self.send_error(502)
@@ -156,6 +157,49 @@ try:
     check(result[0]==202 and result[2]['status']=='uncertain', 'unarmed_capture_fails_closed')
     check(not (storage/'snapshots/unarmed-capture').exists(), 'unarmed_has_no_snapshot')
     check(backup_request(operation='unarmed-capture')[0]==202, 'unarmed_result_persisted')
+    if args.site_full:
+        operation = 'native-joint'
+        def joint(method='GET', seq=0, credential=backup, tls=True):
+            payload = {'site_id':site_id,'operation':operation,'action':'step','sequence':seq,'confirmed':True}
+            return request(credential, task='backup_site', method=method, tls=tls,
+                suffix='&site_id='+site_id+'&operation='+operation+'&action=status' if method=='GET' else '',
+                data=json.dumps(payload).encode() if method=='POST' else None,
+                extra={'Content-Type':'application/json'})
+        check(joint()[0]==404, 'joint_unknown')
+        check(joint(credential=token)[0]==401, 'joint_inventory_denied')
+        check(joint(tls=False)[0]==403, 'joint_tls_required')
+        # This fixture exclusively owns the offline lab, with no other server/cron.
+        # Renew locally under that same continuously stopped-writer condition;
+        # production clients must never infer or renew this permission remotely.
+        def arm():
+            (storage/'armed.json').write_text(json.dumps({'operation':operation,'writers_stopped':True,'expires_at':int(time.time())+900}))
+        arm(); renewed=time.monotonic(); renewals=0; durations=[]; phases={}; started=time.monotonic()
+        for seq in range(20000):
+            if time.monotonic()-renewed > 600:
+                arm(); renewed=time.monotonic(); renewals+=1
+            begin=time.monotonic(); result=joint('POST',seq); durations.append(time.monotonic()-begin)
+            check(result[0]==200 and result[2]['next_sequence']==seq+1, 'joint_step_'+str(seq))
+            phase=result[2]['phase']; phases[phase]=phases.get(phase,0)+1
+            if seq==0 or phases[phase]==1:
+                check(joint('POST',seq)[2]==result[2], 'joint_duplicate_'+phase)
+                check(joint()[2]==result[2], 'joint_get_'+phase)
+                check(joint('POST',seq+2)[0]==409 or phase=='complete', 'joint_sequence_'+phase)
+            if seq % 100 == 0:
+                (storage.parent/'progress.json').write_text(json.dumps({'sequence':seq,'phase':phase,'seconds':time.monotonic()-started}))
+            if result[2]['status']=='complete': break
+        check(result[2]['status']=='complete' and result[2]['scope']=='files_and_database', 'joint_complete')
+        check(not result[2]['restoration_verified'], 'joint_no_false_restore_claim')
+        check(str(storage).encode() not in result[3] and backup.encode() not in result[3], 'joint_private_response')
+        check(joint('POST',seq+1)[2]==result[2], 'joint_completion_stable')
+        verify=subprocess.run([str(args.php),str(Path(__file__).with_name('site_http_restore.php')),str(site),str(storage),'--allow-disposable-writes'],input=sys.stdin.read(),text=True,capture_output=True,creationflags=flags)
+        if verify.returncode: raise RuntimeError('Joint restore comparison failed: '+verify.stderr)
+        restored=json.loads(verify.stdout)
+        (storage/'armed.json').unlink()
+        configure(token,backup_credential='')
+        check(joint()[0]==503, 'joint_revoked')
+        check(max(durations)<5, 'joint_requests_under_five_seconds')
+        print(json.dumps({'passed':len(checks),'requests':len(durations),'phases':phases,'max_request_seconds':max(durations),'elapsed_seconds':time.monotonic()-started,'local_permit_renewals':renewals,'tls_certificate_verified':True,'restore':restored,'application_verified':False},indent=2))
+        sys.exit(0)
     if args.database_full or args.database_guard_only:
         def database(method='GET', seq=0, credential=backup, tls=True, operation='native-database'):
             payload = {'site_id':site_id,'operation':operation,'action':'step','sequence':seq,'confirmed':True}

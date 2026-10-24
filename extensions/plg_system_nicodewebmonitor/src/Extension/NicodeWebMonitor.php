@@ -33,11 +33,11 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
             return;
         }
         $task = $app->getInput()->get->getString('task', '');
-        if (in_array($task, ['backup', 'backup_tree', 'backup_database'], true)) {
+        if (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site'], true)) {
             $storage = (string) $this->params->get('backup_storage', '');
             $endpoint = new BackupEndpoint((string) $this->params->get('site_id', ''),
                 (string) $this->params->get('backup_token_hash', ''),
-                (string) $this->params->get('token_hash', ''), $storage, JPATH_ROOT, $task === 'backup_tree', $task === 'backup_database');
+                (string) $this->params->get('token_hash', ''), $storage, JPATH_ROOT, $task === 'backup_tree', $task === 'backup_database', $task === 'backup_site');
             // Bound the read even when Content-Length is missing or false.
             $body = file_get_contents('php://input', false, null, 0, 4097);
             [$status, $body] = $endpoint->handle($_SERVER, $_GET, $body === false ? '' : $body,
@@ -62,12 +62,21 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
                     $this->database->connect();
                     $connection = $this->database->getConnection();
                     if (!$connection instanceof \mysqli) { throw new \RuntimeException('Unsupported database driver'); }
-                    if ($task === 'backup_database') {
+                    if (in_array($task, ['backup_database', 'backup_site'], true)) {
                         // Joomla starts its session before onAfterInitialise: the backup
                         // requests themselves must not mutate the database being captured.
                         if ($app->get('session_handler', 'filesystem') !== 'filesystem'
                             || (bool) $app->get('session_metadata', true)) {
                             throw new \RuntimeException('Database-writing sessions must be disabled locally');
+                        }
+                        if ($task === 'backup_site') {
+                            foreach (['sites','site-trees','site-databases','site-verify'] as $child) {
+                                BackupEndpoint::privateDirectory($storage . '/' . $child, JPATH_ROOT);
+                            }
+                            return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableSite($storage . '/sites'))->step($id,
+                                fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/site-trees'))->step(JPATH_ROOT, $operation, true, 64),
+                                fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableDatabase($storage . '/site-databases'))->step($connection, $operation, true),
+                                fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\TreeManifest($storage . '/site-verify'))->step(JPATH_ROOT, $operation, true, 64));
                         }
                         BackupEndpoint::privateDirectory($storage . '/databases', JPATH_ROOT);
                         return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableDatabase($storage . '/databases'))->step($connection, $id, true);
@@ -90,7 +99,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
         header('Pragma: no-cache');
         header('X-Content-Type-Options: nosniff');
         if ($status === 401) { header('WWW-Authenticate: Bearer realm="Nicode Web Monitor"'); }
-        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree', 'backup_database'], true) ? 'GET, POST' : 'GET')); }
+        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site'], true) ? 'GET, POST' : 'GET')); }
         echo json_encode($body, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         $app->close();
     }

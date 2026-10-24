@@ -1,0 +1,76 @@
+Joint sequenced site capture (development), 24 October 2026
+Package: Nicode.joomla.webmonitor
+
+The backup_site connector route coordinates files and database under one operation
+ID and one sequence journal. It is a capture operation, not a remote restore API.
+The central maintenance screen and native Joomla/extension updates are pending.
+
+Prepare a disposable Joomla 6 installation using tools/build.py and install the
+system connector ZIP. Configure its site UUID, inventory credential digest and a
+separate backup credential digest as described in backup-http.txt. Use HTTPS with
+a verified certificate. Never put credentials or captured data in the repository.
+
+Create private directories outside all web roots and the source tree:
+site-operations, sites, site-trees, site-databases, site-verify.
+Configure backup_storage as their parent. Restrict that directory to the service
+account. Existing standalone tree/database operations use different directories;
+their operation IDs cannot supply stale child captures to a new joint operation.
+
+Before starting, stop ALL writers (cron, administration, queues, external SQL and
+filesystem writers), set Joomla offline, use filesystem sessions and disable
+session metadata writes. Keep PHP session/log/temp storage outside the tree.
+Offline alone does not satisfy these conditions. The connector refuses database
+sessions or enabled session metadata before advancing the joint capture.
+
+Locally create armed.json in backup_storage, containing the exact operation ID,
+writers_stopped:true and an integer expires_at no more than 900 seconds ahead.
+This is a local operator assertion; the connector cannot stop or detect every
+external writer. Keep the stopped-writer window continuous until completion.
+A long capture may require the operator to renew this short permission BEFORE it
+expires, after confirming those conditions still hold. There is no HTTP renewal
+API. Never renew blindly after another writer was allowed to run.
+
+POST /index.php?option=com_nicodewebmonitor&task=backup_site
+Authorization: Bearer <separate backup credential>
+Content-Type: application/json
+Body: site_id, operation, action:"step", confirmed:true, sequence:0.
+Use the returned next_sequence for the next POST. Subsequent bodies keep the
+same site_id/operation. Each call performs one bounded child step. File batches
+have at most 64 units and a cooperative 0.2s yield budget; storage and database
+latency are not hard deadlines. See resumable-tree.txt/resumable-database.txt
+for capacity limits and SQL constraints.
+
+Phases: files -> database -> verify -> complete. The last phase independently
+rebuilds the source file manifest and compares it with the captured file manifest,
+so a file changed during database capture cannot produce a completed receipt.
+This is not a transactional snapshot of a live site and cannot detect arbitrary
+transient external effects. The continuously stopped-writer condition is required.
+
+GET the same route with site_id, operation, action=status to reconcile a lost
+response. Repeating the last acknowledged sequence returns its receipt without
+advancing. A stale/skipped sequence is rejected. A process failure after reserving
+a step, provider failure, expired permit or damaged checkpoint yields uncertain:
+do not create another operation or replay the uncertain step automatically.
+Inspect the private journal and underlying effect before operator recovery.
+Credential revocation also blocks status queries. Responses never return paths,
+credentials, files, SQL or table names. Completed receipts remain historical.
+
+The final manifest_sha256 binds the file and database digests using SHA-256 of
+JSON {format:"nwm-site-chunks-1",files:<file digest>,database:<database digest>}
+in that key order. Private sites/<operation>/state.json retains both digests.
+Children reside in site-trees/<operation> and site-databases/<operation>; the
+independent final manifest is in site-verify/<operation>. This is a development
+chunk format, not a downloadable archive. Capture completion always reports
+restoration_verified:false. Restoration and application acceptance are separate.
+
+Tests:
+php tests/resumable_site.php /absolute/private/fresh-directory
+This tests real file capture/verification with a controlled database receipt,
+duplicate requests, changed files, corrupt checkpoints and journal uncertainty.
+tests/backup_http.py --site-full exercises the native Joomla route over verified
+loopback TLS and restores/compares the captured files and actual database in a
+disposable environment. It changes connector/configuration state and requires
+the explicit --allow-disposable-writes flag; never use it on a production site.
+Its local permission renewal is valid only because the fixture exclusively owns
+the offline laboratory. Database administrator credentials arrive via stdin.
+See verification-2026-10-24-pm.txt for executed evidence and remaining limits.

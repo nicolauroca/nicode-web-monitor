@@ -8,7 +8,7 @@ namespace Nicode\Maintenance;
 final class TreeOperations
 {
     public function __construct(private readonly string $storage, private readonly string $siteId, private readonly string $scope = 'files_only') {
-        if (!in_array($scope, ['files_only', 'database_only'], true)) { throw new \InvalidArgumentException('Invalid scope'); }
+        if (!in_array($scope, ['files_only', 'database_only', 'files_and_database'], true)) { throw new \InvalidArgumentException('Invalid scope'); }
     }
 
     public function handle(array $server, array $request, \Closure $step): array {
@@ -63,7 +63,12 @@ final class TreeOperations
             // Do not advance again automatically after losing the journal receipt.
             $s['status'] = 'uncertain'; self::save($path, $s);
             $r = $step($id);
-            if (($r['operation'] ?? null) !== $id || !in_array($r['status'] ?? null, ($this->scope === 'files_only' ? ['manifest','capture','final','complete'] : ['schema','capture','verify','complete']), true)
+            $phases = match ($this->scope) {
+                'files_only'=>['manifest','capture','final','complete'],
+                'database_only'=>['schema','capture','verify','complete'],
+                'files_and_database'=>['files','database','verify','complete']
+            };
+            if (($r['operation'] ?? null) !== $id || !in_array($r['status'] ?? null, $phases, true)
                 || !is_int($r['cursor'] ?? null) || $r['cursor'] < 0
                 || (($r['manifest_sha256'] ?? null) !== null && (!is_string($r['manifest_sha256']) || !preg_match('/^[a-f0-9]{64}$/D', $r['manifest_sha256'])))
                 || ($r['status'] === 'complete' && !is_string($r['manifest_sha256'] ?? null))) { throw new \RuntimeException('Invalid receipt'); }

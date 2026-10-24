@@ -33,22 +33,23 @@ coverage and reproduction: `docs/verification-2026-10-11-browser.txt`.
 An optional native Joomla task plugin now performs bounded automatic inventory
 batches with explicit permissions and oldest-first selection. Setup and current
 verification limits: `docs/automatic-monitoring.txt`.
-Guided pairing, external notifications, updates and backups remain
-pending. See `docs/central-client.txt` for the transport contract and test commands,
+Guided pairing, external notifications, native updates and central backup
+management remain pending. Experimental connector backups are described below. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
 A local development recovery primitive captures/restores files, configuration and
 database schemas/rows into a separate directory and empty database, with corruption
 checks and explicit uncertain operations. Restored Joomla CLI/frontend/login boot
-has been tested in the disposable lab. This is not yet a remote backup feature or
-integrated backup workflow. Preconditions and reproduction:
+has been tested in the disposable lab. Central backup management remains pending. Preconditions and reproduction:
 `docs/local-site-recovery.txt` and `docs/local-database-snapshot.txt`.
 A separate experimental backup operation core now reserves operation IDs before
 capture, authenticates with a backup-only credential and retains receipts or
 uncertain outcomes across process restarts without automatically rerunning capture.
-It is not yet wired into a Joomla route or panel. Contract and executed checks:
+It backs the synchronous Joomla backup route; the separate sequenced backup_site
+route combines bounded file/database capture. Neither has a central panel yet.
+Contract and historical checks:
 `docs/backup-operations.txt` and `docs/verification-2026-10-16.txt`.
 No data is pushed to external services. The console command uses the operating-system
-account's existing access; the HTTP connector has its own read-only credential.
+account's existing access; HTTP inventory and backup use separate credentials.
 
 ## Build and try in a disposable Joomla 6 installation
 
@@ -86,7 +87,7 @@ of Git. License: GPL-2.0-or-later; see LICENSE.
 
 ## HTTPS connector (development)
 
-The build also produces `dist/plg_system_nicodewebmonitor-0.3.0-dev.zip`.
+The build also produces `dist/plg_system_nicodewebmonitor-0.4.0-dev.zip`.
 Install it in a disposable Joomla 6 site. In **System - Nicode Web Monitor**,
 configure a unique lowercase UUID v4 and the SHA-256 digest of a cryptographically
 random 32-byte credential encoded as 64 hex characters. Hash the encoded text,
@@ -110,3 +111,8 @@ An experimental backup route uses a separate credential and a locally armed
 maintenance window; see `docs/backup-http.txt` before enabling it in a disposable
 site. Central backup UI/ACL, pairing UI and production rate limiting remain pending.
 See `docs/connector-contract.txt` and `docs/verification-2026-10-05.txt`.
+
+Joint resumable file/database capture is available in the development connector
+through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
+reconciliation and private layout. Capture is not proof of restoration. Central
+maintenance UI/ACL/history and native updates are still pending.

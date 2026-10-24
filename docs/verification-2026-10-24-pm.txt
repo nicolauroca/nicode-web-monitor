@@ -1,0 +1,50 @@
+Nicode Web Monitor — 24 October 2026, afternoon
+Package: Nicode.joomla.webmonitor
+
+Implemented backup_site: one sequenced operation for files, database and a final
+independent file-manifest comparison, with a receipt binding both digests.
+Separate private storage prevents reuse of standalone file/database captures.
+
+Passed 26 coordinator checks with real file capture and controlled database
+receipts: duplicate requests, changed files, invalid identity/digest, orphan and
+corrupt checkpoints, lost receipt, scope conflict and expired permission.
+Passed 16 sequenced journal regression checks and 83 standalone HTTPS file checks.
+The development connector installed in the disposable Joomla; all 15 bundled
+PHP source files passed lint. No central maintenance screen is implemented yet.
+
+Native Joomla HTTPS acceptance is PARTIAL. The joint route acknowledged 3203
+sequenced requests, completed its initial manifest and copied the file tree;
+the tree was still in its final verification phase. Database phase, final joint
+completion and restoration from this HTTP operation were NOT reached or verified.
+The previous morning's local full recovery evidence remains separate.
+
+The full test exceeded 20 minutes and could not finish within the gateway's
+30-minute execution budget. The local permit was deliberately revoked before
+that deadline. The next request failed closed; GET/journal state remained
+uncertain at next_sequence 3203. That operation was not retried. The harness
+disabled its test credential, restored lab defaults and stopped the database;
+ports 8767 and 33077 were checked closed. This is not a completed backup.
+
+An earlier harness attempt failed before capture because a temporary preparation
+script shadowed Python's http module. The filename and duplicate parser setup
+were corrected, then fresh private storage was used for the native run above.
+
+Correction required before another full run: remove the redundant whole-tree
+verification between file capture and database capture by coordinating the
+existing final file verification AFTER the database, while preserving stopped
+writers, frozen manifest binding, bounded requests and fail-closed uncertainty.
+Validate that change on a small actual database/file fixture first. Do not rerun
+the same full test unchanged or raise gateway limits to conceal its duration.
+
+Fixture: Windows, Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9, verified loopback TLS.
+No real hosting, paid dependency or new scheduled task. No cross-platform,
+power-loss durability or release acceptance claim. Native updates and central
+maintenance credential/ACL/UI/history remain pending. The target is still
+1 November, with internal candidate 29 October; neither is certified here.
+
+Reproduce the coordinator: php tests/resumable_site.php <fresh-private-directory>.
+The --site-full mode in tests/backup_http.py is an unfinished full-acceptance test,
+not evidence of a passing full run. It requires an exclusively owned disposable
+offline Joomla, filesystem sessions, session metadata disabled, private storage,
+all other writers stopped and --allow-disposable-writes. Restore credentials go
+through stdin. See resumable-site.txt for the interface and limits.

@@ -24,6 +24,8 @@ function untilPhase(string $id, string $phase): array {
     throw new RuntimeException('No progress');
 }
 $c = new ResumableTree($root . '/store');
+denied(fn() => $c->step($root . '/source', 'bad-budget', true, 65), 'oversized work budget refused');
+denied(fn() => $c->step($root . '/source', 'bad-budget', true, 0), 'zero work budget refused');
 denied(fn() => $c->step($root . '/source', 'tree-one', false), 'requires stopped writers');
 denied(fn() => $c->step($root . '/source', '../escape', true), 'invalid identity refused');
 denied(fn() => (new ResumableTree($root . '/source/empty'))->step($root . '/source', 'tree-one', true), 'nested storage refused');

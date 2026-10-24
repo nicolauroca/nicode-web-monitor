@@ -13,7 +13,7 @@ limits and every stored chunk before writing target content. During writing
 it checks chunks again and creates files exclusively without overwriting.
 Binary files, empty files, numeric filenames and empty directories are
 preserved. Memory for file contents is bounded to a 1 MiB block; execution
-time is NOT bounded or resumable. The same 2048-entry/1-GiB limits apply.
+time is NOT bounded or resumable. The same 32768-entry/1-GiB limits apply.
 
 The returned files_restored receipt identifies the source manifest and counts.
 application_verified remains false: database restoration, permissions,
@@ -35,3 +35,10 @@ target effects, incomplete capture and seven unsafe manifest paths rejected.
 
 Database consistency and bounded HTTP resume remain the next integration
 gate. Central maintenance UI/ACL and native updates are still pending.
+
+24 October capacity update
+Limits: 32768 total entries, 2048 children per directory, 1 GiB and 16 MiB
+manifest checkpoints. The native file route requests batches of at most 64
+units with a cooperative 0.2-second yield budget, not a hard I/O deadline.
+See tree-manifest.txt for checkpoint/batch semantics and verification-2026-10-24.txt
+for full local recovery evidence and the remaining HTTP/product limitations.

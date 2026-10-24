@@ -11,7 +11,8 @@ final class ResumableTree
 {
     public function __construct(private readonly string $storage) {}
 
-    public function step(string $source, string $id, bool $quiesced): array {
+    public function step(string $source, string $id, bool $quiesced, int $units = 1): array {
+        if ($units < 1 || $units > 64) { throw new \InvalidArgumentException('Invalid work budget'); }
         clearstatcache();
         $root = realpath($source); $base = realpath($this->storage);
         if (!$quiesced || !$root || !$base || !is_dir($root) || is_link($source)
@@ -50,28 +51,34 @@ final class ResumableTree
             }
             $builder = new TreeManifest($dir . '/manifests');
             if ($s['phase'] === 'manifest') {
-                $r = $builder->step($root, 'initial-tree', true);
+                $r = $builder->step($root, 'initial-tree', true, $units);
                 if ($r['status'] === 'complete') {
                     $s['manifest_sha256'] = $r['manifest_sha256']; $s['phase'] = 'capture';
                 }
             } elseif ($s['phase'] === 'capture') {
-                $m = json_decode(file_get_contents($dir . '/manifests/initial-tree/state.json'), true, 32, JSON_THROW_ON_ERROR);
+                $manifestPath = $dir . '/manifests/initial-tree/state.json';
+                if (is_link($manifestPath) || filesize($manifestPath) > TreeManifest::MAX_CHECKPOINT) { throw new \RuntimeException('Invalid manifest'); }
+                $m = json_decode(file_get_contents($manifestPath), true, 32, JSON_THROW_ON_ERROR);
                 $entries = $m['entries'];
                 if (!hash_equals($s['manifest_sha256'], hash('sha256', json_encode($entries, JSON_THROW_ON_ERROR)))) {
                     throw new \RuntimeException('Frozen manifest changed');
                 }
                 $keys = array_keys($entries);
-                if ($s['cursor'] >= count($keys)) { throw new \RuntimeException('Invalid capture cursor'); }
-                $key = (string) $keys[$s['cursor']]; $entry = $entries[$key];
-                if ($entry['type'] === 'directory') { $s['cursor']++; }
-                else {
-                    $r = (new ResumableFile($dir . '/files'))->step($root . '/' . $key,
-                        sprintf('file-%04d', $s['cursor']), ['bytes' => $entry['bytes'], 'chunks' => $entry['chunks']], true);
-                    if ($r['status'] === 'complete') { $s['cursor']++; }
+                $deadline = microtime(true) + 0.2;
+                for ($unit = 0; $unit < $units; $unit++) {
+                    if ($s['cursor'] >= count($keys)) { throw new \RuntimeException('Invalid capture cursor'); }
+                    $key = (string) $keys[$s['cursor']]; $entry = $entries[$key];
+                    if ($entry['type'] === 'directory') { $s['cursor']++; }
+                    else {
+                        $r = (new ResumableFile($dir . '/files'))->step($root . '/' . $key,
+                            sprintf('file-%04d', $s['cursor']), ['bytes' => $entry['bytes'], 'chunks' => $entry['chunks']], true);
+                        if ($r['status'] === 'complete') { $s['cursor']++; }
+                    }
+                    if ($s['cursor'] === count($keys)) { $s['phase'] = 'final'; break; }
+                    if (microtime(true) >= $deadline) { break; }
                 }
-                if ($s['cursor'] === count($keys)) { $s['phase'] = 'final'; }
             } elseif ($s['phase'] === 'final') {
-                $r = $builder->step($root, 'final-tree', true);
+                $r = $builder->step($root, 'final-tree', true, $units);
                 if ($r['status'] === 'complete') {
                     if (!hash_equals($s['manifest_sha256'], $r['manifest_sha256'])) { throw new \RuntimeException('Source tree changed'); }
                     $s['phase'] = 'complete';

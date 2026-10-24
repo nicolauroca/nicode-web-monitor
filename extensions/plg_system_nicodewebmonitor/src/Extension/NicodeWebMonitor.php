@@ -56,7 +56,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
                     }
                     if ($task === 'backup_tree') {
                         BackupEndpoint::privateDirectory($storage . '/trees', JPATH_ROOT);
-                        return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/trees'))->step(JPATH_ROOT, $id, true);
+                        return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/trees'))->step(JPATH_ROOT, $id, true, 64);
                     }
 
                     $this->database->connect();

@@ -1,0 +1,11 @@
+24 October 2026 - capacity and local application recovery
+Quiesced disposable Joomla: 13327 entries / 9822 files / 88066066 bytes.
+Batched capture: 3495 calls; maximum 0.763506s; capture/restore/comparison 1162.59s.
+Checkpoint 2208205 bytes; all restored file SHA256 values equal source.
+Database: 78 tables compared exactly by schema/row multiset, 983 rows; 310 capture steps.
+Restored Joomla CLI inventory and HTTP frontend/admin login booted; source configuration unchanged. Temporary database removed, lab stopped.
+Native plugin installed: 25 checks; four batched authenticated HTTPS steps, maximum 0.203398s.
+Focused regressions: {"manifest": 18, "tree2": 14, "restore": 20, "limits": 7, "http": 83}.
+
+Limits: file/database captures coordinated by the disposable test runner with all writers stopped; NOT a product combined HTTP operation. Native smoke does not establish full-tree HTTPS throughput or 900-second permit sufficiency. Central maintenance UI/ACL/history and native updates still pending. No stable release or production recovery claim.
+Reproduce files: tests/tree_capacity.php SOURCE NEW_PRIVATE_STORE EMPTY_CLONE. Keep all writers stopped, then tests/tree_database_recovery.php SOURCE NEW_PRIVATE_DB_STORE CLONE nwm_recovery_<10hex> --allow-disposable-writes --prepare TREE_CAPTURE_DIRECTORY; database-admin JSON on stdin through existing lab secret helper. The test relocates only the clone, disables its outbound connector/scheduler and compares DB schemas/rows. Boot clone separately, then invoke same arguments with --cleanup in place of --prepare (no capture path needed). Never expose capture/clone or credentials publicly.

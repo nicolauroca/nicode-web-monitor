@@ -4,13 +4,14 @@ TreeManifest::step(source, operation, quiesced) persists discovery and SHA-256
 block manifests across separate PHP processes. One call visits one directory,
 discovers one file, or hashes/verifies one block of at most 1 MiB. Directory
 enumeration stops and refuses after 2048 children; the whole operation permits
-2048 entries INCLUDING the root and 1 GiB of file bytes. These are explicit
+32768 entries INCLUDING the root and 1 GiB of file bytes. These are explicit
 prototype limits, not claimed coverage of arbitrary Joomla installations.
 Checkpoint serialization is bounded by those caps; slow filesystem I/O has no
 guaranteed wall-clock deadline. State is read/written on each step.
 
 Keep storage private, outside both the source and the web root. Paths and IDs
-come from trusted local configuration. No HTTP route exposes this class.
+come from trusted local configuration. The native backup_tree route uses this
+through ResumableTree; callers cannot supply arbitrary paths through HTTP.
 The caller MUST stop all filesystem writers throughout discovery, verification
 and subsequent capture. This class does not enforce maintenance or coordinate
 database writers. It is not a snapshot mechanism for a live changing tree.
@@ -40,3 +41,20 @@ Run with a fresh private directory outside Git:
 The test uses separate processes, partial-checkpoint fixtures, changed sources,
 lock contention and a directory over the cap. It does not kill a process during
 fsync. See the session verification record for measured local durations.
+
+24 October capacity update
+The aggregate tree cap is 32768 entries, independently of the unchanged 2048
+children per directory and 1 GiB total. Manifest checkpoints are capped at
+16 MiB on write AND read, including offline restoration. Oversize writes are
+refused before replacing the previous committed checkpoint.
+The optional fourth step argument units defaults to 1 for compatibility and
+accepts at most 64. The native file endpoint requests 64 units. Batches yield
+after 0.2 seconds between primitive operations; this is a cooperative budget,
+NOT interruption of a slow filesystem call or a hard request deadline. Each
+hash primitive reads at most 1 MiB. Capture parses its frozen manifest once per
+batch, then checkpoints the cursor. HTTP journal uncertainty and explicit local
+quiescence requirements are unchanged. All writers must stay stopped.
+tests/tree_capacity.php SOURCE NEW_PRIVATE_STORE EMPTY_RESTORE_DIRECTORY runs
+batched capture on a quiesced tree larger than 2048 entries, restores it, compares
+every file hash and enforces a measured five-second local step gate. It does
+not by itself prove HTTP throughput, database consistency or application boot.

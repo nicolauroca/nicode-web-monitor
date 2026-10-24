@@ -14,7 +14,7 @@ changes; it does not make a live filesystem transactional. A completed receipt
 is historical, not a fresh integrity scan. Private captured storage must also
 remain protected from other writers.
 
-Each call makes at most one primitive step. Limits remain 2048 entries including
+By default each call makes one primitive step; the optional units argument accepts 1 through 64. Limits remain 32768 entries including
 root and 1 GiB total; filesystem latency has no guaranteed wall-clock deadline.
 The coordinator serializes processes using an OS lock, binds the canonical
 source to the operation ID, and persists each phase/cursor atomically. If the
@@ -35,7 +35,14 @@ process time 0.085725 seconds locally. Exact reconstruction of all file bytes,
 empty directory retention, lock contention, identity binding, partial checkpoint,
 source mutations, orphan initialization and corrupt checkpoints tested.
 
-Database consistency, database capture orchestration, authenticated HTTP resume,
-central backup UI/ACL/history and native updates remain pending. The existing
-synchronous HTTP route is unchanged; its timeout is NOT resolved by this local
-coordinator. No complete backup/restore or release claim.
+The separate authenticated backup_tree route uses this coordinator; see
+tree-http.txt. backup_database has its own sequenced journal. Combined HTTP
+orchestration, central backup UI/ACL/history and native updates remain pending.
+The older synchronous backup route is unchanged. No stable release claim.
+
+24 October capacity update
+Limits: 32768 total entries, 2048 children per directory, 1 GiB and 16 MiB
+manifest checkpoints. The native file route requests batches of at most 64
+units with a cooperative 0.2-second yield budget, not a hard I/O deadline.
+See tree-manifest.txt for checkpoint/batch semantics and verification-2026-10-24.txt
+for full local recovery evidence and the remaining HTTP/product limitations.

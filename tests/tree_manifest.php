@@ -81,7 +81,7 @@ denied(fn() => step('orphan-one'), 'interrupted initialization fails closed');
 file_put_contents($root . '/store/tree-one/state.json', '{');
 denied(fn() => step('tree-one'), 'corrupt checkpoint fails closed');
 mkdir($root . '/wide');
-for ($i = 0; $i <= TreeManifest::MAX_ENTRIES; $i++) { file_put_contents($root . '/wide/f' . $i, ''); }
+for ($i = 0; $i <= TreeManifest::MAX_CHILDREN; $i++) { file_put_contents($root . '/wide/f' . $i, ''); }
 denied(fn() => $builder->step($root . '/wide', 'wide-tree', true), 'oversized directory rejected within entry cap');
 check(max($times) < 5, 'every measured subprocess below five seconds locally');
 echo json_encode(['passed' => count($checks), 'checks' => $checks, 'process_steps' => count($times),

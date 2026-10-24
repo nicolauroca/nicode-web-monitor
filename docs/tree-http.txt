@@ -47,7 +47,7 @@ returned. HTTP responses are private/no-store.
 
 Resource and acceptance limits
 Each provider step processes one entry/directory or one 1 MiB block. Prototype
-limits remain 2048 manifest entries and 1 GiB total; a larger Joomla tree may be
+limits remain 32768 manifest entries and 1 GiB total; a larger Joomla tree may be
 refused. These limits have NOT been raised to claim full Joomla coverage.
 Bounded work is not a hard wall-clock guarantee on arbitrary storage. Keep the
 site quiesced across all requests and allow adequate operator-managed maintenance
@@ -73,3 +73,10 @@ disables it afterwards; never use it on a production installation.
 Next acceptance: database consistency across bounded requests, realistic whole
 Joomla capacity and complete recovery, then central maintenance ACL/UI/history
 and native Joomla/extension updates. None is implied by this file-only route.
+
+24 October capacity update
+Limits: 32768 total entries, 2048 children per directory, 1 GiB and 16 MiB
+manifest checkpoints. The native file route requests batches of at most 64
+units with a cooperative 0.2-second yield budget, not a hard I/O deadline.
+See tree-manifest.txt for checkpoint/batch semantics and verification-2026-10-24.txt
+for full local recovery evidence and the remaining HTTP/product limitations.

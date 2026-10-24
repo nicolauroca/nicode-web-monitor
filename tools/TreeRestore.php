@@ -34,7 +34,7 @@ final class TreeRestore
         }
         if (scandir($target) !== ['.', '..']) { throw new \RuntimeException('Target must be empty'); }
         $s = self::read($capture . '/state.json', 4096);
-        $m = self::read($capture . '/manifests/initial-tree/state.json', 2097152);
+        $m = self::read($capture . '/manifests/initial-tree/state.json', TreeManifest::MAX_CHECKPOINT);
         $entries = $m['entries'] ?? null;
         if (($s['phase'] ?? '') !== 'complete' || ($m['phase'] ?? '') !== 'complete'
             || !is_array($entries) || count($entries) > TreeManifest::MAX_ENTRIES

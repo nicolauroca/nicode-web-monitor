@@ -74,9 +74,11 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
                                 BackupEndpoint::privateDirectory($storage . '/' . $child, JPATH_ROOT);
                             }
                             return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableSite($storage . '/sites'))->step($id,
-                                fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/site-trees'))->step(JPATH_ROOT, $operation, true, 64),
+                                fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/site-trees'))->step(JPATH_ROOT, $operation, true, 64, true),
                                 fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableDatabase($storage . '/site-databases'))->step($connection, $operation, true),
-                                fn ($operation) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\TreeManifest($storage . '/site-verify'))->step(JPATH_ROOT, $operation, true, 64));
+                                fn ($operation, $deferred) => $deferred
+                                    ? (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/site-trees'))->step(JPATH_ROOT, $operation, true, 64)
+                                    : (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\TreeManifest($storage . '/site-verify'))->step(JPATH_ROOT, $operation, true, 64));
                         }
                         BackupEndpoint::privateDirectory($storage . '/databases', JPATH_ROOT);
                         return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableDatabase($storage . '/databases'))->step($connection, $id, true);

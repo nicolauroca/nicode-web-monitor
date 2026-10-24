@@ -40,7 +40,11 @@ have at most 64 units and a cooperative 0.2s yield budget; storage and database
 latency are not hard deadlines. See resumable-tree.txt/resumable-database.txt
 for capacity limits and SQL constraints.
 
-Phases: files -> database -> verify -> complete. The last phase independently
+Phases: files -> database -> verify -> complete. New captures defer the tree
+provider final scan until after database capture, avoiding a redundant scan
+before the database. The tree is not marked complete until that scan succeeds.
+The joint checkpoint binds this mode; older checkpoints keep their original
+independent verifier. The last phase independently
 rebuilds the source file manifest and compares it with the captured file manifest,
 so a file changed during database capture cannot produce a completed receipt.
 This is not a transactional snapshot of a live site and cannot detect arbitrary
@@ -59,7 +63,8 @@ The final manifest_sha256 binds the file and database digests using SHA-256 of
 JSON {format:"nwm-site-chunks-1",files:<file digest>,database:<database digest>}
 in that key order. Private sites/<operation>/state.json retains both digests.
 Children reside in site-trees/<operation> and site-databases/<operation>; the
-independent final manifest is in site-verify/<operation>. This is a development
+final manifest for new captures is in site-trees/<operation>/manifests/final-tree.
+Legacy checkpoints retain the independent site-verify/<operation> scan. This is a development
 chunk format, not a downloadable archive. Capture completion always reports
 restoration_verified:false. Restoration and application acceptance are separate.
 
@@ -74,3 +79,8 @@ the explicit --allow-disposable-writes flag; never use it on a production site.
 Its local permission renewal is valid only because the fixture exclusively owns
 the offline laboratory. Database administrator credentials arrive via stdin.
 See verification-2026-10-24-pm.txt for executed evidence and remaining limits.
+
+Small real database fixture: tests/site_small_database.php <fresh-directory>
+--allow-disposable-writes, administrator connection JSON via stdin. It creates
+and removes a uniquely named disposable schema. Never pass credentials in CLI
+arguments. This checks phase ordering and completion, not restoration.

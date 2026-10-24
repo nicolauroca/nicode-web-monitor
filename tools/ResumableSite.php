@@ -26,6 +26,7 @@ final class ResumableSite
                 $s = json_decode(file_get_contents($path), true, 8, JSON_THROW_ON_ERROR);
                 if (($s['operation'] ?? null) !== $id || !in_array($s['phase'] ?? null, ['files','database','verify','complete'], true)
                     || !is_int($s['cursor'] ?? null) || $s['cursor'] < 0) { throw new \RuntimeException('Invalid checkpoint'); }
+                if (isset($s['deferred_final']) && !is_bool($s['deferred_final'])) { throw new \RuntimeException('Invalid verification mode'); }
                 foreach (['files_sha256','database_sha256'] as $key) {
                     if (($s[$key] ?? null) !== null && (!is_string($s[$key]) || !preg_match('/^[a-f0-9]{64}$/D', $s[$key]))) {
                         throw new \RuntimeException('Invalid digest');
@@ -42,17 +43,17 @@ final class ResumableSite
             }
             $phase = $s['phase'];
             if ($phase !== 'complete') {
-                $r = match ($phase) { 'files'=>$files($id), 'database'=>$database($id), 'verify'=>$verify($id) };
+                $r = match ($phase) { 'files'=>$files($id), 'database'=>$database($id), 'verify'=>$verify($id, $s['deferred_final'] ?? false) };
                 $allowed = match ($phase) {
                     'files'=>['manifest','capture','final','complete'],
                     'database'=>['schema','capture','verify','complete'],
-                    'verify'=>['discover','verify','complete']
+                    'verify'=>['discover','verify','final','complete']
                 };
                 if (($r['operation'] ?? null) !== $id || !in_array($r['status'] ?? null, $allowed, true)) { throw new \RuntimeException('Invalid provider receipt'); }
-                if ($r['status'] === 'complete') {
+                if ($r['status'] === 'complete' || ($phase === 'files' && $r['status'] === 'final')) {
                     $hash = $r['manifest_sha256'] ?? null;
                     if (!is_string($hash) || !preg_match('/^[a-f0-9]{64}$/D', $hash)) { throw new \RuntimeException('Missing manifest digest'); }
-                    if ($phase === 'files') { $s['files_sha256'] = $hash; $s['phase'] = 'database'; }
+                    if ($phase === 'files') { $s['deferred_final'] = $r['status'] === 'final'; $s['files_sha256'] = $hash; $s['phase'] = 'database'; }
                     elseif ($phase === 'database') { $s['database_sha256'] = $hash; $s['phase'] = 'verify'; }
                     else {
                         if (!hash_equals($s['files_sha256'], $hash)) { throw new \RuntimeException('Files changed during database capture'); }

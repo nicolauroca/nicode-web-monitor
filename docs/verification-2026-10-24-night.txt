@@ -1,0 +1,8 @@
+Nicode Web Monitor,24 October evening
+Package: Nicode.joomla.webmonitor
+
+Deferred final tree verification now follows database capture, removing a redundant scan. Legacy checkpoints keep their independent verifier.31 coordinator checks,14 tree checks and small actual MariaDB fixture pass.
+
+Whole Joomla capture over verified loopback TLS reached complete, including final tree verification. Restore/comparison was stopped at session budget; no completed restoration or application startup claim. Completed capture preserved; resume recovery testing without recapturing.
+
+Full capture installed SHA256 f7fd34c1483bca6e6e0cbf1158a6a182e384f8f68074fc388d84f4921855cad6. Final source adds legacy mode binding, separately unit/database tested; final package native smoke remains pending. Central maintenance and native updates remain pending; no release acceptance.

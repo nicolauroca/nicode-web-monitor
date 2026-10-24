@@ -11,7 +11,10 @@ final class ResumableTree
 {
     public function __construct(private readonly string $storage) {}
 
-    public function step(string $source, string $id, bool $quiesced, int $units = 1): array {
+    /** deferFinal stops at final with a frozen digest, never a completed receipt.
+     * The joint coordinator must resume with deferFinal=false after database capture.
+     */
+    public function step(string $source, string $id, bool $quiesced, int $units = 1, bool $deferFinal = false): array {
         if ($units < 1 || $units > 64) { throw new \InvalidArgumentException('Invalid work budget'); }
         clearstatcache();
         $root = realpath($source); $base = realpath($this->storage);
@@ -77,7 +80,7 @@ final class ResumableTree
                     if ($s['cursor'] === count($keys)) { $s['phase'] = 'final'; break; }
                     if (microtime(true) >= $deadline) { break; }
                 }
-            } elseif ($s['phase'] === 'final') {
+            } elseif ($s['phase'] === 'final' && !$deferFinal) {
                 $r = $builder->step($root, 'final-tree', true, $units);
                 if ($r['status'] === 'complete') {
                     if (!hash_equals($s['manifest_sha256'], $r['manifest_sha256'])) { throw new \RuntimeException('Source tree changed'); }

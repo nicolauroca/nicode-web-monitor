@@ -14,9 +14,13 @@ function check(bool $ok, string $name): void {
 }
 foreach (['source','sites','trees','verify','journal'] as $name) { mkdir($root . '/' . $name); }
 file_put_contents($root . '/source/data', str_repeat('a', 1048576) . 'tail');
-$files = fn ($id) => (new ResumableTree($root . '/trees'))->step($root . '/source', $id, true, 64);
-$verify = fn ($id) => (new TreeManifest($root . '/verify'))->step($root . '/source', $id, true, 64);
-$database = function ($id) use (&$calls) {
+$files = fn ($id) => (new ResumableTree($root . '/trees'))->step($root . '/source', $id, true, 64, true);
+$verify = function ($id, $deferred) use ($root) {
+    check($deferred === true, 'new_capture_uses_deferred_verifier');
+    return (new ResumableTree($root . '/trees'))->step($root . '/source', $id, true, 64);
+};
+$database = function ($id) use (&$calls, $root) {
+    check(!is_file($root . '/trees/' . $id . '/manifests/final-tree/state.json'), 'database_before_final_scan');
     $calls++; return ['operation'=>$id, 'status'=>'complete', 'manifest_sha256'=>hash('sha256','database-fixture')];
 };
 $site = '12345678-1234-4123-8123-123456789abc';
@@ -87,4 +91,18 @@ check($journal->handle($post,$request,$unarmed)[0]===202
     && !is_dir($root.'/sites/unarmed-site'), 'unarmed_has_no_child_effect');
 check($journal->handle($post,$request,$provider)[0]===202
     && !is_dir($root.'/sites/unarmed-site'), 'later_permission_cannot_replay_uncertainty');
+// Checkpoints created before deferred verification must retain the independent scan.
+mkdir($root.'/sites/legacy-checkpoint');
+file_put_contents($root.'/sites/legacy-checkpoint/state.json',json_encode([
+ 'operation'=>'legacy-checkpoint','phase'=>'verify','cursor'=>9,
+ 'files_sha256'=>str_repeat('a',64),'database_sha256'=>str_repeat('b',64)
+]));
+$legacyCalls=0;
+$legacy=function($id,$deferred) use (&$legacyCalls) {
+ check($deferred===false,'legacy_requires_independent_verification'); $legacyCalls++;
+ return ['operation'=>$id,'status'=>'complete','manifest_sha256'=>str_repeat('a',64)];
+};
+check((new ResumableSite($root.'/sites'))->step('legacy-checkpoint',$files,$database,$legacy)['status']==='complete'
+ && $legacyCalls===1,'legacy_verifier_invoked');
+check($state['deferred_final']===true,'new_checkpoint_binds_deferred_verification');
 echo json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT);

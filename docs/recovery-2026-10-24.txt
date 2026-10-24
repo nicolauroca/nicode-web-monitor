@@ -1,0 +1,39 @@
+Nicode Web Monitor - interrupted session recovery, 24 October 2026
+Package: Nicode.joomla.webmonitor
+
+The evening execution reached its 1800-second gateway limit. Its completed
+joint capture and restored files survived; the missing final response did not
+mean that no work had occurred. The original diagnostic remains unchanged.
+
+Recovery reused the existing restored tree, without recapturing or overwriting
+it. All 9823 files (88074454 bytes), directory entries, lengths and chunk SHA256
+digests match the captured manifest. The existing exported database snapshot
+was restored into a new isolated database: all 78 schemas and all 969 rows
+(compared as multisets, including NULL values) match the snapshot.
+
+A separate clone of the restored files booted against that restored database.
+Its frontend and administrator login returned HTTP 200 with expected Joomla
+content. Only after the equality checks, the clone configuration was adjusted
+for its isolated database/paths, outgoing mail disabled and the connector
+disabled. Authenticated administration workflows were not tested. The clone
+database was removed and lab ports closed after testing.
+
+The full captured tree came from installed connector SHA256
+f7fd34c1483bca6e6e0cbf1158a6a182e384f8f68074fc388d84f4921855cad6.
+Final connector SHA256
+393689924952d51924d3b33b1fed8e0e97dbadc20efdf4cffc943408b2803428
+was separately installed and passed 25 bounded HTTPS checks, with maximum
+measured request duration 0.270 seconds (rounded up). This smoke test covers
+the file-tree route, not a second complete joint capture of the final package.
+Previously recorded coordinator/tree/real-database tests remain applicable;
+do not combine these scopes into a claim that the final ZIP had a full run.
+
+The integration harness now writes capture and database verification results
+before starting subsequent long phases, and the final restoration result to
+disk. These checkpoint additions passed Python/PHP syntax checks; the complete
+joint harness was not rerun for this logging-only change. They preserve useful
+evidence after interruptions but do not remove the gateway timeout or make
+restoration automatically resumable.
+
+Central maintenance UI/ACL/history, native updates and wider compatibility
+remain separate project work. This recovery is not a stable release acceptance.

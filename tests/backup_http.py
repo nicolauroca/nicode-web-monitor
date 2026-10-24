@@ -191,6 +191,12 @@ try:
         check(not result[2]['restoration_verified'], 'joint_no_false_restore_claim')
         check(str(storage).encode() not in result[3] and backup.encode() not in result[3], 'joint_private_response')
         check(joint('POST',seq+1)[2]==result[2], 'joint_completion_stable')
+        # Keep completed capture evidence even if the independent restore test is interrupted.
+        capture_result = {'passed':len(checks),'requests':len(durations),'phases':phases,
+            'max_request_seconds':max(durations),'elapsed_seconds':time.monotonic()-started,
+            'local_permit_renewals':renewals,'tls_certificate_verified':True,
+            'restoration_verified':False,'application_verified':False}
+        (storage/'capture-verification.json').write_text(json.dumps(capture_result,indent=2))
         verify=subprocess.run([str(args.php),str(Path(__file__).with_name('site_http_restore.php')),str(site),str(storage),'--allow-disposable-writes'],input=sys.stdin.read(),text=True,capture_output=True,creationflags=flags)
         if verify.returncode: raise RuntimeError('Joint restore comparison failed: '+verify.stderr)
         restored=json.loads(verify.stdout)

@@ -37,6 +37,10 @@ try {
     }
     check($compared === $export['tables'] && $restored['rows'] === $export['rows'], 'all tables and rows restored');
     $dbResult = ['tables'=>$compared, 'rows'=>$restored['rows'], 'passed'=>count($checks), 'application_verified'=>false];
+    // Persist each verified phase before starting the next potentially long phase.
+    if (file_put_contents($argv[2] . '/database-verification.json', json_encode($dbResult, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT), LOCK_EX) === false) {
+        throw new RuntimeException('Cannot persist database verification');
+    }
 } finally {
     $admin->query('DROP DATABASE IF EXISTS `' . $targetName . '`');
     $source->close(); $admin->close();
@@ -53,4 +57,8 @@ foreach ($m['entries'] as $key=>$entry) {
         $compared++;
     }
 }
-echo json_encode(['database'=>$dbResult, 'files_compared'=>$compared, 'files'=>$files, 'application_verified'=>false]);
+$result = ['database'=>$dbResult, 'files_compared'=>$compared, 'files'=>$files, 'application_verified'=>false];
+if (file_put_contents($argv[2] . '/restore-verification.json', json_encode($result, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT), LOCK_EX) === false) {
+    throw new RuntimeException('Cannot persist restoration verification');
+}
+echo json_encode($result);

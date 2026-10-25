@@ -55,6 +55,7 @@ try {
     denied(fn()=>$readOnly->enroll($site,$backup),'reader cannot enroll backup');
     denied(fn()=>$readOnly->begin($site,true),'reader cannot begin backup');
     denied(fn()=>$readOnly->run('backup-'.str_repeat('a',32)),'reader cannot query backup');
+    denied(fn()=>$readOnly->recent(),'reader cannot list operations');
     denied(fn()=>(new BackupCoordinator($db,$vault,new User(),$transport))->begin($site,true),'guest denied');
     denied(fn()=>(new BackupCoordinator($db,$vault,$operator,$transport))->enroll($site,$backup),'backup operator cannot change credentials');
     invalid(fn()=>$service->enroll($site,$inventory),'inventory credential cannot authorize backups');
@@ -65,6 +66,8 @@ try {
     catch (RuntimeException) { check(true,'inventory purpose cannot decrypt backup credential'); }
     invalid(fn()=>$service->begin($site,false),'begin requires confirmation');
     $id=$service->begin($site,true); check($calls===0,'begin has no remote effects');
+    $projection=$service->recent();
+    check(count($projection)===1 && $projection[0]['operation']===$id && !isset($projection[0]['receipt']) && !isset($projection[0]['credential']), 'journal projection excludes secrets and receipts');
     invalid(fn()=>$service->run($id,true,false),'step requires confirmation');
     check($service->run($id,true,true)['receipt']['next_sequence']===1,'first sequenced step persisted');
     $mode='stale'; check($service->run($id)['error']==='journal_conflict','receipt cannot regress sequence');

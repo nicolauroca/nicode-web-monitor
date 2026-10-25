@@ -59,6 +59,13 @@ final class BackupCoordinator
         return $id;
     }
 
+    /** Bounded display projection; never return credentials or raw receipts. */
+    public function recent(): array
+    {
+        $this->permit();
+        return $this->db->setQuery('SELECT operation,site,status,next_sequence,updated_at FROM #__nwm_backup_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+    }
+
     public function run(string $operation, bool $advance = false, bool $confirmed = false): array
     {
         $this->permit();

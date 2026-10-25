@@ -7,6 +7,7 @@ use Joomla\CMS\Session\Session;
 use Joomla\Database\DatabaseInterface;
 use Nicode\Component\NicodeWebMonitor\Administrator\Service\CredentialVault;
 use Nicode\Component\NicodeWebMonitor\Administrator\Service\SiteRegistry;
+use Nicode\Component\NicodeWebMonitor\Administrator\Service\BackupCoordinator;
 final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
 {
     public function dispatch()
@@ -17,6 +18,8 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $this->checkAccess();
         $user = $this->app->getIdentity();
         $registry = new SiteRegistry(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
+        $backups = new BackupCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
+        $canBackup = !$user->guest && !$user->block && $user->authorise('nwm.backup', 'com_nicodewebmonitor');
         $task = $this->input->getCmd('task', 'display');
         $inspection = null;
         $inspectedId = 0;
@@ -24,13 +27,35 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
             }
-            if (!in_array($task, ['add', 'remove', 'inspect'], true)) {
+            if (!in_array($task, ['add', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupStatus'], true)) {
                 throw new \RuntimeException('Unknown task', 404);
+            }
+            if (str_starts_with($task, 'backup')) {
+                if (!$canBackup || ($task === 'backupEnroll' && !$user->authorise('core.admin', 'com_nicodewebmonitor'))) {
+                    throw new \RuntimeException('Access denied', 403);
+                }
+                $post = $this->input->post;
+                try {
+                    if ($task === 'backupEnroll') {
+                        $backups->enroll($post->getInt('id'), $post->getString('backup_credential'));
+                    } elseif ($task === 'backupBegin') {
+                        $backups->begin($post->getInt('id'), $post->getString('confirmed') === '1');
+                    } else {
+                        $result = $backups->run($post->getString('operation'), $task === 'backupAdvance', $post->getString('confirmed') === '1');
+                        if (!($result['ok'] ?? false)) { throw new \RuntimeException('Backup request failed'); }
+                    }
+                    $this->app->enqueueMessage('Backup journal updated. Capture completion does not verify restoration.');
+                } catch (\Throwable) {
+                    $this->app->enqueueMessage('Backup action not confirmed. Review the journal and query status before advancing an uncertain operation. No automatic retry was made.', 'error');
+                }
+                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                return;
             }
             if ($task === 'inspect') {
                 $inspectedId = $this->input->post->getInt('id');
                 $inspection = $registry->inspect($inspectedId);
                 $sites = $registry->all();
+                $backupOperations = $canBackup ? $backups->recent() : [];
                 require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
                 return;
             }
@@ -50,6 +75,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             return;
         }
         $sites = $registry->all();
+        $backupOperations = $canBackup ? $backups->recent() : [];
         require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
     }
 }

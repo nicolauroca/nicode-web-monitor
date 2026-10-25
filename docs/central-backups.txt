@@ -1,7 +1,7 @@
 Central sequenced backups (0.6.0-dev, 25 October 2026)
 
 The component now contains BackupClient and BackupCoordinator. These are backend
-services; the administrator forms and browser workflow are not yet connected.
+services connected to the administrator panel through POST-only CSRF-protected forms.
 Only the joint files_and_database route is supported by this client.
 
 An authenticated, unblocked Joomla user needs core.manage AND nwm.backup.
@@ -11,8 +11,9 @@ the backup purpose, and is never included in operation receipts.
 
 begin(site, true) creates a local random operation identity and makes no network
 request. run(operation, true, true) advances exactly one sequence. run(operation)
-only queries remote status. The HTTP/form layer must additionally enforce CSRF,
-explicit confirmation, and suitable request throttling before exposing these APIs.
+only queries remote status. The form layer enforces CSRF and explicit confirmation for begin/advance, and uses
+a redirect after each action. Status queries are also POST/CSRF protected. There is
+no automatic loop or retry; each advance requires a deliberate confirmed action.
 
 Each remote write is preceded by a committed uncertain journal entry. The service
 requires autocommit and rejects an enclosing transaction. MariaDB named locks
@@ -46,10 +47,26 @@ capture provider. The optional Joomla path exercises the installed central servi
 real database, encrypted credential and real HTTPS client together. It loses a
 response after the provider effect, verifies the retry is blocked, then reconciles
 completion without another provider call. It does not perform native whole-site
-capture, restoration, administrator browser flows or native Joomla updates.
+capture, restoration or native Joomla updates. Separate administrator HTTP/browser
+tests cover credential enrollment, CSRF, confirmation, journal rendering and
+mobile/desktop layout; they do not exercise a native backup over the browser.
 Never run the write fixtures against a real site. Temporary test records are removed.
 
-Next acceptance work: administrator UI/CSRF/ACL paths, browser reader denial and
-confirmed backup progression, native full-site capture through this central path,
+Next acceptance work: real reader/operator HTTP accounts and confirmed remote
+progression through the browser, native full-site capture through this central path,
 then recovery/update integration. Preserve the earlier restoration evidence rather
 than repeating it as if it belonged to this new central package.
+
+Administrator workflow
+Open Remote backups, expand the enrolled site and save its separate backup token
+(requires core.admin plus nwm.backup). Create an operation with confirmation, then
+use its own Advance backup step action after stopping all writers. An uncertain
+operation has only Query backup status available. Errors never echo a submitted
+token, raw exception or receipt. The latest 100 operations show state, sequence,
+site and UTC update time; completion is not proof of restoration. A site removal
+also removes its local backup credential and journal, not remote artifacts.
+
+HTTP acceptance (disposable loopback only, administrator JSON on stdin):
+python tests/backup_admin_http.py --base-url http://127.0.0.1:8767 --allow-disposable-writes
+Optional --browser-output PATH uses installed Playwright/Edge for 1440/390/320px
+checks and screenshots. Network is blocked outside the loopback origin in browser.

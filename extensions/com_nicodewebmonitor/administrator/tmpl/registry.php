@@ -19,7 +19,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 }
 </style>
 <h1>Nicode Web Monitor</h1>
-<p>Development monitor. Check a site to read its inventory now. Check summaries are retained (last 100 per site). Recent means checked and collected within 24 hours. Automatic monitoring and maintenance are pending.</p>
+<p>Development monitor. Check a site to read its inventory now. Check summaries are retained (last 100 per site). Recent means checked and collected within 24 hours. Backups require a separately configured connector; updates remain pending.</p>
 <?php if (isset($inspection)): ?>
 <section aria-label="Inventory result">
 <?php if (($inspection['history_saved'] ?? true) === false): ?><p role="alert">This check could not be saved to history. No retry was made.</p><?php endif; ?>
@@ -74,6 +74,42 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="remove"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-danger" type="submit">Remove <?= $escape($site['label']) ?></button></form>
 <?php endif; ?></td></tr>
 <?php endforeach; ?></tbody></table></div>
+<?php if ($canBackup ?? false): ?>
+<section aria-label="Remote backups">
+<h2>Remote backups</h2>
+<p>Files and database capture requires the connector backup provider and a separate credential. Stop all writers before advancing; confirmation here does not stop them. Create an operation once, then advance one bounded step at a time. An uncertain result requires a status query, never a new operation as a retry. Completion does not establish a tested restoration.</p>
+<?php foreach ($sites as $site): ?>
+<details><summary>Backup: <?= $escape($site['label']) ?></summary>
+<?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
+<input type="hidden" name="task" value="backupEnroll"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
+<label for="backup-secret-<?= (int)$site['id'] ?>">Separate backup credential</label>
+<input class="form-control" id="backup-secret-<?= (int)$site['id'] ?>" name="backup_credential" type="password" required pattern="[a-f0-9]{64}" maxlength="64" autocomplete="new-password">
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Save backup credential</button></form>
+<?php endif; ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor">
+<input type="hidden" name="task" value="backupBegin"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
+<label><input type="checkbox" name="confirmed" value="1" required> Create a new operation for <?= $escape($site['label']) ?> (no remote capture yet).</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Create backup operation</button></form>
+</details>
+<?php endforeach; ?>
+<h3>Latest 100 operations</h3>
+<p>This journal shows current state, not an immutable event history.</p>
+<?php foreach ($backupOperations as $operation): ?>
+<article class="nwm-backup" style="overflow-wrap:anywhere">
+<h4><?= $escape($operation['operation']) ?></h4>
+<p>Site #<?= (int)$operation['site'] ?>; state: <?= $escape($operation['status']) ?>; next sequence: <?= (int)$operation['next_sequence'] ?>; updated <?= $escape(gmdate('Y-m-d H:i:s', (int)$operation['updated_at'])) ?> UTC.</p>
+<form method="post" action="index.php?option=com_nicodewebmonitor">
+<input type="hidden" name="task" value="backupStatus"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Query backup status</button></form>
+<?php if (in_array($operation['status'], ['ready','progress'], true)): ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor">
+<input type="hidden" name="task" value="backupAdvance"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
+<label><input type="checkbox" name="confirmed" value="1" required> All writers are stopped; advance this operation by one step.</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Advance backup step</button></form>
+<?php endif; ?></article>
+<?php endforeach; ?></section>
+<?php endif; ?>
 <?php if ($user->authorise('core.create', 'com_nicodewebmonitor')): ?>
 <h2>Enroll a site</h2>
 <p>Use its canonical HTTPS URL, public IP, connector UUID and read-only credential. Enrollment saves configuration; it does not verify connectivity. Removing a site does not revoke its remote credential.</p>

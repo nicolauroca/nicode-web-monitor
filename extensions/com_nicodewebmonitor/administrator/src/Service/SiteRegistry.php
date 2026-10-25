@@ -78,6 +78,8 @@ final class SiteRegistry
         try {
             $this->db->setQuery('SELECT id FROM #__nwm_sites WHERE id=' . $id . ' FOR UPDATE')->loadResult();
             $this->db->setQuery('DELETE FROM #__nwm_checks WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_backup_credentials WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_backup_operations WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_sites WHERE id=' . $id)->execute();
             $this->db->transactionCommit(true);
         } catch (\Throwable $e) {

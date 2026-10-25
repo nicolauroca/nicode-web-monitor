@@ -17,3 +17,20 @@ CREATE TABLE IF NOT EXISTS `#__nwm_checks` (
  `detail` varchar(40) NOT NULL,
  PRIMARY KEY (`id`), KEY `site_history` (`site`, `id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `#__nwm_backup_credentials` (
+ `site` int unsigned NOT NULL,
+ `credential` text NOT NULL,
+ PRIMARY KEY (`site`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `#__nwm_backup_operations` (
+ `operation` varchar(64) NOT NULL,
+ `site` int unsigned NOT NULL,
+ `site_id` char(36) NOT NULL,
+ `status` varchar(16) NOT NULL,
+ `next_sequence` int unsigned NOT NULL,
+ `receipt` text NOT NULL,
+ `updated_at` bigint NOT NULL,
+ PRIMARY KEY (`operation`), KEY `site_history` (`site`, `updated_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

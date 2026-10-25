@@ -3,6 +3,7 @@
  <action name="core.admin" title="JACTION_ADMIN" />
  <action name="core.manage" title="JACTION_MANAGE" />
  <action name="nwm.monitor" title="Run automatic inventory checks" />
+ <action name="nwm.backup" title="Run and reconcile remote backups" />
  <action name="core.create" title="JACTION_CREATE" />
  <action name="core.delete" title="JACTION_DELETE" />
 </section></access>

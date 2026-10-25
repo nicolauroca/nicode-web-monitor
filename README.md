@@ -33,8 +33,9 @@ coverage and reproduction: `docs/verification-2026-10-11-browser.txt`.
 An optional native Joomla task plugin now performs bounded automatic inventory
 batches with explicit permissions and oldest-first selection. Setup and current
 verification limits: `docs/automatic-monitoring.txt`.
-Guided pairing, external notifications, native updates and central backup
-management remain pending. Experimental connector backups are described below. See `docs/central-client.txt` for the transport contract and test commands,
+Guided pairing, external notifications, native updates and the central backup
+administrator interface remain pending. Version 0.6.0-dev adds the backup transport,
+separate service ACL/credential and durable operation journal; see `docs/central-backups.txt`. Experimental connector backups are described below. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
 A local development recovery primitive captures/restores files, configuration and
 database schemas/rows into a separate directory and empty database, with corruption
@@ -109,10 +110,10 @@ credentials across redirects. Cookies and Joomla login do not grant connector ac
 This development version has one read-only inventory credential per site.
 An experimental backup route uses a separate credential and a locally armed
 maintenance window; see `docs/backup-http.txt` before enabling it in a disposable
-site. Central backup UI/ACL, pairing UI and production rate limiting remain pending.
+site. Central backup UI/CSRF and browser ACL verification, pairing UI and production rate limiting remain pending.
 See `docs/connector-contract.txt` and `docs/verification-2026-10-05.txt`.
 
 Joint resumable file/database capture is available in the development connector
 through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
 reconciliation and private layout. Capture is not proof of restoration. Central
-maintenance UI/ACL/history and native updates are still pending.
+maintenance UI, browser ACL/history and native updates are still pending; backend backup ACL and operation journal are now tested.

@@ -1,0 +1,55 @@
+Central sequenced backups (0.6.0-dev, 25 October 2026)
+
+The component now contains BackupClient and BackupCoordinator. These are backend
+services; the administrator forms and browser workflow are not yet connected.
+Only the joint files_and_database route is supported by this client.
+
+An authenticated, unblocked Joomla user needs core.manage AND nwm.backup.
+Enrolling/rotating the separate backup credential also needs core.admin.
+The inventory credential cannot be reused. Ciphertext is bound to site UUID plus
+the backup purpose, and is never included in operation receipts.
+
+begin(site, true) creates a local random operation identity and makes no network
+request. run(operation, true, true) advances exactly one sequence. run(operation)
+only queries remote status. The HTTP/form layer must additionally enforce CSRF,
+explicit confirmation, and suitable request throttling before exposing these APIs.
+
+Each remote write is preceded by a committed uncertain journal entry. The service
+requires autocommit and rejects an enclosing transaction. MariaDB named locks
+serialize each operation. A transport failure leaves uncertainty and prevents
+another advance. An explicit status read reconciles the same operation identity;
+an unknown remote operation is not permission to restart or create another copy.
+Receipts cannot regress the sequence or reopen a completed operation. This is a
+current operation journal, not yet an append-only audit/history interface.
+
+HTTPS verifies certificate and hostname, pins the enrolled IP, disables redirects
+and proxies, bounds time/body/headers and never retries. Private IP exceptions and
+CA overrides are constructor-only test dependencies. No form may control them.
+Responses must match site, operation, scope, sequence and receipt structure; remote
+bodies, paths and arbitrary extra fields are not propagated. Capture completion
+does not assert restoration. A backup API response is not an approval for updates.
+
+Installation/upgrade from the previous lab component to 0.6.0-dev was tested with
+Joomla's native CLI. The schema creates separate credential/operation tables.
+Site deletion removes these records with the existing registry transaction.
+Schema/runtime validation currently covers the existing Windows/Joomla/MariaDB
+lab; MySQL and other platforms remain acceptance gates.
+
+Verification commands (paths are examples for a disposable local installation):
+python tools/build.py
+php JOOMLA/cli/joomla.php extension:install --path=dist/com_nicodewebmonitor-0.6.0-dev.zip --no-interaction
+php tests/backup_coordinator.php JOOMLA --allow-disposable-writes
+python tests/backup_client_http.py --php PHP --certificate LOCAL_CERT --private-key LOCAL_KEY --package dist/plg_system_nicodewebmonitor-0.4.0-dev.zip --joomla JOOMLA --allow-disposable-writes
+
+The TLS test uses the actual packaged connector adapter/journal with a deterministic
+capture provider. The optional Joomla path exercises the installed central service,
+real database, encrypted credential and real HTTPS client together. It loses a
+response after the provider effect, verifies the retry is blocked, then reconciles
+completion without another provider call. It does not perform native whole-site
+capture, restoration, administrator browser flows or native Joomla updates.
+Never run the write fixtures against a real site. Temporary test records are removed.
+
+Next acceptance work: administrator UI/CSRF/ACL paths, browser reader denial and
+confirmed backup progression, native full-site capture through this central path,
+then recovery/update integration. Preserve the earlier restoration evidence rather
+than repeating it as if it belonged to this new central package.

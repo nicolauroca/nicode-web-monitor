@@ -1,0 +1,42 @@
+Local extension update primitive - 26 October 2026
+
+tools/ExtensionUpdate.php reserves an operation before invoking a locally bound
+installer. The caller supplies a trusted package digest, installed extension ID,
+expected old version and strictly newer target version. Permission and explicit
+confirmation are required; they are caller-supplied decisions, not an implemented
+Joomla HTTP ACL. Installed state must match before and after the native installer.
+An exclusive journal lock prevents concurrent calls sharing that journal.
+
+The install callback MUST validate the trusted package bytes against the digest
+before extraction, bind its manifest identity/target version to the approved plan,
+and use the native Joomla installer. Packages execute code: an arbitrary uploaded
+ZIP is not safe merely because its hash matches. There is no download endpoint,
+remote package selection or production update route in this primitive.
+
+Reservations are never automatically retried. Reusing an ID with another plan is
+rejected. Process death, installer failure, changed resulting metadata or receipt
+failure leaves an uncertain reservation. Read the receipt and inspect the site;
+do not infer full success from a version alone or launch a replacement operation
+blindly. Truncated journals fail closed. External installers not using this lock
+remain outside its concurrency protection. Keep journals private and durable.
+
+Reproduction (disposable Joomla only):
+1. Use a separately installed Joomla 6 and its supported PHP/database. Start its DB.
+2. Create an empty private output directory outside the web root.
+3. php tests/extension_update_native.php JOOMLA_ROOT OUTPUT_DIR --allow-disposable-writes
+4. Inspect OUTPUT_DIR/result.json and cleanup.json. Preserve journals for evidence.
+   Use a new output directory for a subsequent independent run.
+5. php tests/extension_update.php (standalone journal failure checks).
+
+Verified in the existing Joomla 6.1.4/PHP 8.4.26/MariaDB 11.8.9 Windows lab:
+16 integration checks plus 3 cleanup checks, 8 standalone checks. A disabled
+synthetic plugin was installed at 1.0.0, updated natively to 1.1.0 preserving its
+extension ID and changing its files/manifest, then updated to 1.2.0 with a thrown
+exception after the native side effect. A new coordinator instance returned
+uncertain and did not reinstall. Fixture removed with native uninstaller; its
+database row and files are gone. Receipts stay in local evidence, not this repo.
+
+Remaining: installed connector adapter, separate real update ACL/credential,
+HTTPS and central UI orchestration, trusted package acquisition and preflight,
+Joomla core update, restore-after-update, compatibility and release acceptance.
+This is an experimental local primitive, not an end-to-end remote update feature.

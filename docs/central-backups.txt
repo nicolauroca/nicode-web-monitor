@@ -52,10 +52,16 @@ tests cover credential enrollment, CSRF, confirmation, journal rendering and
 mobile/desktop layout; they do not exercise a native backup over the browser.
 Never run the write fixtures against a real site. Temporary test records are removed.
 
-Next acceptance work: real reader/operator HTTP accounts and confirmed remote
-progression through the browser, native full-site capture through this central path,
-then recovery/update integration. Preserve the earlier restoration evidence rather
-than repeating it as if it belonged to this new central package.
+Real reader/operator HTTP accounts and native remote progression through the
+operator forms were verified on 25-26 October. The native test uses a separate
+Joomla/database and verified local TLS. A lost response leaves the central journal
+uncertain, blocks another write and is reconciled by a status query. The temporary
+test-only loopback/CA override is removed afterwards; it is not in the package.
+Full capture/recovery evidence is tracked separately from these bounded checks.
+The completed 26 October run restored 9,720 files and 78 tables, then booted the
+isolated clone; see verification-2026-10-26.txt for evidence and usability limits.
+Native updates and broader platform compatibility remain acceptance work. Preserve
+earlier restoration evidence rather than attributing it to a different package.
 
 Administrator workflow
 Open Remote backups, expand the enrolled site and save its separate backup token

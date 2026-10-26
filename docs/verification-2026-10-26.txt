@@ -1,0 +1,43 @@
+Native central capture and recovery — 26 October 2026
+
+The existing partial capture was resumed through authenticated Joomla operator
+forms on the central component, against a second local Joomla/database over
+verified TLS. No files were recaptured from a new operation.
+Initial sequence: 1429; final sequence: 3421.
+Continuation duration: 1181.40 seconds, including fixture setup.
+Maximum measured panel request: 1.144 seconds.
+These measurements describe this local run, not hosting performance guarantees.
+
+The native joint receipt reached complete after files, database and final file
+consistency verification. The temporary CA/loopback transport override was removed;
+original central transport bytes and product rows were restored by the fixture.
+Test-only re-enrollment was done before database capture. It is not a product
+automatic recovery procedure or permission to change writers during capture.
+
+The SAME capture was restored to a fresh isolated destination:
+- 78 tables and 893 rows; schemas and sorted row digests match the pre-capture baseline.
+- 9720 files, 87733947 bytes; all entry paths/types and 1 MiB hashes match.
+- The new read-only offline verifier was exercised on this restored tree and passed
+  eight focused cases covering corruption, loss, extra entries, wrong type,
+  incomplete manifest, traversal, multi-block and empty files.
+- After byte verification, clone configuration was relocated to an isolated
+  database; mail, cloned connector and scheduled tasks were disabled.
+- Frontend and administrator login returned HTTP200 with expected Joomla markers.
+  Authenticated clone workflows were not tested.
+- Disposable database removed and local lab ports closed after the checks.
+
+Capture completion still correctly reports restoration_verified:false. Separate
+local recovery evidence does not rewrite that historical API receipt.
+
+Reproduction uses tests/backup_http.py --site-full --central-site with separate
+disposable Joomla installations, local certificate and --allow-disposable-writes.
+See docs/central-backups.txt for forms/permissions and docs/resumable-site.txt for
+capture layout and tools/verify_restored_tree.py. Credentials stay in memory/stdin
+or private protected lab files; never put dumps/configuration in the repository.
+
+Limits: Windows/Joomla6/MariaDB only; no MySQL, real hosting, native updates or full
+release acceptance. The harness drives thousands of deliberate form steps; the
+current one-step UI is not yet a validated practical browser runner. Usability,
+native extension/Joomla updates and wider compatibility remain acceptance gates.
+The installed capture provider is unchanged from the earlier package; this run
+adds central complete-capture/recovery evidence, not a new package release.

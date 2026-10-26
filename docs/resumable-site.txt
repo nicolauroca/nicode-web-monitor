@@ -84,3 +84,16 @@ Small real database fixture: tests/site_small_database.php <fresh-directory>
 --allow-disposable-writes, administrator connection JSON via stdin. It creates
 and removes a uniquely named disposable schema. Never pass credentials in CLI
 arguments. This checks phase ordering and completion, not restoration.
+
+Independent offline file verification (Python standard library only):
+python tools/verify_restored_tree.py <private-manifest.json> <restored-directory>
+Use site-trees/<operation>/manifests/initial-tree/state.json from the trusted
+capture. Keep exclusive access to both paths throughout the check. The verifier
+reads only: exact entry set, directory/file types, lengths and every 1 MiB chunk
+must match. Missing, extra, linked and corrupted entries fail. The original site
+is not needed. This can inspect an interrupted restoration without overwriting
+it; it does not resume or repair it. A successful result does not prove database
+restoration or application startup. Keep manifests and restored files private;
+they can contain credentials and personal data. Relocate a disposable clone only
+after this check, since changing configuration would change the verified tree.
+Run python tests/verify_restored_tree.py for the focused corruption tests.

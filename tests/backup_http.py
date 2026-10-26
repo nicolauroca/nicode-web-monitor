@@ -32,6 +32,9 @@ parser.add_argument('--site-full', action='store_true', help='Full joint sequenc
 parser.add_argument('--tree-smoke', action='store_true', help='Bounded native file-tree route only; does not capture a complete Joomla or database')
 parser.add_argument('--database-guard-only', action='store_true')
 parser.add_argument('--database-full', action='store_true', help='Capture entire disposable database in sequenced HTTPS requests')
+parser.add_argument('--central-site', type=Path, help='Separate disposable Joomla central panel on loopback port 8767')
+parser.add_argument('--central-steps', type=int, default=12)
+parser.add_argument('--resume-panel', type=Path, help='Existing panel-progress.json; only before database capture has started')
 args = parser.parse_args()
 site = args.site.resolve()
 cgi = args.php.with_name('php-cgi.exe' if os.name == 'nt' else 'php-cgi')
@@ -41,7 +44,21 @@ site_id = str(uuid.uuid4())
 token = secrets.token_hex(32)
 backup = secrets.token_hex(32)
 storage = args.storage.resolve()
-for name in ['operations','snapshots','tree-operations','trees','database-operations','databases','site-operations','sites','site-trees','site-databases','site-verify']: (storage/name).mkdir()
+resume = None
+if args.resume_panel:
+    if not args.central_site or args.resume_panel.resolve().parent != storage:
+        parser.error('Resume requires central site and the original capture storage')
+    resume = json.loads(args.resume_panel.read_text())
+    operation = resume['operation']
+    if not __import__('re').fullmatch(r'backup-[a-f0-9]{32}', operation):
+        parser.error('Invalid resume identity')
+    state = json.loads((storage/'sites'/operation/'state.json').read_text())
+    receipt = json.loads((storage/'site-operations'/operation/'state.json').read_text())
+    if state['phase'] != 'files' or receipt['status'] != 'progress' or (storage/'site-databases'/operation).exists():
+        parser.error('Resume enrollment only supported before database capture; do not change captured database')
+    site_id = receipt['site_id']
+    resume['receipt'] = receipt
+for name in ['operations','snapshots','tree-operations','trees','database-operations','databases','site-operations','sites','site-trees','site-databases','site-verify']: (storage/name).mkdir(exist_ok=bool(resume))
 
 def check(ok, name):
     if not ok:
@@ -90,6 +107,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         parsed = [line.decode('latin1').split(':',1) for line in headers.split(b'\r\n') if b':' in line]
         status = next((int(v.strip().split()[0]) for k,v in parsed if k.lower()=='status'),200)
+        if args.central_site and self.command == 'POST' and payload and json.loads(payload).get('sequence') == 1 and not getattr(self.server, 'response_dropped', False):
+            self.server.response_dropped = True
+            self.close_connection = True
+            return
         self.send_response(status)
         for k,v in parsed:
             if k.lower() not in ['status','content-length','connection']:
@@ -144,6 +165,13 @@ def backup_request(operation='http-capture', method='GET', credential=backup, da
 
 try:
     configure(token)
+    if args.central_site:
+        subprocess.run([str(args.php), str(Path(__file__).with_name('backup_database_baseline.php')),
+                        str(site), str(storage/'database-baseline.json'), '--allow-disposable-writes'],
+                       check=True, capture_output=True, timeout=30, creationflags=flags)
+        from backup_panel_native import run_panel
+        print(json.dumps(run_panel(globals()), indent=2))
+        sys.exit(0)
     check(request(token)[0]==200, 'inventory_still_works')
     check(backup_request(credential=token)[0]==401, 'inventory_cannot_read_backup_status')
     check(backup_request(tls=False)[0]==403, 'backup_requires_tls')

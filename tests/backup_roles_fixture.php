@@ -46,13 +46,22 @@ try {
             }
             $result['users'][$role]=['id'=>$user->id,'username'=>$name,'password'=>$password];
         }
-        $uuid='12345678-1234-4123-8123-'.bin2hex(random_bytes(6));
+        $uuid=$d['site_id'] ?? ('12345678-1234-4123-8123-'.bin2hex(random_bytes(6)));
         $vault=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CredentialVault(Factory::$application->get('secret'));
         // Loopback address is intentionally rejected by the production transport, without outbound I/O.
-        $row=(object)['site_id'=>$uuid,'label'=>'Disposable role QA','base_url'=>'https://example.invalid','address'=>'127.0.0.1','credential'=>$vault->seal($uuid,bin2hex(random_bytes(32)))];
+        $url=$d['url'] ?? 'https://example.invalid';
+        if ($url !== 'https://example.invalid' && !preg_match('#^https://localhost:[0-9]+$#D', $url)) { throw new RuntimeException('Loopback fixture only'); }
+        $row=(object)['site_id'=>$uuid,'label'=>'Disposable role QA','base_url'=>$url,'address'=>'127.0.0.1','credential'=>$vault->seal($uuid,bin2hex(random_bytes(32)))];
         $db->insertObject('#__nwm_sites',$row,'id'); $result['site']=(int)$row->id;
-        $row=(object)['site'=>$row->id,'credential'=>$vault->seal($uuid.':backup',bin2hex(random_bytes(32)))];
+        $row=(object)['site'=>$row->id,'credential'=>$vault->seal($uuid.':backup',$d['backup_token'] ?? bin2hex(random_bytes(32)))];
         $db->insertObject('#__nwm_backup_credentials',$row);
+        if (isset($d['resume_receipt'])) {
+            $r=$d['resume_receipt'];
+            if (!preg_match('/^backup-[a-f0-9]{32}$/D', $r['operation']) || $r['site_id']!==$uuid || $r['status']!=='progress' || !is_int($r['next_sequence'])) { throw new RuntimeException('Invalid fixture resume receipt'); }
+            $op=(object)['operation'=>$r['operation'],'site'=>$result['site'],'site_id'=>$uuid,'status'=>'progress',
+                'next_sequence'=>$r['next_sequence'],'receipt'=>json_encode($r,JSON_THROW_ON_ERROR),'updated_at'=>time()];
+            $db->insertObject('#__nwm_backup_operations',$op);
+        }
     } elseif ($d['action']==='cleanup') {
         foreach (['backup_operations','backup_credentials'] as $table) { $db->setQuery('DELETE FROM #__nwm_'.$table.' WHERE site='.(int)$d['site'])->execute(); }
         $db->setQuery('DELETE FROM #__nwm_sites WHERE id='.(int)$d['site'])->execute();

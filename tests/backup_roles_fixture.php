@@ -27,7 +27,7 @@ $db->transactionStart();
 try {
     if ($d['action']==='setup') {
         $result=['users'=>[], 'groups'=>[]];
-        foreach (['reader','operator'] as $role) {
+        foreach (isset($d['update_token']) ? ['reader','operator','backup_operator'] : ['reader','operator'] as $role) {
             $name='nwm_qa_'.bin2hex(random_bytes(6));
             $group=Table::getInstance('Usergroup');
             $group->parent_id=2; $group->title=$name;
@@ -36,7 +36,8 @@ try {
             foreach ([1,$asset] as $aid) {
                 $rules=json_decode($db->setQuery('SELECT rules FROM #__assets WHERE id='.$aid)->loadResult(),true);
                 $rules[$aid===1?'core.login.admin':'core.manage'][(string)$gid]=1;
-                if ($aid===$asset && $role==='operator') { $rules['nwm.backup'][(string)$gid]=1; }
+                if ($aid===$asset && $role==='operator') { $rules[isset($d['update_token']) ? 'nwm.update' : 'nwm.backup'][(string)$gid]=1; }
+                if ($aid===$asset && $role==='backup_operator') { $rules['nwm.backup'][(string)$gid]=1; }
                 $db->setQuery('UPDATE #__assets SET rules='.$db->quote(json_encode($rules)).' WHERE id='.$aid)->execute();
             }
             $password=bin2hex(random_bytes(24)); $user=new User();
@@ -55,6 +56,10 @@ try {
         $db->insertObject('#__nwm_sites',$row,'id'); $result['site']=(int)$row->id;
         $row=(object)['site'=>$row->id,'credential'=>$vault->seal($uuid.':backup',$d['backup_token'] ?? bin2hex(random_bytes(32)))];
         $db->insertObject('#__nwm_backup_credentials',$row);
+        if (isset($d['update_token'])) {
+            $row=(object)['site'=>$result['site'],'credential'=>$vault->seal($uuid.':update',$d['update_token'])];
+            $db->insertObject('#__nwm_update_credentials',$row);
+        }
         if (isset($d['resume_receipt'])) {
             $r=$d['resume_receipt'];
             if (!preg_match('/^backup-[a-f0-9]{32}$/D', $r['operation']) || $r['site_id']!==$uuid || $r['status']!=='progress' || !is_int($r['next_sequence'])) { throw new RuntimeException('Invalid fixture resume receipt'); }
@@ -64,6 +69,9 @@ try {
         }
     } elseif ($d['action']==='cleanup') {
         foreach (['backup_operations','backup_credentials'] as $table) { $db->setQuery('DELETE FROM #__nwm_'.$table.' WHERE site='.(int)$d['site'])->execute(); }
+        if (isset($d['users']['backup_operator'])) {
+            foreach (['update_operations','update_credentials'] as $table) { $db->setQuery('DELETE FROM #__nwm_'.$table.' WHERE site='.(int)$d['site'])->execute(); }
+        }
         $db->setQuery('DELETE FROM #__nwm_sites WHERE id='.(int)$d['site'])->execute();
         foreach ($d['users'] as $u) { if (!(new User((int)$u['id']))->delete()) { throw new RuntimeException('User cleanup failed'); } }
         foreach ([1,$asset] as $aid) {

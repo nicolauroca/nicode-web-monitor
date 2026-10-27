@@ -1,0 +1,98 @@
+Prepared plugin updates (development) — 27 October 2026
+Package: Nicode.joomla.webmonitor
+
+What this version does
+The central Joomla component can execute a locally prepared plugin update on a
+second Joomla through verified HTTPS, then query its durable receipt. Inventory,
+backup and update credentials are separate. Joomla core updates and other extension
+types are not implemented by this provider yet; they remain product acceptance work.
+This is development code for disposable installations, not a production release.
+
+Start from source
+1. Build with python tools/build.py. Install com_nicodewebmonitor-0.7.0-dev.zip on
+   the central Joomla and plg_system_nicodewebmonitor-0.5.0-dev.zip on the remote
+   Joomla through the native extension installer. Updating the central package
+   creates the update journal and credential tables through the native SQL schema.
+2. Configure inventory and enroll the remote site as described in central-client.txt.
+   Use its HTTPS URL, explicitly pinned public IP and unique connector UUID.
+3. Create a private update directory outside ALL web roots, writable only by the
+   service account/local maintainer. Do not share it with backup storage. In the
+   remote plugin set update_storage to this directory. Create a new random 32-byte
+   token encoded as 64 lowercase hex characters. Store only the SHA-256 digest of
+   that encoded text in update_token_hash; keep the token in a private secret store.
+   It must differ from both inventory and backup. Do not put it in a command line,
+   URL, repository or log. Emptying its digest disables update execution AND status.
+4. Grant nwm.update and core.manage on the component only to the intended update
+   operators. Backup permission does not grant update permission. A central user
+   also needs core.admin to save an update credential. Use the component password
+   field to enroll it; the component encrypts it with Joomla's secret and binds it
+   to the site UUID plus the update purpose. Serve the administrator over HTTPS.
+
+Prepare a specific update on the remote machine
+Obtain and review a trusted plugin ZIP locally. The checksum binds these exact
+bytes; it does not establish who wrote them or make executable installer code safe.
+This first provider supports a single non-core plugin with a root ELEMENT.xml
+manifest and an existing extension ID. Downgrades and protected core extensions
+are refused. No arbitrary download URL is accepted by the remote endpoint.
+
+Create and VERIFY a recoverable backup, then put the remote Joomla offline and
+stop cron, other administrators and external writers. Offline alone is not enough.
+Once those facts are established, run locally (replace paths and the operation ID):
+
+php tools/prepare_plugin_update.php /srv/joomla /srv/private/nwm-updates /srv/packages/plugin.zip release-plugin-20261027 --writers-stopped-and-recovery-verified
+
+The helper reads the package identity and installed version, copies the ZIP to a
+new exclusive operation directory, verifies its SHA-256 and writes a 15-minute
+permit. It does not install, download, verify your backup or stop writers. The
+flag records the local operator's attestation of those prerequisites. Preparation
+fails if the operation already exists. Keep the returned operation ID and plan.
+On Windows use equivalent absolute paths; no hosting access is implied.
+
+The layout is PRIVATE_UPDATE_DIR/journal and prepared/OPERATION, containing
+package.zip and permit.json. The permit fixes operation, stopped-writer/recovery
+attestations, expiry, type/element/folder/client identity and plan fields:
+extension_id, from, to, package_sha256. Never edit a started operation or its journal.
+
+Execute and inspect
+In Prepared extension updates, select the remote site's form and register the
+operation ID after reviewing the prepared plan. Registration only creates a local
+journal entry. Confirm Execute update separately while the local permit is valid.
+The remote side checks its offline state, permit, package hash/manifest and current
+installed identity/version. It reserves uncertainty durably BEFORE invoking Joomla's
+native installer. After success it verifies the same installed ID and new version.
+This is installation evidence, not a claim that every plugin workflow is healthy.
+Complete your functional checks and restore normal writers only after inspection.
+
+If the request times out or the response disappears, the central journal remains
+uncertain. Use Query update status; do not repeat installation under another ID.
+A remote terminal receipt can reconcile a lost response. A remote uncertain receipt
+cannot be promoted to success just because a version string matches: inspect the
+site and recovery evidence locally. Status remains readable after permit expiry.
+Malformed/truncated receipts fail closed. Completed/uncertain operations are never
+automatically rerun. An early failure with no remote receipt still needs local
+inspection before a fresh operation; the central UI deliberately offers no retry.
+
+HTTP contract
+Path: /index.php?option=com_nicodewebmonitor&task=update_extension
+GET: site_id, operation, action=status; no body.
+POST: application/json object with exactly site_id, operation, action=update and
+confirmed=true. No package path, plan or URL can be supplied remotely. Bearer
+credential and trusted HTTPS server variable required; forwarded headers ignored.
+Responses project only site/operation/scope/status/plan. No paths or credentials.
+200 updated; 202 uncertain; 404 unknown; 409 not confirmed; no automatic retries.
+The central client validates identity, plan and status, pins the enrolled IP,
+verifies TLS, refuses redirects/private addresses by default and bounds I/O.
+Native installation itself is not a resumable or hard-deadline operation. Web/PHP
+limits can interrupt it; retained uncertainty and recovery are essential.
+
+Reproduction and verified limits
+See verification-2026-10-27.txt. The test requires two DISPOSABLE Joomla databases,
+central HTTP on loopback:8767, a running local database and a valid localhost TLS
+certificate/key. All test credentials are ephemeral in memory; no production data.
+python tests/update_http.py --site REMOTE --central CENTRAL --php PHP_EXECUTABLE --certificate LOCAL_CERT --private-key LOCAL_KEY --storage NEW_PRIVATE_OUTPUT --allow-disposable-writes
+The harness creates temporary real users, installs a disabled synthetic plugin,
+exercises panel/HTTPS/native updates and removes fixture users/plugin afterwards.
+Only the installed test client gets a temporary loopback/CA override, restored in
+finally. Production source and packaged transports retain their network restrictions.
+No Joomla core update, general plugin compatibility, post-update rollback, MySQL,
+production hosting or complete-release acceptance is claimed by these tests.

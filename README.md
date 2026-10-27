@@ -33,7 +33,11 @@ coverage and reproduction: `docs/verification-2026-10-11-browser.txt`.
 An optional native Joomla task plugin now performs bounded automatic inventory
 batches with explicit permissions and oldest-first selection. Setup and current
 verification limits: `docs/automatic-monitoring.txt`.
-Guided pairing, external notifications and native updates remain pending.
+Guided pairing, external notifications and Joomla core updates remain pending.
+Version 0.7.0-dev of the central component and 0.5.0-dev of the connector add
+locally prepared plugin updates through the panel, with a separate credential and
+permission, explicit confirmation, native installation and lost-response
+reconciliation. Start-to-finish instructions: `docs/extension-update-http.txt`.
 The central backup administrator forms support enrollment, explicit single-step
 advance and status reconciliation, with separate permissions and CSRF checks.
 Version 0.6.0-dev adds the backup transport,
@@ -42,13 +46,14 @@ and `docs/site-registry.txt` for central installation and credential limits.
 A local development recovery primitive captures/restores files, configuration and
 database schemas/rows into a separate directory and empty database, with corruption
 checks and explicit uncertain operations. Restored Joomla CLI/frontend/login boot
-has been tested in the disposable lab. Central backup management remains pending. Preconditions and reproduction:
+has been tested in the disposable lab. A complete joint capture from central forms
+was also restored and booted locally. Preconditions and reproduction:
 `docs/local-site-recovery.txt` and `docs/local-database-snapshot.txt`.
 A separate experimental backup operation core now reserves operation IDs before
 capture, authenticates with a backup-only credential and retains receipts or
 uncertain outcomes across process restarts without automatically rerunning capture.
 It backs the synchronous Joomla backup route; the separate sequenced backup_site
-route combines bounded file/database capture. Neither has a central panel yet.
+route combines bounded file/database capture and is available in the central panel.
 Contract and historical checks:
 `docs/backup-operations.txt` and `docs/verification-2026-10-16.txt`.
 No data is pushed to external services. The console command uses the operating-system
@@ -90,7 +95,7 @@ of Git. License: GPL-2.0-or-later; see LICENSE.
 
 ## HTTPS connector (development)
 
-The build also produces `dist/plg_system_nicodewebmonitor-0.4.0-dev.zip`.
+The build also produces `dist/plg_system_nicodewebmonitor-0.5.0-dev.zip`.
 Install it in a disposable Joomla 6 site. In **System - Nicode Web Monitor**,
 configure a unique lowercase UUID v4 and the SHA-256 digest of a cryptographically
 random 32-byte credential encoded as 64 hex characters. Hash the encoded text,
@@ -120,4 +125,7 @@ Joint resumable file/database capture is available in the development connector
 through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
 reconciliation and private layout. Capture is not proof of restoration. Central
 backup forms, real user permissions and the operation journal are tested; an
-append-only maintenance history and native updates remain pending.
+append-only maintenance history, Joomla core updates and the remaining extension
+types remain pending. Prepared plugin updates are described in
+`docs/extension-update-http.txt`; current integration evidence is in
+`docs/verification-2026-10-27.txt`.

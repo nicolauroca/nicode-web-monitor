@@ -65,7 +65,7 @@ try {
     rejects(fn()=>$readonly->add('x','https://example.org','93.184.216.34',$uuid,$token), 'reader cannot enroll');
     rejects(fn()=>$readonly->remove((int)$row['id']), 'reader cannot delete');
     // Actual template with malicious stored label, no form token needed for a reader.
-    $sites = [$row]; $user = $reader;
+    $sites = [$row]; $user = $reader; $canUpdate = false; $updateOperations = [];
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     check(!str_contains($html,'<script>') && str_contains($html,'&lt;script&gt;'), 'stored label escaped');
     check(!str_contains($html,$token) && !str_contains($html,$stored), 'template excludes secrets');

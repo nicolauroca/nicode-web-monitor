@@ -4,8 +4,8 @@
   <author>Nicolau Roca</author>
   <creationDate>2026-10</creationDate>
   <license>GNU General Public License version 2 or later</license>
-  <version>0.4.0-dev</version>
-  <description>HTTPS inventory and experimental opt-in backup connector. Backups require separate credentials, private storage and a locally armed maintenance window. Development only.</description>
+  <version>0.5.0-dev</version>
+  <description>HTTPS inventory, backups and locally prepared plugin updates. Maintenance requires separate credentials and private storage. Development only.</description>
   <namespace path="src">Nicode\Plugin\System\NicodeWebMonitor</namespace>
   <scriptfile>script.php</scriptfile>
   <files>
@@ -19,5 +19,7 @@
     <field name="token_hash" type="text" label="Credential SHA-256 digest" description="64 lowercase hex characters. Never paste the bearer credential here. Empty revokes access immediately." filter="string" />
     <field name="backup_token_hash" type="text" label="Backup credential SHA-256 digest" description="Separate from inventory. Empty disables backups. Never paste the credential itself." filter="string" />
     <field name="backup_storage" type="text" label="Private backup directory" description="Absolute directory outside every web root, restricted to the service account. Pre-create operations and snapshots subdirectories. See backup-http.txt before enabling." filter="string" />
+    <field name="update_token_hash" type="text" label="Update credential SHA-256 digest" description="Must differ from inventory and backup. Empty disables updates." filter="string" />
+    <field name="update_storage" type="text" label="Private update directory" description="Locally vetted packages and operation permits. Outside all web roots. See extension-update-http.txt." filter="string" />
   </fieldset></fields></config>
 </extension>

@@ -110,6 +110,33 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php endif; ?></article>
 <?php endforeach; ?></section>
 <?php endif; ?>
+<?php if ($canUpdate): ?>
+<section aria-label="Remote extension updates"><h2>Prepared extension updates</h2>
+<p>First prepare and verify the package and recovery locally on the remote site. Enter that operation ID here. Execution requires a separate confirmation. An uncertain operation can only be queried, never retried automatically.</p>
+<?php foreach ($sites as $site): ?>
+<?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
+<input type="hidden" name="task" value="updateEnroll"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
+<label>Update credential for <?= $escape($site['label']) ?> <input type="password" name="update_credential" required autocomplete="new-password"></label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Save update credential</button></form>
+<?php endif; ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor">
+<input type="hidden" name="task" value="updateBegin"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
+<label>Prepared operation ID for <?= $escape($site['label']) ?> <input name="operation" pattern="[a-z0-9-]{8,64}" required></label>
+<label><input type="checkbox" name="confirmed" value="1" required> I verified this local package and its recovery procedure.</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Register prepared update</button></form>
+<?php endforeach; ?>
+<?php foreach ($updateOperations as $op): ?>
+<article class="nwm-update"><h3><?= $escape($op['operation']) ?></h3><p>Site #<?= (int)$op['site'] ?>; state: <?= $escape($op['status']) ?></p>
+<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateStatus"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Query update status</button></form>
+<?php if ($op['status']==='ready'): ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
+<label><input type="checkbox" name="confirmed" value="1" required> Execute this prepared update now.</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Execute update</button></form>
+<?php endif; ?></article>
+<?php endforeach; ?></section>
+<?php endif; ?>
 <?php if ($user->authorise('core.create', 'com_nicodewebmonitor')): ?>
 <h2>Enroll a site</h2>
 <p>Use its canonical HTTPS URL, public IP, connector UUID and read-only credential. Enrollment saves configuration; it does not verify connectivity. Removing a site does not revoke its remote credential.</p>

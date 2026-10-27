@@ -1,0 +1,42 @@
+Central native plugin updates — 27 October 2026
+Package: Nicode.joomla.webmonitor
+
+Two separate local Joomla 6 installations/databases; PHP8.4 and MariaDB11.8,
+Windows. Central component upgraded through the Joomla installer with native SQL
+schema creation. Remote connector installed from the current development ZIP.
+
+44 integration checks passed on the final 0.7.0-dev central / 0.5.0-dev connector:
+- Real Joomla reader, backup-only operator and update operator accounts.
+- Independent update ACL, CSRF and explicit execution confirmation. Enrollment
+  denied to the non-admin update operator; no permission inherited from backups.
+- Documented local preparation CLI produces an exact package plan without installing.
+- Separate credentials and site identity; HTTP, malformed/oversized bodies, remote
+  package injection, expired permits, missing stopped-writer/recovery attestation,
+  stale installed version, wrong identity/version, hash tampering and ZIP traversal
+  rejected without installer effects or a started update reservation.
+- Native Joomla installer updates a disabled synthetic plugin 1.0.0 -> 1.1.0 through
+  central forms and verified TLS. Installed extension ID retained; file and manifest
+  versions checked. Duplicate completed operation never reinstalls.
+- Response intentionally dropped AFTER native installation of 1.2.0. Central state
+  remains uncertain and refuses another POST; a GET receipt reconciles it to updated.
+- Credential revocation denies status. Public receipts exclude paths/credentials.
+- Fixture users/plugin removed and installed test transport override restored.
+
+18 focused transport/receipt cases passed: untrusted proxy, method/content-type,
+query/body ambiguity, traversal, typed confirmation, sanitized failures, private IP
+rejection before I/O and mismatched receipt identities/status/hash/version.
+8 existing primitive journal/failure checks and 26 central registry/credential/
+template/removal checks passed. PHP syntax checked for changed
+entrypoints, provider, services, template and preparation CLI.
+
+The first integration attempt refused the expired local TLS certificate. No update
+occurred; fixture cleanup verified. A new local certificate was used with normal
+verification enabled. Intermediate successful runs preceded archive/CLI hardening;
+the final package was rerun after those changes. Counts above describe the final
+run, not a sum of repeated tests.
+
+Limits: synthetic plugin only; local recovery flag is an operator attestation, not
+automatic verification. No Joomla core update, rollback after update, full extension
+matrix, MySQL or production acceptance. The TLS fixture uses a temporary override
+on installed test code only; production still refuses private addresses. There is
+no claim of a guaranteed installation deadline or a complete release.

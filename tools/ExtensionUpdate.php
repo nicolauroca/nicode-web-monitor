@@ -17,6 +17,7 @@ final class ExtensionUpdate
             || array_keys($plan) !== ['extension_id', 'from', 'to', 'package_sha256']
             || !is_int($plan['extension_id']) || $plan['extension_id'] < 1
             || !is_string($plan['from']) || !is_string($plan['to'])
+            || strlen($plan['from']) > 64 || strlen($plan['to']) > 64
             || !version_compare($plan['to'], $plan['from'], '>')
             || !is_string($plan['package_sha256'])
             || !preg_match('/^[a-f0-9]{64}$/D', $plan['package_sha256'])) {

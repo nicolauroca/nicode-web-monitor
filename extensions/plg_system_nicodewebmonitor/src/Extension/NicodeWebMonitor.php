@@ -33,7 +33,16 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
             return;
         }
         $task = $app->getInput()->get->getString('task', '');
-        if (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site'], true)) {
+        if ($task === 'update_extension') {
+            $storage = (string)$this->params->get('update_storage', '');
+            $endpoint = new \Nicode\Plugin\System\NicodeWebMonitor\Transport\UpdateEndpoint(
+                (string)$this->params->get('site_id', ''), (string)$this->params->get('update_token_hash', ''),
+                [(string)$this->params->get('token_hash', ''), (string)$this->params->get('backup_token_hash', '')]);
+            $body = file_get_contents('php://input', false, null, 0, 4097);
+            [$status, $body] = $endpoint->handle($_SERVER, $_GET, $body === false ? '' : $body,
+                fn (string $id, bool $execute) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\NativeExtensionUpdate(
+                    $this->database, $storage, JPATH_ROOT, (bool)$app->get('offline')))->handle($id, $execute));
+        } elseif (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site'], true)) {
             $storage = (string) $this->params->get('backup_storage', '');
             $endpoint = new BackupEndpoint((string) $this->params->get('site_id', ''),
                 (string) $this->params->get('backup_token_hash', ''),
@@ -101,7 +110,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
         header('Pragma: no-cache');
         header('X-Content-Type-Options: nosniff');
         if ($status === 401) { header('WWW-Authenticate: Bearer realm="Nicode Web Monitor"'); }
-        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site'], true) ? 'GET, POST' : 'GET')); }
+        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site', 'update_extension'], true) ? 'GET, POST' : 'GET')); }
         echo json_encode($body, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         $app->close();
     }

@@ -1,0 +1,54 @@
+Joomla core update preflight (development, 27 October 2026)
+
+This command checks a local Joomla 6 installation against a locally obtained update
+ZIP. It does not update Joomla, download packages, repair its schema, arm a remote
+operation or certify compatibility. The native core update provider is not yet
+implemented. The existing remote update route still supports prepared plugins only.
+
+From the beginning
+1. Use a disposable Joomla 6 site and the PHP CLI belonging to that installation.
+   PHP needs ZipArchive and SimpleXML as well as Joomla's normal requirements.
+2. Obtain the intended stable Joomla 6 Update_Package.zip from the official Joomla release.
+   Verify its origin and published digest independently. A digest calculated from an
+   untrusted file only identifies that file; this tool cannot establish provenance.
+3. Keep the package locally. Run from this repository:
+   php tools/core_update_preflight.php JOOMLA_ROOT TRUSTED_CORE_ZIP EXPECTED_SHA256
+   Replace the three arguments with local paths and the verified lowercase SHA-256.
+   Quote paths containing spaces. Credentials are read by Joomla from its own config;
+   do not put credentials in these arguments or publish the resulting inventory.
+4. Read the JSON blockers. A same-version package or downgrade is blocked. Correct
+   an inconsistent baseline using Joomla's supported maintenance procedures before
+   considering an update. This command never repairs the database automatically.
+
+The native Joomla installer database model checks the core schema. The report
+compares runtime, on-disk manifest and database manifest versions. Joomla's normal
+bootstrap may refresh its generated namespace cache; this is not an installation.
+The archive check verifies digest, identity, manifest/PHP version agreement, required
+files, path safety, file/directory collisions, special files and bounded ZIP sizes.
+Full installation packages are rejected: their installation directory prevents
+normal boot even when native finalization succeeds. It reads PHP as text, never executes package code or extracts its files. Limits:
+128 MiB compressed, 512 MiB total expanded, 64 MiB per entry, 32768 entries.
+Those checks do not prove the package is complete, compatible or trustworthy.
+
+Exit codes: 0 preflight_passed, 3 blocked, 2 invalid inputs/check unavailable.
+Even preflight_passed has execution_authorized=false. Outstanding prerequisites
+remain explicit: all other writers stopped, independent restore proof, extension
+and platform compatibility, operation confirmation and a tested native provider.
+Offline mode alone does not stop cron, API, administrator or external writers.
+The next provider must journal before effects and verify in a fresh PHP process:
+already-loaded Joomla version classes cannot prove the new files boot correctly.
+
+Verification
+php tests/core_update_preflight.php PRIVATE_EMPTY_OUTPUT_DIRECTORY
+php tests/core_preflight_native.php DISPOSABLE_JOOMLA_ROOT --allow-disposable-writes
+The second test injects version/schema metadata faults inside an InnoDB transaction
+and rolls them back. Never run it on a production database. It neither updates core
+nor proves recovery after an update. Tests retain no database credentials in output.
+
+Executed archive/decision checks and native database fault injection are recorded
+in verification-2026-10-27-core.txt. The disposable native upgrade experiment is
+separate from the product command and does not expose a remote core operation.
+
+Sources consulted: installed Joomla 6.1.4 UpdateCoreCommand and com_joomlaupdate
+UpdateModel; https://guide.joomla.org/user-guide/command-line-interface/command-line-interface-using-the-cli
+https://guide.joomla.org/user-guide/migration/migration-version-update

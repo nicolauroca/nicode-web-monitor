@@ -129,3 +129,8 @@ append-only maintenance history, Joomla core updates and the remaining extension
 types remain pending. Prepared plugin updates are described in
 `docs/extension-update-http.txt`; current integration evidence is in
 `docs/verification-2026-10-27.txt`.
+
+A local core-update preflight checks pinned update archives, installed versions and
+Joomla's native database schema. It does not execute updates. See
+`docs/core-update-preflight.txt` and `docs/verification-2026-10-27-core.txt` for the
+disposable core-upgrade experiment and the remaining remote-provider work.

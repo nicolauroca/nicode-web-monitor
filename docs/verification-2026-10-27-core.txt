@@ -1,0 +1,68 @@
+Core update laboratory verification — 27 October 2026
+
+New product capability: local CLI preflight, documented in core-update-preflight.txt.
+The remote product route still updates prepared plugins only. This experiment does
+not complete the remote Joomla core update feature or authorize a production site.
+
+Executed in isolated Windows/PHP 8.4/MariaDB laboratory:
+- 29 archive and preflight checks; 9 native database fault checks with
+  exact transactional restoration. Three CLI integration cases cover absolute
+  Windows paths, the official full-package rejection and an incomplete site root.
+  Six PHP files pass syntax checks.
+- Fresh official Joomla 6.1.3 installation, separate database, mail disabled,
+  offline, no web/cron writers while capturing or updating.
+- First experiment with the Full_Package returned success from finaliseUpgrade,
+  but failed fresh boot because installation/index.php was reintroduced. Preserved
+  the failed attempt and restored it before starting the corrected experiment.
+  CoreUpdatePreflight now rejects every installation/ entry before effects.
+- Official Update_Package 6.1.4: pinned digest, native unpack/copy/finaliseUpgrade,
+  schema migration and cleanup. A separate PHP process confirms runtime version,
+  disk manifest and database manifest are all 6.1.4, with zero schema errors.
+  Updated frontend and administrator login both return HTTP 200 with expected markup.
+- The corrected experiment's own pre-update database snapshot restored to another
+  empty database. All 76 table definitions and multisets of 888 rows match exactly.
+  9687 copied baseline files match byte-for-byte before intentional clone config
+  rebinding. A fresh process confirms 6.1.3 and clean schema; frontend/admin login
+  then return HTTP 200. No authenticated application workflows claimed.
+- Fixed CLI URI initialization for absolute Windows paths. The local recovery
+  harness now checks configuration writes and handles the installer's read-only
+  configuration file; the initial unchecked write was detected by the version gate.
+
+Pinned official assets, SHA-256 checked against GitHub release asset metadata:
+https://github.com/joomla/joomla-cms/releases/download/6.1.3/Joomla_6.1.3-Stable-Full_Package.zip
+a49305652503f9344d046d55471f324a07882996132ed967c3b0fe34707ae4a1
+https://github.com/joomla/joomla-cms/releases/download/6.1.4/Joomla_6.1.4-Stable-Update_Package.zip
+163203f1d85feb7c1854ed127553db63c5895bb7b691b8d2584b04c14f091189
+The Update archive has 13105 entries and 86202918 expanded bytes.
+
+Reproducing the native experiment (developers, disposable sites only)
+1. Install Joomla 6.1.3 using its official installer in an isolated database/root.
+   Disable mail and all scheduler/cron/web writers. Set the site offline. Obtain
+   the official 6.1.4 Update_Package and independently verify its SHA-256.
+2. Preserve a complete file baseline outside the web root. Create a private empty
+   snapshot directory outside it. Deliberately create .nwm-disposable-core in the
+   disposable root to acknowledge the test-only destination.
+3. Run with that site's PHP CLI, replacing paths and digest:
+   php tests/core_update_native.php JOOMLA_ROOT UPDATE_ZIP SHA256 PRIVATE_SNAPSHOT_DIR --allow-disposable-writes
+   The test captures its database, writes core-started.json before update effects,
+   uses the native Joomla model and retains native-returned.json. No production
+   execution permission is implied. Do not rerun an interrupted attempt or reuse
+   its directory; inspect existing effects first.
+4. In a NEW PHP process run tools/core_update_preflight.php against the updated site
+   and the same package. Expected blocker is only target_not_newer, with all three
+   versions 6.1.4 and schema_errors=0. Check frontend/admin login separately.
+5. Restore the captured database with DatabaseSnapshot into a DIFFERENT empty
+   database, copy the saved file baseline to a separate root, and compare schemas,
+   row multisets and file hashes before changing clone connection/path settings.
+   Verify every configuration write. Boot the recovered site and verify 6.1.3.
+   See the existing backup/recovery documentation for provider limits. A snapshot
+   or successful installer return alone does not demonstrate recovery.
+
+Remaining product gates
+Native core provider with durable operation IDs, completion in a fresh process,
+remote HTTPS integration, central permissions/confirmation and reconciliation
+following lost responses remain pending. The test reservation is an experimental
+local guard, not that product journal. Rollback was manual to a separate clone,
+not automatic recovery. Other extension types/catalog downloads, backup runner
+usability, compatibility beyond this environment and clean-source release QA remain
+open. No release or full-product readiness is claimed by these checks.

@@ -1,0 +1,43 @@
+Core operation journal — development integration, 27 October 2026
+
+The native adapter and journal are local building blocks. The connector and
+central panel do not yet expose core updates. Do not describe this as a complete
+remote updater, or execute these building blocks on a production installation.
+
+CoreOperation reserves a stable operation ID and exact plan before the installer
+callback runs. Its private directory belongs to ONE installation and must live
+outside the served document root. All callers for that installation must use the
+same directory. An interrupted reservation blocks every new core ID, not just a
+replay of the old ID. Never delete a reservation to retry an uncertain update.
+
+NativeCoreUpdate performs the already pinned package preflight, captures the
+database, stages the ZIP, calls Joomla extraction/copy/finalization and cleanup.
+The caller must first stop other writers, validate extension compatibility and
+verify a recoverable filesystem AND database baseline on a separate clone. The
+database capture alone is not a complete backup. Authorization and confirmation
+must be derived from trusted local policy, never from a remote boolean alone.
+
+Even if the installer returns success, the journal stays uncertain. PHP has
+already loaded classes from the previous Joomla version. Run a fresh CLI process:
+
+php tools/core_operation_status.php JOOMLA_ROOT PRIVATE_JOURNAL OPERATION_ID
+
+This command only inspects Joomla and writes the verification receipt. It never
+installs, repairs the schema, downloads a package or retries. It compares the
+core extension ID, runtime version, manifest version, database version and native
+schema error count to the reserved target. A mismatch remains uncertain. A
+verified receipt describes the observation at reconciliation, not perpetual site
+health or proof that all third-party extensions work. Preserve the journal.
+
+tests/core_operation.php injects a process exit after effects and before a receipt.
+tests/core_operation_native.php does the same after a real native upgrade. The
+native harness requires an explicit disposable-site marker and write flag. It
+is intentionally NOT a public execution command. Never rerun it against the same
+clone to recover: inspect the journal using the read-only reconciliation command.
+
+Remaining integration: package preparation/plan binding, maintenance worker
+lifecycle, shared exclusion with extension updates/backups, transport, central
+ACL/confirmation/UI, recovery handoff, and complete clean-install acceptance.
+PID comparison catches accidental same-process verification in CLI; it is not a
+security boundary or a general web-worker freshness guarantee. Storage and local
+adapters are trusted. No automatic rollback or production compatibility claim.

@@ -10,6 +10,8 @@ $d=new CoreDispatch($base.'/updates',$gate,$base.'/site');
 $inspect=fn()=>json_decode(file_get_contents($base.'/state.json'),true,16,JSON_THROW_ON_ERROR);
 try {
     $r=match($mode) {
+        'discovery'=>$gate->currentOwner()===null ? ['status'=>'idle'] :
+            ($gate->currentOwner()==='core:'.$id ? $d->handle($id,false,false) : ['status'=>'blocked']),
         'queue'=>$d->handle($id,true,true),
         'online'=>$d->handle($id,true,false),
         'status'=>$d->handle($id,false,false),

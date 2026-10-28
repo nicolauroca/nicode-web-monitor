@@ -2,8 +2,9 @@ Nicode Web Monitor — prepared core dispatch (development, 28 October 2026)
 Package: Nicode.joomla.webmonitor
 
 This is an integration stage, not a release candidate. The 0.8.0-dev central panel
-has core credentials, ACL and a queue/status journal. Native execution still uses
-an explicit remote CLI. A managed runner is pending; queueing does not install.
+has core credentials, ACL and a queue/status journal. An opt-in host runner now
+discovers queued core work and uses fresh CLI children. Queueing alone does not install;
+the host must invoke the runner. No host scheduling is installed by this product.
 The existing extension panel remains limited to plugins.
 
 CENTRAL PANEL FROM AN EXISTING JOOMLA 6 INSTALLATION
@@ -21,7 +22,7 @@ result. ready is local registration, queued is waiting for remote execution,
 uncertain requires reconciliation, verified is fresh-process verification.
 Queued/uncertain/verified operations cannot be dispatched again from the panel.
 The journal displays current state, not an immutable event log. Neither POST nor
-GET spawns an installer process. Follow steps 5 and 6 below on the remote host.
+GET spawns an installer process. Use the host runner below, or steps 5 and 6.
 
 SETUP IN A DISPOSABLE, RECOVERABLE INSTALLATION
 Install the current connector ZIP using Joomla's installer. Keep the trusted tools
@@ -65,6 +66,28 @@ PREPARE, REQUEST, EXECUTE, VERIFY
    Do not use the older core_operation_status.php for dispatched operations: it does
    not release the shared maintenance owner.
 
+HOST RUNNER (OPTIONAL)
+Using the same compatible PHP CLI and trusted tools outside the web root, invoke:
+  php tools/core_runner.php JOOMLA_ROOT --run-queued
+No operation ID or secret is passed. It reads the configured maintenance owner in a
+child process, executes an already queued core operation once, and reconciles in a
+second fresh process. It never creates a permit, queues work, or installs a prepared
+but unrequested operation. All existing confirmations and permit expiry still apply.
+An interrupted child triggers reconciliation only; an existing uncertain journal
+never triggers another installation. A partial backup or extension owner is left alone.
+Idle and verified return exit 0; blocked/uncertain/unavailable return a nonzero exit.
+Repeated invocations after successful completion are idle. An expired queued permit
+remains reserved for local inspection; the runner cannot extend it or delete ownership.
+proc_open must be enabled for this trusted CLI. Subprocesses use PHP_BINARY and an
+argument array without a shell. No Joomla code is loaded in the parent process.
+One invocation processes at most the current owner, without polling or a resident
+service. Native file/database I/O is not a hard time-bounded operation. If a host process
+manager terminates execution, preserve receipts and reconcile; do not clear locks or
+automatically restart installation. A host administrator may invoke this command from
+their existing execution facility within the permit window. This project does not
+create cron entries, Windows tasks, or Joomla scheduling as part of runner setup.
+The tested local invocation is not evidence of a deployed host schedule.
+
 FAILURES AND EXCLUSION
 The gate uses a nonblocking OS file lock while executing and a durable owner between
 requests. Queued core, uncertain effects and partial backups block other maintenance
@@ -85,3 +108,8 @@ response and fresh CLI verification. It does not test central panel core ACL or 
 tests/core_panel.py adds the real central panel and four Joomla roles, CSRF,
 confirmation, lost-response reconciliation and verified native update. Add
 --central CENTRAL_JOOMLA_ROOT to the same disposable fixture arguments.
+Add --managed-runner to exercise discovery, native update and fresh verification
+through one host invocation, followed by an idle invocation with no reinstallation.
+python tests/core_runner.py --php PHP_BINARY --output RESULT_JSON
+tests subprocess failure, drift, partial backups and expired/torn state with simulated
+effects. It complements, rather than replaces, the native managed-runner fixture.

@@ -1,0 +1,28 @@
+Nicode Web Monitor - host core runner and reproducible packaging, 28 October 2026
+Package: Nicode.joomla.webmonitor
+
+41 checks on a disposable Joomla installation: real central panel/roles, lost queue
+response, GET reconciliation, native 6.1.3 to 6.1.4 update through the host runner,
+fresh-process runtime/manifest/database/schema verification and panel verified state.
+The runner discovered the operation without a per-operation CLI argument. A second
+invocation was idle and preserved the native completion receipt.
+
+9 runner subprocess contract checks: unqueued preparation, success/replay, abrupt
+installer exit after simulated effects, schema drift and later reconciliation,
+partial backup, expired permit and malformed ownership. 20 dispatch regression
+checks include process crash and cross-operation/concurrent locking. Simulated
+crash tests are distinct from the successful native installation above.
+
+4 development ZIPs are byte-identical when built from equivalent LF and CRLF text
+sources. A synthetic binary asset retained its exact bytes. Known text sources and
+LICENSE are normalized to LF; binary files are not converted. Run:
+  python tests/build_reproducible.py --output RESULT_JSON
+These checks do not establish clean installation/lifecycle acceptance of a final
+release. Native integration used the same PHP source before newline normalization.
+
+No host schedule was installed; the host must invoke core_runner.php explicitly or
+through its existing execution facility. Queueing via HTTP never spawns processes.
+Backup progress still needs a usable batch/runner flow. Other extension types,
+broader environment compatibility and final lifecycle acceptance remain pending.
+The 29 October complete candidate and 30-31 October correction margin are not yet
+verified. No real hosting was accessed and no stable release was declared.

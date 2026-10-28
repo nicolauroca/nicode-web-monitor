@@ -17,6 +17,18 @@ final class MaintenanceGate
         }
     }
 
+    public function currentOwner(): ?string {
+        $file = $this->storage.'/owner.json';
+        if (is_link($file)) { throw new \RuntimeException('Linked gate denied'); }
+        if (!file_exists($file)) { return null; }
+        if (!is_file($file) || filesize($file)>4096) { throw new \RuntimeException('Invalid gate'); }
+        $owner = json_decode((string)file_get_contents($file), true, 8, JSON_THROW_ON_ERROR)['owner'] ?? null;
+        if (!is_string($owner) || !preg_match('/^(core|extension|backup|backup_tree|backup_database|backup_site):[a-z0-9-]{8,64}$/D', $owner)) {
+            throw new \RuntimeException('Invalid maintenance owner');
+        }
+        return $owner; // Advisory discovery only; every effect still obtains the shared lock.
+    }
+
     public function run(string $owner, \Closure $action): array {
         if (!preg_match('/^(core|extension|backup|backup_tree|backup_database|backup_site):[a-z0-9-]{8,64}$/D', $owner)) {
             throw new \RuntimeException('Invalid maintenance owner');

@@ -59,6 +59,7 @@ if args.resume_panel:
     site_id = receipt['site_id']
     resume['receipt'] = receipt
 for name in ['operations','snapshots','tree-operations','trees','database-operations','databases','site-operations','sites','site-trees','site-databases','site-verify']: (storage/name).mkdir(exist_ok=bool(resume))
+(storage/'maintenance').mkdir(exist_ok=bool(resume))
 
 def check(ok, name):
     if not ok:
@@ -67,7 +68,7 @@ def check(ok, name):
 
 def configure(credential, enabled=1, identity=None, backup_credential=backup):
     # Nonsecret digest goes through stdin, never shell interpolation.
-    params = json.dumps({'backup_storage':str(storage), 'backup_token_hash':hashlib.sha256(backup_credential.encode()).hexdigest() if backup_credential else '', 'site_id': identity or site_id, 'token_hash': hashlib.sha256(credential.encode()).hexdigest() if credential else ''})
+    params = json.dumps({'backup_storage':str(storage), 'maintenance_storage':str(storage/'maintenance'), 'backup_token_hash':hashlib.sha256(backup_credential.encode()).hexdigest() if backup_credential else '', 'site_id': identity or site_id, 'token_hash': hashlib.sha256(credential.encode()).hexdigest() if credential else ''})
     code = r'''define('_JEXEC',1); define('JPATH_BASE',getcwd());
 require JPATH_BASE.'/includes/defines.php'; require JPATH_BASE.'/includes/framework.php';
 $d=json_decode(stream_get_contents(STDIN),true,512,JSON_THROW_ON_ERROR);

@@ -1,0 +1,36 @@
+Nicode.joomla.webmonitor — 28 October 2026, development verification
+
+Real disposable Windows/PHP 8.4/MariaDB/Joomla test:
+- Local core preparation copied a pinned Update_Package and did not execute it.
+- Installed connector accepted a core-only HTTPS credential; plugin credential denied.
+- A deliberately lost POST response was reconciled by GET to the durable queued state.
+- Web requests did not invoke the native installer. Explicit separate CLI upgraded
+  Joomla 6.1.3 to 6.1.4; another CLI verified runtime, manifest, database and zero
+  native schema errors. Replay did not reinstall. HTTPS then returned verified.
+- 13 native integration checks passed. Central core panel/ACL/runner NOT tested or
+  implemented by this change; the execution CLI is still an explicit manual step.
+
+Shared maintenance:
+- 20 subprocess checks: simulated crash after effects, replay without reinstall,
+  schema drift, partial backup owner, queued core excluding backup/plugin, expired
+  and foreign permits, malformed durable state, simultaneous OS-lock contention.
+- 44 real Joomla plugin-update panel/ACL/HTTPS checks passed after correcting stale
+  baseline rejection: it previously reserved the shared gate without native effects.
+  Baseline is now checked before reservation and again inside the native primitive.
+- 25 HTTPS backup file-tree smoke checks passed, including multiple bounded steps,
+  duplicate request, status reconciliation and expired maintenance refusal. This
+  is NOT a second full backup/restore certification. Maximum observed request in
+  this smoke run: 0.286 seconds, not a general performance guarantee.
+- 25 transport contract checks passed, including strict receipt-scope separation.
+
+The first native transport attempt was blocked by an expired local TLS certificate,
+before any queue/installation. A fresh local test certificate fixed the harness;
+TLS verification was never disabled. Private fixture credentials/artifacts remain
+outside Git. Existing full backup/restore evidence is preserved, not repeated here.
+
+Gate setup is a required change for development installations: configure one private
+maintenance_storage per installation before maintenance. See core-dispatch.txt.
+Remaining acceptance: central core credential/ACL/UI, usable execution and backup
+runner, other extension types, compatibility, clean-source lifecycle/reproducibility.
+These checks do not establish release readiness, production deployment or recovery
+of the planned 29 October candidate / 1 November delivery date.

@@ -1,4 +1,4 @@
-Prepared plugin updates (development) — 27 October 2026
+Prepared plugin updates (development) â€” 27 October 2026
 Package: Nicode.joomla.webmonitor
 
 What this version does
@@ -96,3 +96,5 @@ Only the installed test client gets a temporary loopback/CA override, restored i
 finally. Production source and packaged transports retain their network restrictions.
 No Joomla core update, general plugin compatibility, post-update rollback, MySQL,
 production hosting or complete-release acceptance is claimed by these tests.
+
+28 October development change: configure maintenance_storage before plugin updates or backups. Shared durable ownership now excludes concurrent core, plugin and partial-backup operations. See core-dispatch.txt for setup and recovery limitations.

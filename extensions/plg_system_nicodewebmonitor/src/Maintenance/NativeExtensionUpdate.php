@@ -13,7 +13,7 @@ use Nicode\Plugin\System\NicodeWebMonitor\Transport\BackupEndpoint;
 final class NativeExtensionUpdate
 {
     public function __construct(private DatabaseInterface $db, private string $storage,
-        private string $webRoot, private bool $offline) {}
+        private string $webRoot, private bool $offline, private string $maintenanceStorage = '') {}
 
     public function handle(string $operation, bool $execute): array
     {
@@ -82,7 +82,13 @@ final class NativeExtensionUpdate
                 throw new \RuntimeException('Package identity/version mismatch');
             }
         } finally { $zip->close(); }
-        return $core->run($operation, $plan, true, true, $inspect, function ($digest) use ($package, $manifest): bool {
+        // Reject a stale prepared plan before reserving shared maintenance. The primitive
+        // checks again under the lock so a changed baseline can never reach installation.
+        if ($inspect() !== ['extension_id'=>$plan['extension_id'], 'version'=>$plan['from']]) {
+            throw new \RuntimeException('Installed baseline changed');
+        }
+        return (new MaintenanceGate($this->maintenanceStorage, $this->webRoot))->run('extension:'.$operation,
+            fn () => $core->run($operation, $plan, true, true, $inspect, function ($digest) use ($package, $manifest): bool {
             if (!hash_equals($digest, hash_file('sha256', $package))) { throw new \RuntimeException('Package changed'); }
             $p = InstallerHelper::unpack($package, true);
             if (!$p) { throw new \RuntimeException('Unpack failed'); }
@@ -95,6 +101,6 @@ final class NativeExtensionUpdate
                 }
                 return $installer->install($p['extractdir']);
             } finally { \Joomla\Filesystem\Folder::delete($p['extractdir']); }
-        });
+        }));
     }
 }

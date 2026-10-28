@@ -1,0 +1,67 @@
+Nicode Web Monitor — prepared core dispatch (development, 28 October 2026)
+Package: Nicode.joomla.webmonitor
+
+This is an integration stage, not a release candidate. Core transport and the native
+one-shot CLI are implemented. The central panel does not yet expose core credentials,
+core ACL, dispatch or a managed execution runner. Do not describe this as a complete
+remote update workflow. The existing extension panel remains limited to plugins.
+
+SETUP IN A DISPOSABLE, RECOVERABLE INSTALLATION
+Install the current connector ZIP using Joomla's installer. Keep the trusted tools
+directory outside the site. In the connector configuration set:
+- update_storage: existing private directory outside all web roots;
+- maintenance_storage: another existing private directory, used by every backup,
+  plugin update and core operation for this installation;
+- core_token_hash: SHA-256 of a separately generated 64-hex bearer credential.
+  It must differ from inventory, backup and plugin-update credentials. Never store
+  bearer credentials in command arguments, repositories or documentation.
+Existing development installations must configure maintenance_storage before running
+further backup/update operations. Missing configuration fails closed. Do not switch
+that path while an operation is incomplete, and do not share it with another site.
+Keep private directories restricted to the same trusted service account.
+
+PREPARE, REQUEST, EXECUTE, VERIFY
+1. Verify a restorable file/database recovery point, take the site offline and stop
+   admin/cron/external writers. Offline alone does not stop those writers.
+2. Obtain the trusted Joomla Update_Package locally and its independently verified
+   SHA-256. Full_Package is rejected. Use an installed Joomla 6.x baseline.
+3. Run with the site's compatible PHP CLI:
+   php tools/prepare_core_update.php JOOMLA_ROOT UPDATE_ZIP SHA256 OPERATION --writers-stopped-and-recovery-verified
+   The command uses configured storage, validates the native baseline and stages an
+   immutable operation/plan/package with a 15-minute local permit. The recovery flag
+   is an operator attestation, not proof that this command verified a restore.
+4. The authenticated HTTPS route is index.php?option=com_nicodewebmonitor&task=update_core.
+   POST JSON: site_id, operation, action="update", confirmed=true. It persists queued
+   state and reserves shared maintenance; it NEVER installs or spawns a process.
+   GET with site_id, operation, action="status" is read-only. The core UpdateClient
+   uses scope core_update, strict TLS verification and the existing pinned-address
+   policy. A lost POST response requires GET; do not assume failure means no queue.
+5. Before the permit expires, invoke the explicit one-shot command:
+   php tools/core_update_execute.php JOOMLA_ROOT OPERATION --execute-queued
+   This CLI only executes an already queued local permit. Exit 3 means uncertainty,
+   including native completion awaiting verification. Exit 2 is unavailable or error;
+   inspect receipts and effects, never interpret it as permission to retry installation.
+6. In a NEW process:
+   php tools/core_update_execute.php JOOMLA_ROOT OPERATION --reconcile
+   It checks runtime, file manifest, database manifest and native schema errors. Exit 0
+   means verified, 3 remains uncertain. GET then reports verified without paths/PIDs.
+   Do not use the older core_operation_status.php for dispatched operations: it does
+   not release the shared maintenance owner.
+
+FAILURES AND EXCLUSION
+The gate uses a nonblocking OS file lock while executing and a durable owner between
+requests. Queued core, uncertain effects and partial backups block other maintenance
+types and operation IDs. Only a verified/complete receipt releases ownership. There
+is no timeout takeover, automatic rollback, blind reinstall, daemon or new scheduler.
+An expired queued permit, malformed receipt or interrupted backup stays reserved;
+local effect inspection/recovery is required. Do not delete ownership to bypass it.
+Arbitrary trusted external writers and standalone low-level experiment scripts are
+not governed by this gate. They must remain stopped during the maintenance window.
+
+REPRODUCIBLE TESTS
+python tests/core_dispatch.py --php PHP_BINARY --output RESULT_JSON
+Exercises subprocess crash, replay, schema drift, durable cross-type ownership,
+expired/foreign permits, partial backup and malformed gate with simulated effects.
+tests/core_http.py requires an explicitly marked disposable clone and a current local
+TLS certificate. It tests the installed connector, real native core upgrade, lost queue
+response and fresh CLI verification. It does not test central panel core ACL or runner.

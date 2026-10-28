@@ -30,6 +30,7 @@ repo=Path(__file__).resolve().parents[1]
 site=a.site.resolve(); central=a.central.resolve(); store=a.storage.resolve()
 assert site!=central and not store.exists()
 store.mkdir(); (store/'journal').mkdir(); (store/'prepared').mkdir()
+(store/'maintenance').mkdir()
 checks=[]
 def check(ok,name):
     if not ok: raise AssertionError(name)
@@ -58,7 +59,8 @@ v1=package('1.0.0');v2=package('1.1.0');v3=package('1.2.0')
 site_id=str(uuid.uuid4());token=secrets.token_hex(32);inventory=secrets.token_hex(32);backup=secrets.token_hex(32)
 params={'site_id':site_id,'token_hash':hashlib.sha256(inventory.encode()).hexdigest(),
     'backup_token_hash':hashlib.sha256(backup.encode()).hexdigest(),
-    'update_token_hash':hashlib.sha256(token.encode()).hexdigest(),'update_storage':str(store)}
+    'update_token_hash':hashlib.sha256(token.encode()).hexdigest(),'update_storage':str(store),
+    'maintenance_storage':str(store/'maintenance')}
 fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-0.5.0-dev.zip')])
 fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-0.7.0-dev.zip')])
 remote=None;roledata=None
@@ -174,7 +176,8 @@ try:
     check(request('update-wrong-version',True)[0]==409,'manifest version mismatch denied')
     prepare('update-stale',v2,'0.9.0','1.1.0')
     check(request('update-stale',True)[0]==409,'stale installed baseline denied')
-    check(not list((store/'journal').glob('*/started.json')) and fixture('inspect')['version']=='1.0.0','rejected updates have no native effects or reservation')
+    check(not list((store/'journal').glob('*/started.json')) and not (store/'maintenance/owner.json').exists()
+        and fixture('inspect')['version']=='1.0.0','rejected updates have no native effects or shared reservation')
     replacement='(new UpdateClient('+json.dumps(str(a.certificate.resolve()).replace('\\','/'))+", ['127.0.0.1']))"
     check(original.count(b'(new UpdateClient())')==1,'single local transport override')
     path.write_bytes(original.replace(b'(new UpdateClient())',replacement.encode()))

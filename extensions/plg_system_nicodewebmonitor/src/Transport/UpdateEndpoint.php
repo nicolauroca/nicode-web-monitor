@@ -8,7 +8,9 @@ namespace Nicode\Plugin\System\NicodeWebMonitor\Transport;
 final class UpdateEndpoint
 {
     public function __construct(private string $siteId, private string $tokenHash,
-        private array $otherHashes) {}
+        private array $otherHashes, private string $scope = 'extension_update') {
+        if (!in_array($scope, ['extension_update','core_update'], true)) { throw new \InvalidArgumentException('Invalid scope'); }
+    }
 
     public function handle(array $server, array $query, string $body, \Closure $provider): array
     {
@@ -49,8 +51,12 @@ final class UpdateEndpoint
         }
         try {
             $receipt = $provider($r['operation'], $method === 'POST');
-            return [$receipt['status'] === 'updated' ? 200 : 202,
-                ['site_id'=>$this->siteId, 'operation'=>$r['operation'], 'scope'=>'extension_update']
+            if (!in_array($receipt['status'] ?? null, $this->scope === 'core_update'
+                ? ['queued','uncertain','verified'] : ['uncertain','updated'], true)) {
+                throw new \RuntimeException('Invalid provider state');
+            }
+            return [in_array($receipt['status'], ['updated','verified'], true) ? 200 : 202,
+                ['site_id'=>$this->siteId, 'operation'=>$r['operation'], 'scope'=>$this->scope]
                 + array_intersect_key($receipt, array_flip(['status','plan']))];
         } catch (\OutOfBoundsException) { return [404, ['error'=>'operation_unknown']]; }
         catch (\Throwable) { return [409, ['error'=>'update_not_confirmed']]; }

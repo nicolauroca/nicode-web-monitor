@@ -38,4 +38,18 @@ foreach([
     array_replace($valid,['plan'=>array_replace($valid['plan'],['package_sha256'=>'invalid'])]),
 ] as $bad)check($receipt->invoke($client,$bad,$site,'contract-update',true,200)===null,'inconsistent receipt denied');
 check($receipt->invoke($client,$valid,$site,'contract-update',true,202)===null,'HTTP status must match receipt');
+$coreClient=new UpdateClient(scope:'core_update');
+$coreValid=array_replace($valid,['scope'=>'core_update','status'=>'queued']);
+check($receipt->invoke($coreClient,$coreValid,$site,'contract-update',true,202)===$coreValid,'core client accepts queued receipt');
+check($receipt->invoke($client,$coreValid,$site,'contract-update',true,202)===null,'extension client rejects core scope');
+check($receipt->invoke($coreClient,$valid,$site,'contract-update',true,200)===null,'core client rejects extension scope');
+$coreValid['status']='verified';
+check($receipt->invoke($coreClient,$coreValid,$site,'contract-update',false,200)===$coreValid,'core client accepts fresh verified status');
+$coreValid['status']='updated';
+check($receipt->invoke($coreClient,$coreValid,$site,'contract-update',false,200)===null,'core cannot masquerade as synchronous extension update');
+$coreEndpoint=new UpdateEndpoint($site,hash('sha256',$token),[],'core_update');
+$reply=$coreEndpoint->handle($server,[],json_encode($r),fn()=>['status'=>'queued','plan'=>$valid['plan'],'internal_path'=>'private','writer_pid'=>123]);
+check($reply[0]===202 && $reply[1]['scope']==='core_update' && !isset($reply[1]['internal_path'],$reply[1]['writer_pid']),'core queue receipt strips internal fields');
+$collision=new UpdateEndpoint($site,hash('sha256',$token),[hash('sha256',$token)],'core_update');
+check($collision->handle($server,[],json_encode($r),$provider)[0]===503,'core credential cannot be shared with another scope');
 echo json_encode(['passed'=>count($checks),'checks'=>$checks])."\n";

@@ -12,8 +12,10 @@ final class UpdateClient
         private array $allowedPrivateAddresses = [],
         private int $timeoutMs = 15000,
         private int $maxBytes = 2097152,
+        private string $scope = 'extension_update',
     ) {
-        if ($timeoutMs < 100 || $timeoutMs > 30000 || $maxBytes < 1024 || $maxBytes > 4194304) {
+        if ($timeoutMs < 100 || $timeoutMs > 30000 || $maxBytes < 1024 || $maxBytes > 4194304
+            || !in_array($scope, ['extension_update','core_update'], true)) {
             throw new \InvalidArgumentException('Invalid client limits');
         }
     }
@@ -33,7 +35,7 @@ final class UpdateClient
             return $failure('curl_unavailable');
         }
         $url = (new InventoryClient())->endpoint($baseUrl);
-        if ($url !== null) { $url = str_replace('task=inventory', 'task=update_extension', $url); }
+        if ($url !== null) { $url = str_replace('task=inventory', $this->scope === 'core_update' ? 'task=update_core' : 'task=update_extension', $url); }
         if ($url === null || !filter_var($address, FILTER_VALIDATE_IP)
             || (!filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)
                 && !in_array($address, $this->allowedPrivateAddresses, true))
@@ -130,7 +132,7 @@ final class UpdateClient
             $receipt = $this->receipt($data, $siteId, $operation, $execute, $status);
             if ($receipt === null) { return $failure('invalid_receipt'); }
             return ['ok'=>true, 'received_at'=>gmdate('Y-m-d\TH:i:s\Z'),
-                'reconcile_required'=>$receipt['status'] === 'uncertain', 'receipt'=>$receipt];
+                'reconcile_required'=>in_array($receipt['status'], ['uncertain','queued'], true), 'receipt'=>$receipt];
         } catch (\Throwable) {
             // Do not disclose remote bodies, URLs, headers, credentials or exception text.
             return $failure('transport_failed');
@@ -142,15 +144,15 @@ final class UpdateClient
     private function receipt(mixed $data, string $siteId, string $operation, bool $execute, int $http): ?array
     {
         if (!is_array($data) || ($data['site_id'] ?? null) !== $siteId
-            || ($data['operation'] ?? null) !== $operation || ($data['scope'] ?? null) !== 'extension_update'
-            || !in_array($data['status'] ?? null, ['updated','uncertain'], true)
-            || $http !== ($data['status'] === 'updated' ? 200 : 202)) { return null; }
+            || ($data['operation'] ?? null) !== $operation || ($data['scope'] ?? null) !== $this->scope
+            || !in_array($data['status'] ?? null, $this->scope === 'core_update' ? ['queued','verified','uncertain'] : ['updated','uncertain'], true)
+            || $http !== (in_array($data['status'], ['updated','verified'], true) ? 200 : 202)) { return null; }
         $plan = $data['plan'] ?? null;
         if (!is_array($plan) || !is_int($plan['extension_id'] ?? null) || $plan['extension_id'] < 1
             || !is_string($plan['from'] ?? null) || !is_string($plan['to'] ?? null)
             || strlen($plan['from'])>64 || strlen($plan['to'])>64 || !version_compare($plan['to'], $plan['from'], '>')
             || !is_string($plan['package_sha256'] ?? null) || !preg_match('/^[a-f0-9]{64}$/D', $plan['package_sha256'])) { return null; }
-        return ['site_id'=>$siteId,'operation'=>$operation,'scope'=>'extension_update','status'=>$data['status'],
+        return ['site_id'=>$siteId,'operation'=>$operation,'scope'=>$this->scope,'status'=>$data['status'],
             'plan'=>array_intersect_key($plan, array_flip(['extension_id','from','to','package_sha256']))];
     }
 }

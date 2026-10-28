@@ -33,15 +33,27 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
             return;
         }
         $task = $app->getInput()->get->getString('task', '');
-        if ($task === 'update_extension') {
+        if ($task === 'update_core') {
+            $endpoint = new \Nicode\Plugin\System\NicodeWebMonitor\Transport\UpdateEndpoint(
+                (string)$this->params->get('site_id',''), (string)$this->params->get('core_token_hash',''),
+                [(string)$this->params->get('token_hash',''), (string)$this->params->get('backup_token_hash',''),
+                    (string)$this->params->get('update_token_hash','')], 'core_update');
+            $body = file_get_contents('php://input', false, null, 0, 4097);
+            [$status,$body] = $endpoint->handle($_SERVER,$_GET,$body === false ? '' : $body,
+                fn (string $id, bool $execute) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\CoreDispatch(
+                    (string)$this->params->get('update_storage',''),
+                    new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\MaintenanceGate(
+                        (string)$this->params->get('maintenance_storage',''), JPATH_ROOT), JPATH_ROOT))->handle($id,$execute,(bool)$app->get('offline')));
+        } elseif ($task === 'update_extension') {
             $storage = (string)$this->params->get('update_storage', '');
             $endpoint = new \Nicode\Plugin\System\NicodeWebMonitor\Transport\UpdateEndpoint(
                 (string)$this->params->get('site_id', ''), (string)$this->params->get('update_token_hash', ''),
-                [(string)$this->params->get('token_hash', ''), (string)$this->params->get('backup_token_hash', '')]);
+                [(string)$this->params->get('token_hash', ''), (string)$this->params->get('backup_token_hash', ''), (string)$this->params->get('core_token_hash','')]);
             $body = file_get_contents('php://input', false, null, 0, 4097);
             [$status, $body] = $endpoint->handle($_SERVER, $_GET, $body === false ? '' : $body,
                 fn (string $id, bool $execute) => (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\NativeExtensionUpdate(
-                    $this->database, $storage, JPATH_ROOT, (bool)$app->get('offline')))->handle($id, $execute));
+                    $this->database, $storage, JPATH_ROOT, (bool)$app->get('offline'),
+                    (string)$this->params->get('maintenance_storage','')))->handle($id, $execute));
         } elseif (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site'], true)) {
             $storage = (string) $this->params->get('backup_storage', '');
             $endpoint = new BackupEndpoint((string) $this->params->get('site_id', ''),
@@ -63,6 +75,9 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
                         || $permit['expires_at'] > time() + 900) {
                         throw new \RuntimeException('Operation not armed');
                     }
+                    return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\MaintenanceGate(
+                        (string)$this->params->get('maintenance_storage',''),JPATH_ROOT))->run($task.':'.$id,
+                        function () use ($app,$storage,$task,$id): array {
                     if ($task === 'backup_tree') {
                         BackupEndpoint::privateDirectory($storage . '/trees', JPATH_ROOT);
                         return (new \Nicode\Plugin\System\NicodeWebMonitor\Maintenance\ResumableTree($storage . '/trees'))->step(JPATH_ROOT, $id, true, 64);
@@ -94,6 +109,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
                     }
                     BackupEndpoint::privateDirectory($storage . '/snapshots', JPATH_ROOT);
                     return (new SiteSnapshot($storage . '/snapshots'))->capture($connection, JPATH_ROOT, $id, true);
+                        });
                 });
         } else {
             $endpoint = new Endpoint((string) $this->params->get('site_id', ''), (string) $this->params->get('token_hash', ''));
@@ -110,7 +126,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
         header('Pragma: no-cache');
         header('X-Content-Type-Options: nosniff');
         if ($status === 401) { header('WWW-Authenticate: Bearer realm="Nicode Web Monitor"'); }
-        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site', 'update_extension'], true) ? 'GET, POST' : 'GET')); }
+        if ($status === 405) { header('Allow: ' . (in_array($task, ['backup', 'backup_tree', 'backup_database', 'backup_site', 'update_extension','update_core'], true) ? 'GET, POST' : 'GET')); }
         echo json_encode($body, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         $app->close();
     }

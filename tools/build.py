@@ -41,7 +41,7 @@ for file in (source / 'src/Inventory').glob('*.php'):
     files['src/Inventory/' + file.name] = file.read_bytes().replace(
         b'Nicode\\Plugin\\Console\\NicodeWebMonitor', b'Nicode\\Plugin\\System\\NicodeWebMonitor')
 files['LICENSE.txt'] = (root / 'LICENSE').read_bytes()
-for name in ['BackupOperations', 'FileSnapshot', 'DatabaseSnapshot', 'SiteSnapshot', 'TreeOperations', 'TreeManifest', 'ResumableFile', 'ResumableTree', 'ResumableDatabase', 'ResumableSite', 'ExtensionUpdate']:
+for name in ['BackupOperations', 'FileSnapshot', 'DatabaseSnapshot', 'SiteSnapshot', 'TreeOperations', 'TreeManifest', 'ResumableFile', 'ResumableTree', 'ResumableDatabase', 'ResumableSite', 'ExtensionUpdate', 'MaintenanceGate', 'CoreDispatch', 'CoreOperation']:
     files['src/Maintenance/' + name + '.php'] = (root / 'tools' / (name + '.php')).read_bytes().replace(
         b'Nicode\\Maintenance', b'Nicode\\Plugin\\System\\NicodeWebMonitor\\Maintenance')
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

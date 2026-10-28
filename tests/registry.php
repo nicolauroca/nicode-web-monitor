@@ -65,7 +65,7 @@ try {
     rejects(fn()=>$readonly->add('x','https://example.org','93.184.216.34',$uuid,$token), 'reader cannot enroll');
     rejects(fn()=>$readonly->remove((int)$row['id']), 'reader cannot delete');
     // Actual template with malicious stored label, no form token needed for a reader.
-    $sites = [$row]; $user = $reader; $canUpdate = false; $updateOperations = [];
+    $sites = [$row]; $user = $reader; $canUpdate = false; $updateOperations = []; $canCoreUpdate = false; $coreUpdateOperations = []; $canBackup = false;
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     check(!str_contains($html,'<script>') && str_contains($html,'&lt;script&gt;'), 'stored label escaped');
     check(!str_contains($html,$token) && !str_contains($html,$stored), 'template excludes secrets');
@@ -73,7 +73,27 @@ try {
     $inspection=['ok'=>false,'error'=>'access_denied']; $inspectedId=(int)$row['id'];
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     check(str_contains($html,'access_denied') && str_contains($html,'does not establish'), 'failed read not presented as offline');
+    $sid=(int)$row['id'];
+    $core=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CoreUpdateCoordinator($db,$vault,$admin);
+    $updates=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\UpdateCoordinator($db,$vault,$admin);
+    $backups=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\BackupCoordinator($db,$vault,$admin);
+    $backupToken=bin2hex(random_bytes(32)); $updateToken=bin2hex(random_bytes(32)); $coreToken=bin2hex(random_bytes(32));
+    $backups->enroll($sid,$backupToken); $updates->enroll($sid,$updateToken);
+    rejects(fn()=>$core->enroll($sid,$token), 'core rejects inventory credential');
+    rejects(fn()=>$core->enroll($sid,$backupToken), 'core rejects backup credential');
+    rejects(fn()=>$core->enroll($sid,$updateToken), 'core rejects plugin credential');
+    $core->enroll($sid,$coreToken);
+    $sealedCore=$db->setQuery('SELECT credential FROM #__nwm_core_update_credentials WHERE site='.$sid)->loadResult();
+    check(!str_contains($sealedCore,$coreToken) && $vault->open($uuid.':core-update',$sealedCore)===$coreToken, 'core credential encrypted with own purpose');
+    rejects(fn()=>$vault->open($uuid.':update',$sealedCore), 'plugin cannot open core credential');
+    rejects(fn()=>$backups->enroll($sid,$coreToken), 'backup cannot reuse core credential');
+    rejects(fn()=>$updates->enroll($sid,$coreToken), 'plugin cannot reuse core credential');
+    $core->begin($sid,'core-registry-test',true);
+    check(!str_contains(json_encode($core->recent()),$coreToken), 'core journal excludes credential');
     $registry->remove((int)$row['id']);
+    foreach (['core_update_credentials','core_update_operations'] as $table) {
+        check((int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_'.$table.' WHERE site='.$sid)->loadResult()===0, $table.' removed with site');
+    }
     check(count($registry->all())===count($rows)-1, 'site removed');
 } finally { $db->transactionRollback(); }
 echo json_encode(['passed'=>count($checks),'checks'=>$checks], JSON_PRETTY_PRINT), "\n";

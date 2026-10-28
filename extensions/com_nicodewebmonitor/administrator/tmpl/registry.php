@@ -52,7 +52,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php else: ?><p>Extension inventory unavailable.</p><?php endif; ?>
 <?php endif; ?></section>
 <?php endif; ?>
-<div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites — connector observations</caption>
+<div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites â€” connector observations</caption>
 <thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Pinned IP</th><th scope="col">Identity</th><th scope="col">Check history (UTC)</th><th scope="col">Actions</th></tr></thead><tbody>
 <?php foreach ($sites as $site): ?>
 <tr><td data-label="Site"><?= $escape($site['label']) ?></td><td data-label="URL"><?= $escape($site['base_url']) ?></td><td data-label="Pinned IP"><?= $escape($site['address']) ?></td><td data-label="Identity"><?= $escape($site['site_id']) ?></td><td data-label="Check history (UTC)">
@@ -62,12 +62,12 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <p><strong><?= $alerts['active'] ? 'Active inventory alert' : ($alerts['state'] === 'never_checked' ? 'Awaiting first check' : 'No active inventory alert') ?></strong></p>
 <?php if ($alerts['transitions']): ?><details><summary>Alert transitions (retained history)</summary><ol>
 <?php foreach ($alerts['transitions'] as $event): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['at'])) ?> UTC: <?= $escape($event['kind']) ?> — <?= $escape($stateLabels[$event['from']] ?? 'Unknown') ?> → <?= $escape($stateLabels[$event['to']] ?? 'Unknown') ?></li>
+<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['at'])) ?> UTC: <?= $escape($event['kind']) ?> â€” <?= $escape($stateLabels[$event['from']] ?? 'Unknown') ?> â†’ <?= $escape($stateLabels[$event['to']] ?? 'Unknown') ?></li>
 <?php endforeach; ?></ol></details><?php endif; ?>
 <?php endif; ?>
 <?php if (!empty($site['checks'])): ?><details><summary>Recent checks</summary><ol>
 <?php foreach ($site['checks'] as $check): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$check['checked_at'])) ?> — <?= $escape($check['outcome']) ?>: <?= $escape($check['detail']) ?></li>
+<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$check['checked_at'])) ?> â€” <?= $escape($check['outcome']) ?>: <?= $escape($check['detail']) ?></li>
 <?php endforeach; ?></ol></details><?php endif; ?></td><td data-label="Actions">
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="inspect"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Check <?= $escape($site['label']) ?></button></form>
 <?php if ($user->authorise('core.delete', 'com_nicodewebmonitor')): ?>
@@ -134,6 +134,33 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
 <label><input type="checkbox" name="confirmed" value="1" required> Execute this prepared update now.</label>
 <?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Execute update</button></form>
+<?php endif; ?></article>
+<?php endforeach; ?></section>
+<?php endif; ?>
+<?php if ($canCoreUpdate): ?>
+<section aria-label="Remote Joomla core updates"><h2>Prepared Joomla core updates</h2>
+<p>First prepare and verify the package and recovery locally on the remote site. Enter that operation ID here. Queueing requires a separate confirmation. Queued means waiting for the remote CLI runner, not installed; verified means a fresh process checked the installed versions and database schema. An uncertain operation can only be queried, never retried automatically.</p>
+<?php foreach ($sites as $site): ?>
+<?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
+<input type="hidden" name="task" value="coreUpdateEnroll"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
+<label>Separate Joomla core credential for <?= $escape($site['label']) ?> <input type="password" name="core_update_credential" required autocomplete="new-password"></label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Save update credential</button></form>
+<?php endif; ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor">
+<input type="hidden" name="task" value="coreUpdateBegin"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
+<label>Prepared operation ID for <?= $escape($site['label']) ?> <input name="operation" pattern="[a-z0-9-]{8,64}" required></label>
+<label><input type="checkbox" name="confirmed" value="1" required> I verified this local package and its recovery procedure.</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Register prepared update</button></form>
+<?php endforeach; ?>
+<?php foreach ($coreUpdateOperations as $op): ?>
+<article class="nwm-update"><h3><?= $escape($op['operation']) ?></h3><p>Site #<?= (int)$op['site'] ?>; state: <?= $escape($op['status']) ?></p>
+<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="coreUpdateStatus"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Query update status</button></form>
+<?php if ($op['status']==='ready'): ?>
+<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="coreUpdateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
+<label><input type="checkbox" name="confirmed" value="1" required> Queue this prepared Joomla update. The remote CLI runner must execute and verify it.</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Queue Joomla update</button></form>
 <?php endif; ?></article>
 <?php endforeach; ?></section>
 <?php endif; ?>

@@ -4,6 +4,7 @@
  <action name="core.manage" title="JACTION_MANAGE" />
  <action name="nwm.monitor" title="Run automatic inventory checks" />
  <action name="nwm.backup" title="Run and reconcile remote backups" />
+ <action name="nwm.coreupdate" title="Queue and reconcile prepared Joomla core updates" />
  <action name="nwm.update" title="Run and reconcile prepared remote updates" />
  <action name="core.create" title="JACTION_CREATE" />
  <action name="core.delete" title="JACTION_DELETE" />

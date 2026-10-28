@@ -1,7 +1,7 @@
 ﻿Central site registry — development 0.4.0
 
 Start with a disposable Joomla 6 installation and PHP sodium enabled. Run
-python tools/build.py and install dist/com_nicodewebmonitor-0.4.2-dev.zip through
+python tools/build.py and install dist/com_nicodewebmonitor-0.8.0-dev.zip through
 System > Install > Extensions. Open Components > Nicode Web Monitor.
 
 Configure the remote connector first as described in README.md. Enroll its name,
@@ -19,7 +19,9 @@ The disposable test adapter exercises two local Joomla sites; production enrollm
 Permissions are component-scoped: core.manage reads, core.create enrolls and
 core.delete removes. Component permissions can be edited from Joomla Global
 Configuration. POST operations require Joomla's session token; GET cannot mutate.
-No update or backup privilege exists yet.
+Maintenance uses separate nwm.backup, nwm.update (plugins) and nwm.coreupdate
+(Joomla core) permissions; granting registry access alone grants none of these.
+See docs/central-backups.txt, docs/extension-update-http.txt and docs/core-dispatch.txt.
 
 Credentials use sodium XChaCha20-Poly1305 with a random nonce and the site UUID
 as associated data. The key derives from Joomla's secret using HKDF. This protects

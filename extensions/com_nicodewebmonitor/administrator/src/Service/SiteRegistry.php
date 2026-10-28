@@ -80,6 +80,8 @@ final class SiteRegistry
             $this->db->setQuery('DELETE FROM #__nwm_checks WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_backup_credentials WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_backup_operations WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_core_update_credentials WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_core_update_operations WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_update_credentials WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_update_operations WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_sites WHERE id=' . $id)->execute();

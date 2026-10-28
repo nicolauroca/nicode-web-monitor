@@ -1,10 +1,27 @@
 Nicode Web Monitor — prepared core dispatch (development, 28 October 2026)
 Package: Nicode.joomla.webmonitor
 
-This is an integration stage, not a release candidate. Core transport and the native
-one-shot CLI are implemented. The central panel does not yet expose core credentials,
-core ACL, dispatch or a managed execution runner. Do not describe this as a complete
-remote update workflow. The existing extension panel remains limited to plugins.
+This is an integration stage, not a release candidate. The 0.8.0-dev central panel
+has core credentials, ACL and a queue/status journal. Native execution still uses
+an explicit remote CLI. A managed runner is pending; queueing does not install.
+The existing extension panel remains limited to plugins.
+
+CENTRAL PANEL FROM AN EXISTING JOOMLA 6 INSTALLATION
+Build with python tools/build.py and install com_nicodewebmonitor-0.8.0-dev.zip
+through Joomla's extension installer. Existing versions migrate their tables;
+plugin update credentials and journals are retained in their own tables.
+First enroll the remote inventory identity as described in docs/site-registry.txt.
+In component permissions grant core.manage and nwm.coreupdate to the core operator.
+Do not substitute nwm.update (plugins) or nwm.backup. Credential enrollment also
+requires core.admin. Save the separate core bearer credential under Prepared Joomla
+core updates. It is encrypted with a distinct associated-data purpose.
+After preparing the remote operation below, register its ID, confirm recovery, and
+queue it with a second explicit confirmation. Status reads are available after any
+result. ready is local registration, queued is waiting for remote execution,
+uncertain requires reconciliation, verified is fresh-process verification.
+Queued/uncertain/verified operations cannot be dispatched again from the panel.
+The journal displays current state, not an immutable event log. Neither POST nor
+GET spawns an installer process. Follow steps 5 and 6 below on the remote host.
 
 SETUP IN A DISPOSABLE, RECOVERABLE INSTALLATION
 Install the current connector ZIP using Joomla's installer. Keep the trusted tools
@@ -65,3 +82,6 @@ expired/foreign permits, partial backup and malformed gate with simulated effect
 tests/core_http.py requires an explicitly marked disposable clone and a current local
 TLS certificate. It tests the installed connector, real native core upgrade, lost queue
 response and fresh CLI verification. It does not test central panel core ACL or runner.
+tests/core_panel.py adds the real central panel and four Joomla roles, CSRF,
+confirmation, lost-response reconciliation and verified native update. Add
+--central CENTRAL_JOOMLA_ROOT to the same disposable fixture arguments.

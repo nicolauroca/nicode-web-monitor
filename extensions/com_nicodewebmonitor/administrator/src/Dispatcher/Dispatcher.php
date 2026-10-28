@@ -23,6 +23,9 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $updates = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\UpdateCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canUpdate = !$user->guest && !$user->block && $user->authorise('nwm.update', 'com_nicodewebmonitor');
         $updateOperations = $canUpdate ? $updates->recent() : [];
+        $coreUpdates = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CoreUpdateCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
+        $canCoreUpdate = !$user->guest && !$user->block && $user->authorise('nwm.coreupdate', 'com_nicodewebmonitor');
+        $coreUpdateOperations = $canCoreUpdate ? $coreUpdates->recent() : [];
         $task = $this->input->getCmd('task', 'display');
         $inspection = null;
         $inspectedId = 0;
@@ -30,7 +33,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
             }
-            if (!in_array($task, ['add', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus'], true)) {
+            if (!in_array($task, ['add', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
                 throw new \RuntimeException('Unknown task', 404);
             }
             if (str_starts_with($task, 'update')) {
@@ -45,6 +48,27 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                         $updates->begin($post->getInt('id'), $post->getString('operation'), $post->getString('confirmed') === '1');
                     } else {
                         $result = $updates->run($post->getString('operation'), $task === 'updateExecute', $post->getString('confirmed') === '1');
+                        if (!($result['ok'] ?? false)) { throw new \RuntimeException('Update request failed'); }
+                    }
+                    $this->app->enqueueMessage('Update journal updated. Review the operation state.');
+                } catch (\Throwable) {
+                    $this->app->enqueueMessage('Update not confirmed. Query status before any further action. No automatic retry was made.', 'error');
+                }
+                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                return;
+            }
+            if (str_starts_with($task, 'coreUpdate')) {
+                if (!$canCoreUpdate || ($task === 'coreUpdateEnroll' && !$user->authorise('core.admin', 'com_nicodewebmonitor'))) {
+                    throw new \RuntimeException('Access denied', 403);
+                }
+                $post = $this->input->post;
+                try {
+                    if ($task === 'coreUpdateEnroll') {
+                        $coreUpdates->enroll($post->getInt('id'), $post->getString('core_update_credential'));
+                    } elseif ($task === 'coreUpdateBegin') {
+                        $coreUpdates->begin($post->getInt('id'), $post->getString('operation'), $post->getString('confirmed') === '1');
+                    } else {
+                        $result = $coreUpdates->run($post->getString('operation'), $task === 'coreUpdateExecute', $post->getString('confirmed') === '1');
                         if (!($result['ok'] ?? false)) { throw new \RuntimeException('Update request failed'); }
                     }
                     $this->app->enqueueMessage('Update journal updated. Review the operation state.');

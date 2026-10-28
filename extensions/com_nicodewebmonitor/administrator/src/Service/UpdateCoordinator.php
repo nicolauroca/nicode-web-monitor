@@ -42,6 +42,10 @@ final class UpdateCoordinator
         if ($backup && hash_equals($this->vault->open($row['site_id'].':backup', $backup), $token)) {
             throw new \InvalidArgumentException('Separate update credential required');
         }
+        $core = $this->db->setQuery('SELECT credential FROM #__nwm_core_update_credentials WHERE site='.$site)->loadResult();
+        if ($core && hash_equals($this->vault->open($row['site_id'].':core-update', $core), $token)) {
+            throw new \InvalidArgumentException('Separate maintenance credential required');
+        }
         $sealed = $this->vault->seal($row['site_id'] . ':update', $token);
         $this->db->setQuery('INSERT INTO #__nwm_update_credentials (site,credential) VALUES (' . $site . ',' . $this->db->quote($sealed)
             . ') ON DUPLICATE KEY UPDATE credential=VALUES(credential)')->execute();

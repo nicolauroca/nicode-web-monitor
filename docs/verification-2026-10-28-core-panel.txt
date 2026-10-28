@@ -1,0 +1,45 @@
+Nicode Web Monitor - core panel integration, 28 October 2026
+Package: Nicode.joomla.webmonitor
+
+Central component 0.8.0-dev, connector 0.5.0-dev. Development only.
+Windows, PHP 8.4, MariaDB 11.8; two isolated Joomla applications and verified
+local TLS. No production hosting. No new software or scheduled task installed.
+
+42 end-to-end checks in tests/core_panel.py:
+- Real reader, plugin-update operator and backup operator cannot view core forms
+  or invoke any core action. Dedicated core operator has separate access.
+- Credential enrollment additionally requires core.admin; POST requires CSRF.
+- Explicit recovery confirmation registers the prepared ID locally; separate
+  confirmation queues the remote operation. Missing confirmation has no effects.
+- Lost POST response leaves the central journal uncertain. GET recovers queued.
+  Repeated panel dispatch is denied for queued, uncertain and verified states.
+- Native remote CLI upgrades Joomla 6.1.3 to 6.1.4. A NEW CLI process verifies
+  runtime, file/database manifests and zero native schema errors. Panel GET then
+  reports verified. Neither central web requests nor connector HTTP execute PHP
+  installers or start background processes.
+- Core dispatch releases the shared maintenance owner only after verification.
+- Public panel and receipt omit credentials and private storage paths.
+
+36 real database registry checks in tests/registry.php include enrollment of
+distinct encrypted core credentials, rejection of inventory/backup/plugin reuse,
+cross-purpose ciphertext rejection and deletion with the site registration.
+44 tests/update_http.py checks retain the existing real plugin upgrade workflow
+including native install, real ACL, missing confirmation and lost response.
+15 PHP files linted without errors before integration; registry changes were
+executed natively. Component upgrade to 0.8.0 created the two new core tables.
+
+Tests used a loopback/CA override only in installed disposable coordinator copies.
+Both were restored byte-for-byte. Temporary accounts/groups/sites were removed,
+the plugin fixture uninstalled and the isolated core database removed at closure.
+The lab was stopped. Recovery inputs and test evidence remain private, outside Git.
+
+Initial harness attempt used an expired local certificate; TLS rejected it before
+queueing. The current local certificate retained strict verification. The next
+attempt exposed a harness counter that included an intentional denied POST;
+fixed to compare against the initial count, with no native update performed in
+either failed attempt. Only the final attempt installed Joomla.
+
+Remaining acceptance work: managed remote execution (the CLI is still manual),
+usable backup progression, other extension types, wider environment coverage,
+clean-source packaging/lifecycle and final usability review. Current journals are
+state projections, not append-only event history. No release candidate claim.

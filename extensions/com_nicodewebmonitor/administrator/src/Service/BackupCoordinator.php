@@ -38,6 +38,10 @@ final class BackupCoordinator
             || hash_equals($this->vault->open($row['site_id'], $row['credential']), $token)) {
             throw new \InvalidArgumentException('Separate backup credential required');
         }
+        $core = $this->db->setQuery('SELECT credential FROM #__nwm_core_update_credentials WHERE site='.$site)->loadResult();
+        if ($core && hash_equals($this->vault->open($row['site_id'].':core-update', $core), $token)) {
+            throw new \InvalidArgumentException('Separate maintenance credential required');
+        }
         $sealed = $this->vault->seal($row['site_id'] . ':backup', $token);
         $this->db->setQuery('INSERT INTO #__nwm_backup_credentials (site,credential) VALUES (' . $site . ',' . $this->db->quote($sealed)
             . ') ON DUPLICATE KEY UPDATE credential=VALUES(credential)')->execute();

@@ -33,7 +33,10 @@ coverage and reproduction: `docs/verification-2026-10-11-browser.txt`.
 An optional native Joomla task plugin now performs bounded automatic inventory
 batches with explicit permissions and oldest-first selection. Setup and current
 verification limits: `docs/automatic-monitoring.txt`.
-Guided pairing, external notifications and Joomla core updates remain pending.
+Guided pairing and external notifications remain pending.
+The 0.8.0-dev central component queues prepared Joomla core updates with separate
+credentials and permissions, then reconciles their status. A remote CLI must still
+execute and verify the queued operation; see `docs/core-dispatch.txt`.
 Version 0.7.0-dev of the central component and 0.5.0-dev of the connector add
 locally prepared plugin updates through the panel, with a separate credential and
 permission, explicit confirmation, native installation and lost-response
@@ -125,7 +128,7 @@ Joint resumable file/database capture is available in the development connector
 through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
 reconciliation and private layout. Capture is not proof of restoration. Central
 backup forms, real user permissions and the operation journal are tested; an
-append-only maintenance history, Joomla core updates and the remaining extension
+append-only maintenance history, managed core execution and the remaining extension
 types remain pending. Prepared plugin updates are described in
 `docs/extension-update-http.txt`; current integration evidence is in
 `docs/verification-2026-10-27.txt`.
@@ -133,4 +136,5 @@ types remain pending. Prepared plugin updates are described in
 A local core-update preflight checks pinned update archives, installed versions and
 Joomla's native database schema. It does not execute updates. See
 `docs/core-update-preflight.txt` and `docs/verification-2026-10-27-core.txt` for the
-disposable core-upgrade experiment and the remaining remote-provider work.
+disposable core-upgrade experiment. The HTTPS provider and central core panel are
+now integrated; automatic remote execution remains pending.

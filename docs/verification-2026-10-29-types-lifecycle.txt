@@ -1,0 +1,64 @@
+Extension types and native product lifecycle — 29 October 2026
+Package: Nicode.joomla.webmonitor
+
+Environment: isolated Windows lab, Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9.
+No hosting access or production installation. Development artifacts only.
+
+Implemented
+The prepared-update provider accepts plugins, site modules, administrator modules
+and components. A shared manifest reader binds type, element, folder and client to
+the installed ID. Explicit element declarations cannot contradict legacy file
+attributes. Components require canonical com_ names; unsupported types/layouts fail
+closed. The CLI prepares packages without installing them. The old plugin CLI
+remains an alias. No download endpoint or external source of trusted ZIPs was added.
+
+Executed behavior
+ - 39 native adapter checks: both module clients and a component, local CLI
+   preparation, wrong-client rejection before reservation, real update 1.0 -> 1.1,
+   same extension ID, changed files, duplicate receipt, shared gate release and
+   native uninstall with rows/directories removed.
+ - Four complete panel/HTTPS runs, 44 checks each: plugin regression plus site
+   module, administrator module and component. Real Joomla users, separate ACL and
+   credentials, CSRF, explicit confirmation, archive/identity/hash/version guards,
+   updates 1.0 -> 1.1 -> 1.2, lost response after installation and GET reconciliation
+   without a second POST. Fixtures and temporary roles removed; test-only local
+   transport override restored. Synthetic extensions are deliberately disabled.
+ - 13 manifest identity checks, 25 transport contract checks, 8 journal checks.
+ - 62 lifecycle checks on a separate disposable Joomla tree/table prefix:
+   clean product installation of all four ZIPs, eight maintenance tables, native
+   uninstall and documented retention, old component 0.5.0-dev -> 0.8.0-dev,
+   unchanged registration bytes and extension ID, native schema version 0.8.0,
+   same-version reinstall, uninstall/reinstall with retained registration, browser
+   asset presence and final native removal of extension files/registrations.
+
+The lifecycle baseline used the historical component at
+5bc13895738ab67465bead7091749c841d5da16f. The Joomla core itself was cloned from the
+existing disposable lab; this is a clean Web Monitor install, not a new Joomla
+installer test. The first lifecycle harness attempted multiple component installer
+requests in one PHP process and hit a legacy installer-script class redeclaration.
+The final harness starts a fresh PHP process for each native installer request,
+matching normal separate Joomla requests. The failed attempt was cleaned before
+the successful run; no production code workaround or hidden failed gate remains.
+
+Reproduction
+See installation-from-zero.txt for user setup and lifecycle test arguments.
+php tests/extension_identity.php
+php tests/extension_types_native.php JOOMLA_ROOT NEW_OUTPUT --allow-disposable-writes
+The latter requires the current connector installed and an offline disposable site.
+For full integration use the command in extension-update-http.txt, adding
+--extension-kind module-site, module-admin or component; omit it for plugin.
+Each run requires its own new private output directory.
+
+Packaging: nine changed/new PHP files pass lint. All four ZIPs built from a clean
+staged Git tree are byte-identical to the working-tree packages; installed provider
+files match the connector ZIP. The isolated clone tables were removed and the lab
+was stopped after verification.
+
+Limits still open
+Packages containing multiple extensions, templates and libraries remain unsupported
+by this provider; these tests do not close the complete extension-coverage gate.
+No compatibility claim for arbitrary third-party installer scripts or manifest
+layouts. PHP/SQL compatibility beyond this lab, external notification delivery,
+guided pairing and final product acceptance remain open. Existing core-update and
+backup/restore evidence is separate and was not rerun for this extension change.
+No complete candidate or recovered deadline is asserted by this report.

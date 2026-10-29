@@ -19,7 +19,7 @@ The disposable test adapter exercises two local Joomla sites; production enrollm
 Permissions are component-scoped: core.manage reads, core.create enrolls and
 core.delete removes. Component permissions can be edited from Joomla Global
 Configuration. POST operations require Joomla's session token; GET cannot mutate.
-Maintenance uses separate nwm.backup, nwm.update (plugins) and nwm.coreupdate
+Maintenance uses separate nwm.backup, nwm.update (extensions) and nwm.coreupdate
 (Joomla core) permissions; granting registry access alone grants none of these.
 See docs/central-backups.txt, docs/extension-update-http.txt and docs/core-dispatch.txt.
 

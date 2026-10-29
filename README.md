@@ -38,7 +38,7 @@ The 0.8.0-dev central component queues prepared Joomla core updates with separat
 credentials and permissions, then reconciles their status. A remote CLI must still
 execute and verify the queued operation; see `docs/core-dispatch.txt`.
 Version 0.7.0-dev of the central component and 0.5.0-dev of the connector add
-locally prepared plugin updates through the panel, with a separate credential and
+locally prepared plugin, module and component updates through the panel, with a separate credential and
 permission, explicit confirmation, native installation and lost-response
 reconciliation. Start-to-finish instructions: `docs/extension-update-http.txt`.
 The central backup administrator forms support enrollment, explicit single-step
@@ -66,6 +66,9 @@ No data is pushed to external services. The console command uses the operating-s
 account's existing access; HTTP inventory and backup use separate credentials.
 
 ## Build and try in a disposable Joomla 6 installation
+
+For a complete installation path, including both sites, maintenance and removal,
+start with `docs/installation-from-zero.txt`.
 
 Requirements: Python 3 for packaging; an installed Joomla 6 with its supported PHP
 and database. First tested on Joomla 6.1.4, PHP 8.4.26 and MariaDB 11.8.9 on Windows.
@@ -132,7 +135,7 @@ through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequenci
 reconciliation and private layout. Capture is not proof of restoration. Central
 backup forms, real user permissions and the operation journal are tested; an
 append-only maintenance history and the remaining extension
-types remain pending. Prepared plugin updates are described in
+types (packages, templates and libraries) remain pending. Prepared extension updates are described in
 `docs/extension-update-http.txt`; current integration evidence is in
 `docs/verification-2026-10-27.txt`.
 

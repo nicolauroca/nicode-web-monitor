@@ -21,7 +21,15 @@ function installPackage($file) {
     finally {\Joomla\Filesystem\Folder::delete($p['extractdir']);}
 }
 $where="type='plugin' AND folder='system' AND element='nicodewebmonitor'";
-$fixture="type='plugin' AND folder='system' AND element='nwmupdateqa'";
+$kind=$d['kind']??'plugin';
+if(!in_array($kind,['plugin','module-site','module-admin','component'],true))throw new RuntimeException('Unknown fixture kind');
+$type=$kind==='plugin'?'plugin':($kind==='component'?'component':'module');
+$client=in_array($kind,['module-admin','component'],true)?1:0;
+$element=($type==='module'?'mod_':($type==='component'?'com_':'')).'nwmupdateqa';
+$folder=$type==='plugin'?'system':'';
+$fixture='type='.$db->quote($type).' AND element='.$db->quote($element).' AND folder='.$db->quote($folder).' AND client_id='.$client;
+$fixturePath=JPATH_BASE.($client?'/administrator':'').($type==='plugin'?'/plugins/system/':($type==='module'?'/modules/':'/components/')).$element;
+
 switch($d['action']) {
 case 'install':
     foreach($d['packages'] as $file) {installPackage($file);} echo json_encode(['installed'=>true]);break;
@@ -31,6 +39,7 @@ case 'setup':
     if(!$old)throw new RuntimeException('Connector absent');
     installPackage($d['package']);
     $id=(int)$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$fixture)->loadResult();
+    $db->setQuery('UPDATE #__extensions SET enabled=0 WHERE extension_id='.$id)->execute();
     $db->setQuery('UPDATE #__extensions SET enabled=1,params='.$db->quote(json_encode($d['params'])).' WHERE '.$where)->execute();
     echo json_encode(['id'=>$id,'old'=>$old]);break;
 case 'configure':
@@ -39,12 +48,12 @@ case 'configure':
 case 'inspect':
     $row=$db->setQuery('SELECT extension_id,manifest_cache,enabled FROM #__extensions WHERE '.$fixture)->loadAssoc();
     echo json_encode($row?['id'=>(int)$row['extension_id'],'version'=>json_decode($row['manifest_cache'],true)['version'],
-        'enabled'=>(int)$row['enabled'],'file'=>trim(file_get_contents(JPATH_BASE.'/plugins/system/nwmupdateqa/version.txt'))]:['absent'=>true]);break;
+        'enabled'=>(int)$row['enabled'],'file'=>trim(file_get_contents($fixturePath.'/version.txt'))]:['absent'=>true]);break;
 case 'cleanup':
     $id=$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$fixture)->loadResult();
-    if($id){$i=new Installer();$i->setDatabase($db);if(!$i->uninstall('plugin',(int)$id))throw new RuntimeException('Cleanup failed');}
+    if($id){$i=new Installer();$i->setDatabase($db);if(!$i->uninstall($type,(int)$id))throw new RuntimeException('Cleanup failed');}
     $db->setQuery('UPDATE #__extensions SET enabled='.(int)$d['old']['enabled'].',params='.$db->quote($d['old']['params']).' WHERE '.$where)->execute();
-    if(is_dir(JPATH_BASE.'/plugins/system/nwmupdateqa'))throw new RuntimeException('Fixture remains');
+    if(is_dir($fixturePath))throw new RuntimeException('Fixture remains');
     echo json_encode(['removed'=>true]);break;
 default:throw new RuntimeException('Unknown action');
 }

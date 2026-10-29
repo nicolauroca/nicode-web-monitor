@@ -1,15 +1,16 @@
-Prepared plugin updates (development) â€” 27 October 2026
+Prepared extension updates (development) â€” 27 October 2026
 Package: Nicode.joomla.webmonitor
 
 What this version does
-The central Joomla component can execute a locally prepared plugin update on a
+The central Joomla component can execute a locally prepared extension update on a
 second Joomla through verified HTTPS, then query its durable receipt. Inventory,
-backup and update credentials are separate. Joomla core updates and other extension
-types are not implemented by this provider yet; they remain product acceptance work.
+backup and update credentials are separate. This provider supports plugins, site and
+administrator modules, and components. Packages, templates and libraries remain
+unsupported. Joomla core uses its separate provider described in core-dispatch.txt.
 This is development code for disposable installations, not a production release.
 
 Start from source
-1. Build with python tools/build.py. Install com_nicodewebmonitor-0.7.0-dev.zip on
+1. Build with python tools/build.py. Install com_nicodewebmonitor-0.8.0-dev.zip on
    the central Joomla and plg_system_nicodewebmonitor-0.5.0-dev.zip on the remote
    Joomla through the native extension installer. Updating the central package
    creates the update journal and credential tables through the native SQL schema.
@@ -29,17 +30,21 @@ Start from source
    to the site UUID plus the update purpose. Serve the administrator over HTTPS.
 
 Prepare a specific update on the remote machine
-Obtain and review a trusted plugin ZIP locally. The checksum binds these exact
+Obtain and review a trusted extension ZIP locally. The checksum binds these exact
 bytes; it does not establish who wrote them or make executable installer code safe.
-This first provider supports a single non-core plugin with a root ELEMENT.xml
-manifest and an existing extension ID. Downgrades and protected core extensions
+Each operation targets one installed non-core extension with an existing ID.
+Plugins require a root ELEMENT.xml and group; modules require ELEMENT.xml, a mod_
+element and site/administrator client. Components require a canonical com_NAME
+manifest name and a root com_NAME.xml or NAME.xml. Conflicting element declarations
+are rejected. Modern module element declarations are accepted. Other manifest
+layouts are outside the supported subset, even if Joomla itself accepts them. Downgrades and protected core extensions
 are refused. No arbitrary download URL is accepted by the remote endpoint.
 
 Create and VERIFY a recoverable backup, then put the remote Joomla offline and
 stop cron, other administrators and external writers. Offline alone is not enough.
 Once those facts are established, run locally (replace paths and the operation ID):
 
-php tools/prepare_plugin_update.php /srv/joomla /srv/private/nwm-updates /srv/packages/plugin.zip release-plugin-20261027 --writers-stopped-and-recovery-verified
+php tools/prepare_extension_update.php /srv/joomla /srv/private/nwm-updates /srv/packages/extension.zip release-extension-20261027 --writers-stopped-and-recovery-verified
 
 The helper reads the package identity and installed version, copies the ZIP to a
 new exclusive operation directory, verifies its SHA-256 and writes a 15-minute
@@ -98,3 +103,8 @@ No Joomla core update, general plugin compatibility, post-update rollback, MySQL
 production hosting or complete-release acceptance is claimed by these tests.
 
 28 October development change: configure maintenance_storage before plugin updates or backups. Shared durable ownership now excludes concurrent core, plugin and partial-backup operations. See core-dispatch.txt for setup and recovery limitations.
+
+29 October: prepare_plugin_update.php remains a backwards-compatible CLI alias.
+The three additional kinds have native integration coverage in extension_types_native.php.
+Use --extension-kind module-site, module-admin or component with update_http.py
+for the corresponding full panel/HTTPS/permissions/lost-response fixture.

@@ -1,0 +1,69 @@
+<?php
+/** @package Nicode.joomla.webmonitor. Disposable offline Joomla only. */
+if (($argv[3] ?? '') !== '--allow-disposable-writes') { exit(2); }
+define('_JEXEC',1); define('JPATH_BASE',realpath($argv[1]));
+require JPATH_BASE.'/includes/defines.php'; require JPATH_BASE.'/includes/framework.php';
+use Joomla\CMS\Factory;
+use Joomla\CMS\Installer\Installer;
+use Joomla\CMS\Installer\InstallerHelper;
+use Joomla\Database\DatabaseInterface;
+use Nicode\Plugin\System\NicodeWebMonitor\Maintenance\NativeExtensionUpdate;
+$c=Factory::getContainer();
+$c->alias('session','session.cli')->alias(\Joomla\Session\SessionInterface::class,'session.cli');
+Factory::$application=$c->get(\Joomla\CMS\Application\ConsoleApplication::class);
+Factory::$application->createExtensionNamespaceMap();
+$db=$c->get(DatabaseInterface::class); $root=realpath($argv[2]);
+if (!$root || file_exists($root.'/journal') || !Factory::getConfig()->get('offline')) { throw new RuntimeException('Fresh output and offline site required'); }
+foreach (['journal','prepared','gate'] as $child) mkdir($root.'/'.$child,0700);
+$checks=[];$ids=[];
+function check($ok,$name){global $checks;if(!$ok)throw new RuntimeException($name);$checks[]=$name;}
+function installZip($file){global $db;$p=InstallerHelper::unpack($file,true);if(!$p)throw new RuntimeException('Unpack failed');try{$i=new Installer();$i->setDatabase($db);check($i->install($p['extractdir']),'native install');}finally{\Joomla\Filesystem\Folder::delete($p['extractdir']);}}
+function fixturePack($type,$client,$version){
+    global $root;
+    $element=($type==='module'?'mod_':'com_').'nwmtypesqa';
+    $path=$root.'/'.$type.'-'.$client.'-'.$version.'.zip';$z=new ZipArchive();$z->open($path,ZipArchive::CREATE|ZipArchive::EXCL);
+    $files=$type==='module'?'<files><filename module="'.$element.'">'.$element.'.php</filename><filename>version.txt</filename></files>':'<administration><menu>NWM types QA</menu><files folder="admin"><filename>nwmtypesqa.php</filename><filename>version.txt</filename></files></administration>';
+    $z->addFromString($element.'.xml','<extension type="'.$type.'" client="'.($client?'administrator':'site').'" method="upgrade"><name>'.$element.'</name><version>'.$version.'</version>'.$files.'</extension>');
+    $z->addFromString($type==='module'?$element.'.php':'admin/nwmtypesqa.php',"<?php defined('_JEXEC') or die;\n");
+    $z->addFromString($type==='module'?'version.txt':'admin/version.txt',$version);$z->close();return $path;
+}
+function prepare($zip,$operation){
+    global $root;
+    $p=proc_open([PHP_BINARY,__DIR__.'/../tools/prepare_extension_update.php',JPATH_BASE,$root,$zip,$operation,'--writers-stopped-and-recovery-verified'],[1=>['pipe','w'],2=>['pipe','w']],$pipes);
+    $out=stream_get_contents($pipes[1]);$err=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);
+    if(proc_close($p)!==0)throw new RuntimeException('Preparation failed: '.$err);
+    return json_decode($out,true,32,JSON_THROW_ON_ERROR);
+}
+try {
+    foreach ([['module',0],['module',1],['component',1]] as [$type,$client]) {
+        $element=($type==='module'?'mod_':'com_').'nwmtypesqa';
+        $where='type='.$db->quote($type).' AND element='.$db->quote($element).' AND client_id='.$client;
+        check(!$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$where)->loadResult(),'fixture absent '.$type.$client);
+        installZip(fixturePack($type,$client,'1.0.0'));
+        $id=(int)$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$where)->loadResult();$ids[]=[$type,$id,$where,$element,$client];
+        check($id>0,'extension registered '.$type.$client);
+        $v2=fixturePack($type,$client,'1.1.0');$op='types-'.$type.'-'.$client;
+        $prepared=prepare($v2,$op);check($prepared['plan']['extension_id']===$id,'CLI selects exact type/client');
+        $provider=new NativeExtensionUpdate($db,$root,JPATH_BASE,true,$root.'/gate');
+        // Tampering with the target client/identity must fail before any reservation.
+        $permitPath=$root.'/prepared/'.$op.'/permit.json';$original=file_get_contents($permitPath);$bad=json_decode($original,true);
+        $bad['identity']['client_id']=$client===0?1:0;file_put_contents($permitPath,json_encode($bad));
+        try{$provider->handle($op,true);throw new LogicException('Wrong client accepted');}catch(RuntimeException $e){check(!is_dir($root.'/journal/'.$op),'wrong client rejected without effects');}
+        file_put_contents($permitPath,$original);
+        $result=$provider->handle($op,true);check($result['status']==='updated','provider update '.$type.$client);
+        $row=$db->setQuery('SELECT extension_id,manifest_cache FROM #__extensions WHERE '.$where)->loadAssoc();
+        check((int)$row['extension_id']===$id && json_decode($row['manifest_cache'],true)['version']==='1.1.0','same ID and new version');
+        $path=JPATH_BASE.($client?'/administrator':'').($type==='module'?'/modules/':'/components/').$element;
+        check(file_get_contents($path.'/version.txt')==='1.1.0','installed bytes changed');
+        check($provider->handle($op,true)===$result,'duplicate returns receipt');
+        check(!is_file($root.'/gate/owner.json'),'shared gate released');
+    }
+} finally {
+    foreach (array_reverse($ids) as [$type,$id,$where,$element,$client]) {
+        $i=new Installer();$i->setDatabase($db);check($i->uninstall($type,$id),'native uninstall '.$type.$client);
+        check(!$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$where)->loadResult(),'extension row removed');
+        check(!is_dir(JPATH_BASE.($client?'/administrator':'').($type==='module'?'/modules/':'/components/').$element),'installed directory removed');
+    }
+    file_put_contents($root.'/checks.json',json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT));
+}
+echo json_encode(['passed'=>count($checks),'types'=>['site module','administrator module','component'],'cleanup'=>true])."\n";

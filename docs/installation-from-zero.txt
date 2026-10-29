@@ -1,0 +1,79 @@
+Nicode Web Monitor — recorrido desde cero (desarrollo, 29 octubre 2026)
+Package: Nicode.joomla.webmonitor
+
+Qué vas a montar
+Un Joomla central contiene el panel; cada Joomla supervisado tiene su conector.
+Puedes probar con dos instalaciones desechables. No uses esta versión como una
+release estable: faltan compatibilidad ampliada y aceptación del producto completo.
+No necesitas contratar servicios. Necesitas poder instalar extensiones en ambos
+Joomla y ejecutar PHP localmente para preparar mantenimiento en el supervisado.
+
+1. Preparar los paquetes
+Clona el repositorio público y conserva el commit que estás probando. Desde su raíz
+ejecuta python tools/build.py. Python solo prepara los ZIP; no se instala en Joomla.
+El directorio dist contendrá cuatro paquetes independientes:
+ - com_nicodewebmonitor-0.8.0-dev.zip: panel del Joomla central.
+ - plg_system_nicodewebmonitor-0.5.0-dev.zip: conector del Joomla supervisado.
+ - plg_console_nicodewebmonitor-0.1.1-dev.zip: inventario local por CLI, opcional.
+ - plg_task_nicodewebmonitor-0.1.0-dev.zip: comprobaciones programadas, opcional.
+Instala cada ZIP con Sistema > Instalar > Extensiones en su Joomla correspondiente.
+No hay un ZIP de paquete que los instale todos. No se crean tareas al instalarlos.
+La base comprobada es Joomla 6.1.4/PHP 8.4.26/MariaDB 11.8.9 en Windows; otras
+combinaciones requieren comprobación, incluidas futuras versiones mayores de Joomla.
+
+2. Conectar el primer sitio
+Sigue la sección HTTP connector de README.md para crear UUID y credencial privada,
+y configurar su digest en el plugin System - Nicode Web Monitor. Habilítalo después
+de completar los campos. Usa HTTPS con certificado válido en el sitio supervisado.
+En Componentes > Nicode Web Monitor del central, registra nombre, URL canónica,
+IP pública fijada, UUID y credencial de inventario; después ejecuta Check.
+La credencial se introduce en el campo privado del panel; no en comandos ni URLs.
+Consulta docs/site-registry.txt y docs/central-client.txt para los campos y permisos.
+El formulario público rechaza IP privadas; los ensayos locales usan un adaptador
+exclusivo de pruebas. No desactives esa protección para usar esta guía en producción.
+
+3. Interpretar resultados
+Un alta guarda datos de conexión, no acredita disponibilidad. Una comprobación
+correcta muestra inventario y fecha; un dato desconocido o antiguo no es un estado
+sano. Los avisos internos y el historial se describen en check-alerts.txt y
+check-history.txt. Para automatizar las consultas usa automatic-monitoring.txt:
+instalar el plugin de tareas no activa por sí solo el disparador del hosting.
+
+4. Activar mantenimiento de forma deliberada
+Inventario, copias, actualizaciones de extensiones y core tienen credenciales y
+permisos separados. Prepara directorios privados fuera de todas las raíces web;
+el maintenance_storage compartido evita mantenimiento simultáneo entre proveedores.
+Para copias sigue central-backups.txt y resumable-site.txt: primero arma la ventana
+local, después inicia y avanza desde el panel. El lote necesita la pestaña abierta,
+permite pausar y se detiene ante incertidumbre. No renueva la ventana remota.
+Para extensiones sigue extension-update-http.txt: revisa el ZIP, verifica una copia
+recuperable, detén escritores, pon el sitio offline y prepara la operación con
+tools/prepare_extension_update.php. Introduce ese ID en el panel y confirma.
+Para Joomla core sigue core-dispatch.txt, incluida la ejecución del runner remoto
+y su verificación en proceso nuevo. La cola central sola no instala el core.
+Una respuesta perdida requiere consultar estado y efectos; no crear otro ID a ciegas.
+Una copia capturada no acredita que hayas probado su restauración.
+
+5. Actualizar o retirar Web Monitor
+Construye los nuevos ZIP e instálalos encima de la versión previa en cada Joomla.
+El instalador aplica las migraciones SQL; no borres tablas para actualizar.
+Se ha comprobado 0.5.0-dev -> 0.8.0-dev y reinstalación de 0.8.0-dev con registros
+conservados. Conserva configuración y base de datos juntas: las credenciales
+cifradas del central dependen del secret de Joomla.
+Para retirar el sistema, detén antes sus tareas y runners, revoca las credenciales
+remotas y desinstala cada extensión desde Joomla. Las ocho tablas nwm_ se conservan
+deliberadamente, igual que los directorios privados de recibos/copias: desinstalar
+no equivale a borrar datos ni a revocar tokens en otros sitios. Reinstalar el
+componente recupera los registros conservados. La limpieza definitiva de esos
+datos exige una decisión y una copia propias; este producto no la automatiza.
+
+Reproducción del ciclo nativo
+En un Joomla desechable sin Web Monitor ni tablas nwm_, crea un directorio de
+evidencias fuera de la raíz web y prepara un ZIP del componente histórico 0.5.0-dev
+(commit 5bc13895738ab67465bead7091749c841d5da16f). Conserva su hash.
+Ejecuta desde el repositorio:
+php tests/lifecycle_native.php JOOMLA_ROOT OUTPUT_DIR OLD_COMPONENT_ZIP --allow-disposable-writes
+El ensayo instala, actualiza y desinstala extensiones reales; crea un registro
+sintético y conserva sus tablas al terminar. Cada operación de instalador usa un
+proceso nuevo, como peticiones Joomla independientes. No ejecutarlo en un sitio real.
+Consulta lifecycle.json y docs/verification-2026-10-29-types-lifecycle.txt.

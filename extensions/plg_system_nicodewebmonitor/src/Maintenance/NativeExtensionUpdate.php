@@ -8,7 +8,7 @@ use Joomla\Database\DatabaseInterface;
 use Nicode\Plugin\System\NicodeWebMonitor\Transport\BackupEndpoint;
 
 /** @package Nicode.joomla.webmonitor
- * First native provider: locally vetted plugin ZIPs. No downloads or remote paths.
+ * Locally vetted plugin, module and component ZIPs. No downloads or remote paths.
  */
 final class NativeExtensionUpdate
 {
@@ -37,9 +37,11 @@ final class NativeExtensionUpdate
             || !is_int($permit['expires_at'] ?? null) || $permit['expires_at'] < time()
             || $permit['expires_at'] > time()+900) { throw new \RuntimeException('Invalid permit'); }
         $plan = $permit['plan']; $identity = $permit['identity'];
-        if (array_keys($identity) !== ['type','element','folder','client_id'] || $identity['type'] !== 'plugin'
-            || $identity['client_id'] !== 0 || !preg_match('/^[a-z0-9_]+$/D', $identity['element'])
-            || !preg_match('/^[a-z0-9_]+$/D', $identity['folder'])) { throw new \RuntimeException('Unsupported identity'); }
+        if (array_keys($identity) !== ['type','element','folder','client_id']
+            || !in_array($identity['type'], ['plugin','module','component'], true)
+            || !in_array($identity['client_id'], [0,1], true)
+            || !preg_match('/^[a-z0-9_]+$/D', $identity['element'])
+            || !preg_match('/^[a-z0-9_]*$/D', $identity['folder'])) { throw new \RuntimeException('Unsupported identity'); }
         $inspect = function () use ($plan, $identity): array {
             $row = $this->db->setQuery('SELECT extension_id,type,element,folder,client_id,protected,manifest_cache FROM #__extensions WHERE extension_id='.(int)$plan['extension_id'])->loadAssoc();
             if (!$row || (int)$row['protected'] !== 0 || $row['type'] !== $identity['type']
@@ -71,14 +73,16 @@ final class NativeExtensionUpdate
                     throw new \RuntimeException('Archive links unsupported');
                 }
             }
-            $xml = $zip->getFromName($identity['element'].'.xml');
+            $filename = $identity['element'].'.xml';
+            if ($identity['type'] === 'component' && $zip->locateName($filename) === false) {
+                $filename = substr($identity['element'],4).'.xml';
+            }
+            $xml = $zip->getFromName($filename);
             if (!is_string($xml) || strlen($xml)>65536 || stripos($xml, '<!DOCTYPE')!==false
                 || stripos($xml, '<!ENTITY')!==false) { throw new \RuntimeException('Invalid manifest'); }
             $manifest = simplexml_load_string($xml, \SimpleXMLElement::class, LIBXML_NONET);
-            $elements = $manifest ? $manifest->xpath('./files/*[@plugin]') : [];
-            if (!$manifest || $manifest->getName()!=='extension' || (string)$manifest['type']!=='plugin'
-                || (string)$manifest['group']!==$identity['folder'] || (string)$manifest->version!==$plan['to']
-                || count($elements)!==1 || (string)$elements[0]['plugin']!==$identity['element']) {
+            if (!$manifest || ExtensionIdentity::read($manifest, $filename) !== $identity
+                || (string)$manifest->version!==$plan['to']) {
                 throw new \RuntimeException('Package identity/version mismatch');
             }
         } finally { $zip->close(); }
@@ -95,7 +99,7 @@ final class NativeExtensionUpdate
             try {
                 $installer = new Installer(); $installer->setDatabase($this->db);
                 $installer->setPath('source', $p['extractdir']);
-                if ($p['type'] !== 'plugin' || !$installer->findManifest()
+                if ($p['type'] !== (string)$manifest['type'] || !$installer->findManifest()
                     || $installer->manifest->asXML() !== $manifest->asXML()) {
                     throw new \RuntimeException('Installer selected a different manifest');
                 }

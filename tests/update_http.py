@@ -25,6 +25,7 @@ p=argparse.ArgumentParser(description=__doc__)
 for name in ['site','central','php','certificate','private-key','storage']:
     p.add_argument('--'+name,type=Path,required=True)
 p.add_argument('--allow-disposable-writes',action='store_true',required=True)
+p.add_argument('--extension-kind',choices=['plugin','module-site','module-admin','component'],default='plugin')
 a=p.parse_args()
 repo=Path(__file__).resolve().parents[1]
 site=a.site.resolve(); central=a.central.resolve(); store=a.storage.resolve()
@@ -37,7 +38,7 @@ def check(ok,name):
     checks.append(name)
 def fixture(action,target=site,**data):
     proc=subprocess.run([str(a.php),str(repo/'tests/update_fixture.php'),str(target),'--allow-disposable-writes'],
-        input=json.dumps(dict(data,action=action)),text=True,capture_output=True,timeout=60)
+        input=json.dumps(dict(data,action=action,kind=a.extension_kind)),text=True,capture_output=True,timeout=60)
     if proc.returncode:
         # Private diagnostic can contain environment paths, but never input credentials.
         (store/'fixture-failure.txt').write_text(proc.stderr,encoding='utf-8')
@@ -48,12 +49,23 @@ def roles(action,**data):
         input=json.dumps(dict(data,action=action)),text=True,capture_output=True,timeout=30)
     if proc.returncode: raise RuntimeError('Role fixture failed')
     return json.loads(proc.stdout)
+kind=a.extension_kind
+extension_type='plugin' if kind=='plugin' else ('component' if kind=='component' else 'module')
+client=1 if kind in ['module-admin','component'] else 0
+element=('mod_' if extension_type=='module' else ('com_' if extension_type=='component' else ''))+'nwmupdateqa'
+identity={'type':extension_type,'element':element,'folder':'system' if extension_type=='plugin' else '', 'client_id':client}
 def package(version):
     dest=store/('fixture-'+version+'.zip')
     with zipfile.ZipFile(dest,'x') as z:
-        z.writestr('nwmupdateqa.xml','<?xml version="1.0"?><extension type="plugin" group="system" method="upgrade"><name>NWM Update QA</name><version>'+version+'</version><files><filename plugin="nwmupdateqa">nwmupdateqa.php</filename><filename>version.txt</filename></files></extension>')
-        z.writestr('nwmupdateqa.php',"<?php defined('_JEXEC') or die;\n")
-        z.writestr('version.txt',version)
+        if extension_type=='component':
+            files='<administration><menu>NWM update QA</menu><files folder="admin"><filename>nwmupdateqa.php</filename><filename>version.txt</filename></files></administration>'
+            code='admin/nwmupdateqa.php';marker='admin/version.txt'
+        else:
+            files='<files><filename '+extension_type+'="'+element+'">'+element+'.php</filename><filename>version.txt</filename></files>'
+            code=element+'.php';marker='version.txt'
+        z.writestr(element+'.xml','<extension type="'+extension_type+'" group="system" client="'+('administrator' if client else 'site')+'" method="upgrade"><name>'+element+'</name><version>'+version+'</version>'+files+'</extension>')
+        z.writestr(code,"<?php defined('_JEXEC') or die;\n")
+        z.writestr(marker,version)
     return dest
 v1=package('1.0.0');v2=package('1.1.0');v3=package('1.2.0')
 site_id=str(uuid.uuid4());token=secrets.token_hex(32);inventory=secrets.token_hex(32);backup=secrets.token_hex(32)
@@ -126,7 +138,7 @@ def prepare(op,package,from_version,to_version,**changes):
     d=store/'prepared'/op;d.mkdir()
     (d/'package.zip').write_bytes(package.read_bytes())
     permit={'operation':op,'writers_stopped':True,'recovery_verified':True,'expires_at':int(time.time())+600,
-        'identity':{'type':'plugin','element':'nwmupdateqa','folder':'system','client_id':0},
+        'identity':identity,
         'plan':{'extension_id':remote['id'],'from':from_version,'to':to_version,'package_sha256':hashlib.sha256(package.read_bytes()).hexdigest()}}
     permit.update(changes);(d/'permit.json').write_text(json.dumps(permit),encoding='utf-8');return d
 def session(role):
@@ -191,7 +203,7 @@ try:
     check(call({'task':'updateBegin','id':roledata['site'],'operation':'native-update-01','confirmed':'1'})[0]==403,'CSRF required')
     def panel(task,op='native-update-01',confirm='1'):
         return call({'task':task,'id':roledata['site'],'operation':op,'confirmed':confirm,csrf:1})
-    prepared=subprocess.run([str(a.php),str(repo/'tools/prepare_plugin_update.php'),str(site),str(store),str(v2),
+    prepared=subprocess.run([str(a.php),str(repo/('tools/prepare_plugin_update.php' if kind=='plugin' else 'tools/prepare_extension_update.php')),str(site),str(store),str(v2),
         'native-update-01','--writers-stopped-and-recovery-verified'],text=True,capture_output=True,timeout=30)
     check(prepared.returncode==0 and json.loads(prepared.stdout)['installed'] is False,'documented local preparation CLI leaves installation unchanged')
     check('state: ready' in panel('updateBegin')[1],'operator registers prepared update')
@@ -212,7 +224,7 @@ try:
     code,html=panel('updateStatus','native-update-02');check('state: uncertain' not in html and html.count('state: updated')==2,'status read reconciles lost response')
     fixture('configure',params=dict(params,update_token_hash=''))
     check(request()[0]==503,'credential revocation disables status')
-    result={'passed':len(checks),'checks':checks,'native_installer':True,'real_joomla_users':True,'central_panel':True,
+    result={'extension_kind':kind,'passed':len(checks),'checks':checks,'native_installer':True,'real_joomla_users':True,'central_panel':True,
         'tls_verified':True,'lost_response_reconciled':True,'core_update':False}
     (store/'result.json').write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps(result))
 finally:

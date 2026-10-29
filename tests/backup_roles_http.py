@@ -37,7 +37,7 @@ try:
         status,html=request(); check(status==200 and '<h1>Nicode Web Monitor</h1>' in html,role+' authenticated component access')
         token=csrf(html); before=fixture('snapshot')
         check(('aria-label="Remote backups"' in html)==(role=='operator'),role+' backup controls visibility')
-        tasks=['backupEnroll'] if role=='operator' else ['backupEnroll','backupBegin','backupAdvance','backupStatus']
+        tasks=['backupEnroll'] if role=='operator' else ['backupEnroll','backupBegin','backupAdvance','backupContinue','backupStatus']
         for task in tasks:
             status,_=request(data={'task':task,'id':f['site'],'operation':'backup-'+'a'*32,'confirmed':'1','backup_credential':'b'*64,token:1})
             check(status==403,role+' denied '+task+' with valid CSRF')
@@ -51,6 +51,11 @@ try:
         operation=re.search(r'backup-[a-f0-9]{32}',card).group()
         check('state: ready' in card,'operator creates ready operation')
         before=fixture('snapshot')
+        for payload in [dict(expected_sequence='0'), dict(confirmed='1'), dict(confirmed='1',expected_sequence='1')]:
+            status,body=request(data={'task':'backupContinue','operation':operation,token:1,**payload})
+            check(status==200 and json.loads(body)=={'ok':False} and fixture('snapshot')==before,'runner rejects missing confirmation/sequence or stale sequence without effects')
+        status,_=request(data={'task':'backupContinue','operation':operation,'confirmed':'1','expected_sequence':'0'})
+        check(status==403 and fixture('snapshot')==before,'runner rejects missing CSRF without effects')
         status,html=request(data={'task':'backupAdvance','operation':operation,token:1})
         check('Backup action not confirmed' in html and fixture('snapshot')==before,'operator advance requires confirmation')
         status,html=request(data={'task':'backupAdvance','operation':operation,'confirmed':'1',token:1})

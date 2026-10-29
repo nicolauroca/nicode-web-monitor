@@ -33,7 +33,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
             }
-            if (!in_array($task, ['add', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
+            if (!in_array($task, ['add', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupContinue', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
                 throw new \RuntimeException('Unknown task', 404);
             }
             if (str_starts_with($task, 'update')) {
@@ -83,6 +83,27 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                     throw new \RuntimeException('Access denied', 403);
                 }
                 $post = $this->input->post;
+                if ($task === 'backupContinue') {
+                    $response = ['ok'=>false];
+                    try {
+                        $sequence = $post->getString('expected_sequence');
+                        if (!preg_match('/^(0|[1-9][0-9]{0,9})$/D', $sequence)) {
+                            throw new \InvalidArgumentException('Sequence required');
+                        }
+                        $result = $backups->run($post->getString('operation'), true, $post->getString('confirmed') === '1', (int)$sequence);
+                        if ($result['ok'] ?? false) {
+                            $receipt = $result['receipt'];
+                            $response = ['ok'=>true, 'operation'=>$post->getString('operation'),
+                                'status'=>$receipt['status'], 'next_sequence'=>(int)$receipt['next_sequence']];
+                        }
+                    } catch (\Throwable) { /* No receipt, token or driver detail in browser errors. */ }
+                    $this->app->setHeader('Content-Type', 'application/json; charset=utf-8', true);
+                    $this->app->setHeader('Cache-Control', 'no-store', true);
+                    $this->app->sendHeaders();
+                    echo json_encode($response, JSON_THROW_ON_ERROR);
+                    $this->app->close();
+                    return;
+                }
                 try {
                     if ($task === 'backupEnroll') {
                         $backups->enroll($post->getInt('id'), $post->getString('backup_credential'));

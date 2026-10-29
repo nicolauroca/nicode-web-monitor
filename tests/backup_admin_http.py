@@ -92,7 +92,7 @@ if args.browser_output:
             check(page.evaluate('document.documentElement.scrollWidth <= innerWidth'),str(width)+': no page overflow')
             button=card.get_by_role('button',name='Advance backup step')
             button.click()
-            check(card.locator('input[name=confirmed]').evaluate('(e)=>!e.checkValidity()'),str(width)+': browser requires confirmation')
+            check(card.locator('input[name=confirmed]').first.evaluate('(e)=>!e.checkValidity()'),str(width)+': browser requires confirmation')
             check('state: ready' in card.inner_text(),str(width)+': unchecked action leaves operation ready')
             section.screenshot(path=str(args.browser_output / ('backups-'+str(width)+'.png')))
         browser.close()

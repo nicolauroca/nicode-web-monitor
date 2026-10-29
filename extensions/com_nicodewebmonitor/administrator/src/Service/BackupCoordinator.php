@@ -70,7 +70,7 @@ final class BackupCoordinator
         return $this->db->setQuery('SELECT operation,site,status,next_sequence,updated_at FROM #__nwm_backup_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
     }
 
-    public function run(string $operation, bool $advance = false, bool $confirmed = false): array
+    public function run(string $operation, bool $advance = false, bool $confirmed = false, ?int $expectedSequence = null): array
     {
         $this->permit();
         if (!preg_match('/^backup-[a-f0-9]{32}$/D', $operation) || ($advance && !$confirmed)) {
@@ -83,6 +83,11 @@ final class BackupCoordinator
         try {
             $op = $this->db->setQuery('SELECT * FROM #__nwm_backup_operations WHERE operation=' . $this->db->quote($operation))->loadAssoc();
             if (!$op) { return ['ok'=>false, 'error'=>'operation_unknown']; }
+            // Compare under the same database lock as dispatch. Two tabs cannot
+            // turn one observed sequence into two distinct remote writes.
+            if ($advance && $expectedSequence !== null && $expectedSequence !== (int)$op['next_sequence']) {
+                return ['ok'=>false, 'error'=>'sequence_changed'];
+            }
             if ($advance && !in_array($op['status'], ['ready','progress'], true)) {
                 return ['ok'=>false, 'error'=>'reconciliation_required_or_complete'];
             }

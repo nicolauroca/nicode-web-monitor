@@ -4,6 +4,10 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 $stateLabels = ['never_checked'=>'Never checked', 'recent_complete'=>'Recent complete inventory', 'recent_partial'=>'Recent partial inventory', 'stale'=>'Observation older than 24 hours', 'check_failed'=>'Latest check failed', 'clock_uncertain'=>'Observation time uncertain'];
 $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+if ($canBackup ?? false) {
+    $this->app->getDocument()->getWebAssetManager()->registerAndUseScript('nwm.backup.runner',
+        \Joomla\CMS\Uri\Uri::root() . 'administrator/components/com_nicodewebmonitor/tmpl/backup-runner.js', [], ['defer'=>true]);
+}
 ?>
 <style>
 .nwm-sites td { overflow-wrap: anywhere; vertical-align: top; }
@@ -19,7 +23,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 }
 </style>
 <h1>Nicode Web Monitor</h1>
-<p>Development monitor. Check a site to read its inventory now. Check summaries are retained (last 100 per site). Recent means checked and collected within 24 hours. Backups require a separately configured connector; updates remain pending.</p>
+<p>Development monitor. Check a site to read its inventory now. Check summaries are retained (last 100 per site). Recent means checked and collected within 24 hours. Backups and updates require separately configured connectors and permissions.</p>
 <?php if (isset($inspection)): ?>
 <section aria-label="Inventory result">
 <?php if (($inspection['history_saved'] ?? true) === false): ?><p role="alert">This check could not be saved to history. No retry was made.</p><?php endif; ?>
@@ -52,7 +56,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php else: ?><p>Extension inventory unavailable.</p><?php endif; ?>
 <?php endif; ?></section>
 <?php endif; ?>
-<div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites â€” connector observations</caption>
+<div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites - connector observations</caption>
 <thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Pinned IP</th><th scope="col">Identity</th><th scope="col">Check history (UTC)</th><th scope="col">Actions</th></tr></thead><tbody>
 <?php foreach ($sites as $site): ?>
 <tr><td data-label="Site"><?= $escape($site['label']) ?></td><td data-label="URL"><?= $escape($site['base_url']) ?></td><td data-label="Pinned IP"><?= $escape($site['address']) ?></td><td data-label="Identity"><?= $escape($site['site_id']) ?></td><td data-label="Check history (UTC)">
@@ -77,7 +81,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <?php if ($canBackup ?? false): ?>
 <section aria-label="Remote backups">
 <h2>Remote backups</h2>
-<p>Files and database capture requires the connector backup provider and a separate credential. Stop all writers before advancing; confirmation here does not stop them. Create an operation once, then advance one bounded step at a time. An uncertain result requires a status query, never a new operation as a retry. Completion does not establish a tested restoration.</p>
+<p>Files and database capture requires the connector backup provider and a separate credential. Stop all writers before advancing; confirmation here does not stop them. Create an operation once, then use single steps or an explicitly confirmed batch. An uncertain result requires a status query, never a new operation as a retry. Completion does not establish a tested restoration.</p>
 <?php foreach ($sites as $site): ?>
 <details><summary>Backup: <?= $escape($site['label']) ?></summary>
 <?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
@@ -96,7 +100,7 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <h3>Latest 100 operations</h3>
 <p>This journal shows current state, not an immutable event history.</p>
 <?php foreach ($backupOperations as $operation): ?>
-<article class="nwm-backup" style="overflow-wrap:anywhere">
+<article class="nwm-backup" style="overflow-wrap:anywhere" data-site="<?= (int)$operation['site'] ?>" data-operation="<?= $escape($operation['operation']) ?>" data-sequence="<?= (int)$operation['next_sequence'] ?>">
 <h4><?= $escape($operation['operation']) ?></h4>
 <p>Site #<?= (int)$operation['site'] ?>; state: <?= $escape($operation['status']) ?>; next sequence: <?= (int)$operation['next_sequence'] ?>; updated <?= $escape(gmdate('Y-m-d H:i:s', (int)$operation['updated_at'])) ?> UTC.</p>
 <form method="post" action="index.php?option=com_nicodewebmonitor">
@@ -107,6 +111,14 @@ $escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTI
 <input type="hidden" name="task" value="backupAdvance"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
 <label><input type="checkbox" name="confirmed" value="1" required> All writers are stopped; advance this operation by one step.</label>
 <?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Advance backup step</button></form>
+<form class="nwm-backup-runner" method="post" action="index.php?option=com_nicodewebmonitor" hidden>
+<input type="hidden" name="task" value="backupContinue"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
+<input type="hidden" name="expected_sequence" value="<?= (int)$operation['next_sequence'] ?>">
+<label><input type="checkbox" name="confirmed" value="1" required> All writers remain stopped; run up to 100 sequential steps in this tab.</label>
+<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Run backup steps</button>
+<button class="btn btn-outline-secondary nwm-backup-pause" type="button" disabled>Pause after current step</button>
+<p class="nwm-backup-progress" role="status" aria-live="polite">Ready. Keep this tab open. Pause finishes the current request; it does not undo a capture.</p>
+</form>
 <?php endif; ?></article>
 <?php endforeach; ?></section>
 <?php endif; ?>

@@ -70,6 +70,8 @@ try {
     check(count($projection)===1 && $projection[0]['operation']===$id && !isset($projection[0]['receipt']) && !isset($projection[0]['credential']), 'journal projection excludes secrets and receipts');
     invalid(fn()=>$service->run($id,true,false),'step requires confirmation');
     check($service->run($id,true,true)['receipt']['next_sequence']===1,'first sequenced step persisted');
+    $before=$calls;
+    check($service->run($id,true,true,0)['error']==='sequence_changed' && $calls===$before,'stale browser sequence has no remote effects');
     $mode='stale'; check($service->run($id)['error']==='journal_conflict','receipt cannot regress sequence');
     $mode='jump'; check($service->run($id)['error']==='journal_conflict','receipt cannot skip sequences');
     $mode='lost'; check(!$service->run($id,true,true)['ok'],'lost response recorded');

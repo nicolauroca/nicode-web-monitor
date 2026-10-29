@@ -43,6 +43,9 @@ permission, explicit confirmation, native installation and lost-response
 reconciliation. Start-to-finish instructions: `docs/extension-update-http.txt`.
 The central backup administrator forms support enrollment, explicit single-step
 advance and status reconciliation, with separate permissions and CSRF checks.
+An explicitly confirmed browser batch advances up to 100 steps sequentially,
+supports pause/resume and stops on uncertainty without retrying. Keep the tab open;
+this does not create a background job or renew the remote maintenance permit.
 Version 0.6.0-dev adds the backup transport,
 separate service ACL/credential and durable operation journal; see `docs/central-backups.txt`. Experimental connector backups are described below. See `docs/central-client.txt` for the transport contract and test commands,
 and `docs/site-registry.txt` for central installation and credential limits.
@@ -128,7 +131,7 @@ Joint resumable file/database capture is available in the development connector
 through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
 reconciliation and private layout. Capture is not proof of restoration. Central
 backup forms, real user permissions and the operation journal are tested; an
-append-only maintenance history, managed core execution and the remaining extension
+append-only maintenance history and the remaining extension
 types remain pending. Prepared plugin updates are described in
 `docs/extension-update-http.txt`; current integration evidence is in
 `docs/verification-2026-10-27.txt`.
@@ -137,4 +140,4 @@ A local core-update preflight checks pinned update archives, installed versions 
 Joomla's native database schema. It does not execute updates. See
 `docs/core-update-preflight.txt` and `docs/verification-2026-10-27-core.txt` for the
 disposable core-upgrade experiment. The HTTPS provider and central core panel are
-now integrated; automatic remote execution remains pending.
+now integrated; the opt-in host runner is described in `docs/core-dispatch.txt`.

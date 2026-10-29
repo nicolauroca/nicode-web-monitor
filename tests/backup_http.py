@@ -34,8 +34,15 @@ parser.add_argument('--database-guard-only', action='store_true')
 parser.add_argument('--database-full', action='store_true', help='Capture entire disposable database in sequenced HTTPS requests')
 parser.add_argument('--central-site', type=Path, help='Separate disposable Joomla central panel on loopback port 8767')
 parser.add_argument('--central-steps', type=int, default=12)
+parser.add_argument('--central-browser', action='store_true', help='Exercise explicit browser runner and pause with native connector')
 parser.add_argument('--resume-panel', type=Path, help='Existing panel-progress.json; only before database capture has started')
 args = parser.parse_args()
+if args.central_browser and (not args.central_site or args.resume_panel):
+    parser.error('--central-browser requires a separate central site and a fresh test capture')
+# Fail before configuring a disposable site when a reused fixture has expired.
+certificate = ssl._ssl._test_decode_cert(str(args.certificate.resolve()))
+if not ssl.cert_time_to_seconds(certificate['notBefore']) <= time.time() < ssl.cert_time_to_seconds(certificate['notAfter']):
+    parser.error('Local TLS certificate is not currently valid; replace the fixture, never disable verification')
 site = args.site.resolve()
 cgi = args.php.with_name('php-cgi.exe' if os.name == 'nt' else 'php-cgi')
 flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
@@ -170,7 +177,10 @@ try:
         subprocess.run([str(args.php), str(Path(__file__).with_name('backup_database_baseline.php')),
                         str(site), str(storage/'database-baseline.json'), '--allow-disposable-writes'],
                        check=True, capture_output=True, timeout=30, creationflags=flags)
-        from backup_panel_native import run_panel
+        if args.central_browser:
+            from backup_runner_native import run_panel
+        else:
+            from backup_panel_native import run_panel
         print(json.dumps(run_panel(globals()), indent=2))
         sys.exit(0)
     check(request(token)[0]==200, 'inventory_still_works')

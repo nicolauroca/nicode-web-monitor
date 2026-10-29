@@ -1,4 +1,4 @@
-Central sequenced backups (0.6.0-dev, 25 October 2026)
+Central sequenced backups (0.8.0-dev, 29 October 2026)
 
 The component now contains BackupClient and BackupCoordinator. These are backend
 services connected to the administrator panel through POST-only CSRF-protected forms.
@@ -13,7 +13,10 @@ begin(site, true) creates a local random operation identity and makes no network
 request. run(operation, true, true) advances exactly one sequence. run(operation)
 only queries remote status. The form layer enforces CSRF and explicit confirmation for begin/advance, and uses
 a redirect after each action. Status queries are also POST/CSRF protected. There is
-no automatic loop or retry; each advance requires a deliberate confirmed action.
+no retry. The optional browser runner advances up to 100 sequential steps after a
+deliberate confirmation, then pauses. Each HTTP request still advances one step.
+It passes the observed sequence, which is compared under the operation lock before
+dispatch; a second tab with an older sequence cannot advance the operation.
 
 Each remote write is preceded by a committed uncertain journal entry. The service
 requires autocommit and rejects an enclosing transaction. MariaDB named locks
@@ -49,7 +52,8 @@ response after the provider effect, verifies the retry is blocked, then reconcil
 completion without another provider call. It does not perform native whole-site
 capture, restoration or native Joomla updates. Separate administrator HTTP/browser
 tests cover credential enrollment, CSRF, confirmation, journal rendering and
-mobile/desktop layout; they do not exercise a native backup over the browser.
+mobile/desktop layout. The separate browser runner test exercises native capture
+progress, a lost response, explicit reconciliation, pause and resume over TLS.
 Never run the write fixtures against a real site. Temporary test records are removed.
 
 Real reader/operator HTTP accounts and native remote progression through the
@@ -71,6 +75,25 @@ operation has only Query backup status available. Errors never echo a submitted
 token, raw exception or receipt. The latest 100 operations show state, sequence,
 site and UTC update time; completion is not proof of restoration. A site removal
 also removes its local backup credential and journal, not remote artifacts.
+
+With JavaScript available, the same operation also offers Run backup steps:
+1. Keep every remote writer stopped and the local maintenance permit valid.
+2. Confirm the 100-step batch and click Run backup steps. Keep this tab open.
+   The panel shows the next sequence; it does not invent a completion percentage.
+3. Pause after current step finishes the current request and sends no next one.
+   Resume requires another confirmation and continues the same operation.
+4. A network error, expired login, invalid receipt or uncertain result stops the
+   run. Query backup status explicitly to reconcile before continuing; do not
+   create another operation as a retry. Closing the tab also stops future requests,
+   but an already sent request may finish. Reload and query the same operation.
+5. A complete capture disables further advancement. Restoration remains separate.
+
+The runner is a foreground browser convenience, not a background schedule. It does
+not renew the connector's local maintenance permit, stop external writers, restore
+files, or approve updates. Without JavaScript the existing single-step forms work.
+The JSON continuation endpoint requires the same authenticated permission, POST,
+CSRF and confirmation, plus an exact expected sequence. It returns only operation,
+status and next sequence on success; failures contain no raw receipt or secrets.
 
 HTTP acceptance (disposable loopback only, administrator JSON on stdin):
 python tests/backup_admin_http.py --base-url http://127.0.0.1:8767 --allow-disposable-writes

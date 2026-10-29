@@ -1,0 +1,39 @@
+29 October 2026 - explicit foreground backup progression
+
+Development component 0.8.0-dev, Windows / existing PHP 8.4 / Joomla 6.1.3 /
+MariaDB disposable lab. No production hosting or background schedules changed.
+
+Verified with the packaged component installed through Joomla's native CLI:
+- 23 real Edge browser / Joomla operator / DB / native TLS connector checks.
+  Two steps reach the native provider; the second response is deliberately lost.
+  The runner stops without a third dispatch. An explicit status query reconciles
+  sequence 2; two explicit resume/pause rounds continue to sequence 4. Saved native
+  receipt matches the browser. Temporary users and rows are removed and the
+  fixture-only transport override is restored. No page overflow at 390/1440/320px.
+- 27 synthetic browser checks: completion, 100-step budget, pause while a request
+  is in flight, resume at the next sequence, network failure, wrong identity,
+  skipped sequence, uncertain status, HTML login response and rejected request.
+  These terminal/budget scenarios are synthetic, not a second whole-site restore.
+- 36 coordinator checks with real Joomla user/vault and MariaDB temporary tables,
+  including stale sequence rejection before remote dispatch.
+- 24 real HTTP role/CSRF/confirmation checks and 38 administrator/form/layout
+  checks. Reader cannot invoke the continuation endpoint. Missing confirmation,
+  sequence, CSRF and stale sequence leave the product database unchanged.
+- Three changed PHP files pass syntax validation.
+
+Integration corrections: use Joomla's full root asset URL so the browser script
+is emitted; explicitly send JSON/no-store headers before application close;
+retain site identity while refreshing progress. Expired old TLS fixture detected
+and replaced with the already available valid local certificate; verification
+was never disabled. Harness now rejects expired certificates before configuration.
+
+No percentage is fabricated. A batch is at most 100 one-step requests and needs
+fresh confirmation after pause. A failed or malformed reply disables advancement
+and retains the explicit status action. Expected sequence is checked inside the
+same DB lock as dispatch. Closing the tab never cancels an already sent effect.
+
+Limits: this run captures only four native steps, not a complete backup; earlier
+full capture/restoration evidence remains separate. It does not renew maintenance
+permits or stop unrelated writers. Other extension types, clean lifecycle and
+broader compatibility remain acceptance gates. This is not a stable release or
+an accepted complete release candidate.

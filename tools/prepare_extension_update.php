@@ -24,11 +24,11 @@ try {
     $found=[];
     for($i=0;$i<$zip->numFiles;$i++){
         $name=$zip->getNameIndex($i);
-        if(!preg_match('/^[a-z0-9_]+\.xml$/D',$name))continue;
+        if($name !== 'templateDetails.xml' && !preg_match('/^[a-z0-9_]+\.xml$/D',$name))continue;
         $xml=$zip->getFromIndex($i);
         if(!is_string($xml)||strlen($xml)>65536||stripos($xml,'<!DOCTYPE')!==false||stripos($xml,'<!ENTITY')!==false)continue;
         $m=simplexml_load_string($xml,SimpleXMLElement::class,LIBXML_NONET);
-        if($m && $m->getName()==='extension' && in_array((string)$m['type'],['plugin','module','component'],true))$found[]=[$name,$m];
+        if($m && $m->getName()==='extension' && in_array((string)$m['type'],['plugin','module','component','template'],true))$found[]=[$name,$m];
     }
     if(count($found)!==1)throw new RuntimeException('Exactly one supported root manifest required');
     [$name,$m]=$found[0];

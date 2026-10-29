@@ -5,7 +5,7 @@ What this version does
 The central Joomla component can execute a locally prepared extension update on a
 second Joomla through verified HTTPS, then query its durable receipt. Inventory,
 backup and update credentials are separate. This provider supports plugins, site and
-administrator modules, and components. Packages, templates and libraries remain
+administrator modules, components, and site/administrator templates. Packages and libraries remain
 unsupported. Joomla core uses its separate provider described in core-dispatch.txt.
 This is development code for disposable installations, not a production release.
 
@@ -36,7 +36,9 @@ Each operation targets one installed non-core extension with an existing ID.
 Plugins require a root ELEMENT.xml and group; modules require ELEMENT.xml, a mod_
 element and site/administrator client. Components require a canonical com_NAME
 manifest name and a root com_NAME.xml or NAME.xml. Conflicting element declarations
-are rejected. Modern module element declarations are accepted. Other manifest
+are rejected. Templates require a root templateDetails.xml, a canonical lowercase
+element (or name) and a site/administrator client. Existing template style IDs,
+titles and parameters are retained in the tested native upgrade. Modern module element declarations are accepted. Other manifest
 layouts are outside the supported subset, even if Joomla itself accepts them. Downgrades and protected core extensions
 are refused. No arbitrary download URL is accepted by the remote endpoint.
 
@@ -108,3 +110,11 @@ production hosting or complete-release acceptance is claimed by these tests.
 The three additional kinds have native integration coverage in extension_types_native.php.
 Use --extension-kind module-site, module-admin or component with update_http.py
 for the corresponding full panel/HTTPS/permissions/lost-response fixture.
+
+29 October evening verification: template-site and template-admin are accepted by
+--extension-kind in the HTTP harness (44 checks each). Native template tests use
+php tests/extension_types_native.php JOOMLA_ROOT NEW_OUTPUT --allow-disposable-writes --new-types
+Library support is intentionally blocked: Joomla 6.1.4 deletes/recreates its extension
+row during upgrade, incompatible with the current same-ID journal. Packages remain
+blocked pending child-identity/partial-install recovery coverage. Do not work around
+these limits by changing a permit or relabelling a package.

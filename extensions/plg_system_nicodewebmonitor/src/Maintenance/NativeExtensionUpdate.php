@@ -8,7 +8,7 @@ use Joomla\Database\DatabaseInterface;
 use Nicode\Plugin\System\NicodeWebMonitor\Transport\BackupEndpoint;
 
 /** @package Nicode.joomla.webmonitor
- * Locally vetted plugin, module and component ZIPs. No downloads or remote paths.
+ * Locally vetted extension ZIPs. No downloads or remote paths.
  */
 final class NativeExtensionUpdate
 {
@@ -38,7 +38,7 @@ final class NativeExtensionUpdate
             || $permit['expires_at'] > time()+900) { throw new \RuntimeException('Invalid permit'); }
         $plan = $permit['plan']; $identity = $permit['identity'];
         if (array_keys($identity) !== ['type','element','folder','client_id']
-            || !in_array($identity['type'], ['plugin','module','component'], true)
+            || !in_array($identity['type'], ['plugin','module','component','template'], true)
             || !in_array($identity['client_id'], [0,1], true)
             || !preg_match('/^[a-z0-9_]+$/D', $identity['element'])
             || !preg_match('/^[a-z0-9_]*$/D', $identity['folder'])) { throw new \RuntimeException('Unsupported identity'); }
@@ -73,7 +73,7 @@ final class NativeExtensionUpdate
                     throw new \RuntimeException('Archive links unsupported');
                 }
             }
-            $filename = $identity['element'].'.xml';
+            $filename = $identity['type'] === 'template' ? 'templateDetails.xml' : $identity['element'].'.xml';
             if ($identity['type'] === 'component' && $zip->locateName($filename) === false) {
                 $filename = substr($identity['element'],4).'.xml';
             }

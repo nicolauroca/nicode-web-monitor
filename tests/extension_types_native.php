@@ -20,12 +20,13 @@ function check($ok,$name){global $checks;if(!$ok)throw new RuntimeException($nam
 function installZip($file){global $db;$p=InstallerHelper::unpack($file,true);if(!$p)throw new RuntimeException('Unpack failed');try{$i=new Installer();$i->setDatabase($db);check($i->install($p['extractdir']),'native install');}finally{\Joomla\Filesystem\Folder::delete($p['extractdir']);}}
 function fixturePack($type,$client,$version){
     global $root;
-    $element=($type==='module'?'mod_':'com_').'nwmtypesqa';
+    $element=($type==='module'?'mod_':($type==='component'?'com_':'')).'nwmtypesqa';
     $path=$root.'/'.$type.'-'.$client.'-'.$version.'.zip';$z=new ZipArchive();$z->open($path,ZipArchive::CREATE|ZipArchive::EXCL);
     $files=$type==='module'?'<files><filename module="'.$element.'">'.$element.'.php</filename><filename>version.txt</filename></files>':'<administration><menu>NWM types QA</menu><files folder="admin"><filename>nwmtypesqa.php</filename><filename>version.txt</filename></files></administration>';
-    $z->addFromString($element.'.xml','<extension type="'.$type.'" client="'.($client?'administrator':'site').'" method="upgrade"><name>'.$element.'</name><version>'.$version.'</version>'.$files.'</extension>');
-    $z->addFromString($type==='module'?$element.'.php':'admin/nwmtypesqa.php',"<?php defined('_JEXEC') or die;\n");
-    $z->addFromString($type==='module'?'version.txt':'admin/version.txt',$version);$z->close();return $path;
+    if($type==='template')$files='<files><filename>index.php</filename><filename>version.txt</filename></files>';
+    $z->addFromString($type==='template'?'templateDetails.xml':$element.'.xml','<extension type="'.$type.'" client="'.($client?'administrator':'site').'" method="upgrade"><name>'.$element.'</name><version>'.$version.'</version>'.$files.'</extension>');
+    $z->addFromString($type==='module'?$element.'.php':($type==='component'?'admin/nwmtypesqa.php':'index.php'),"<?php defined('_JEXEC') or die;\n");
+    $z->addFromString($type==='component'?'admin/version.txt':'version.txt',$version);$z->close();return $path;
 }
 function prepare($zip,$operation){
     global $root;
@@ -35,13 +36,14 @@ function prepare($zip,$operation){
     return json_decode($out,true,32,JSON_THROW_ON_ERROR);
 }
 try {
-    foreach ([['module',0],['module',1],['component',1]] as [$type,$client]) {
-        $element=($type==='module'?'mod_':'com_').'nwmtypesqa';
+    foreach ((($argv[4]??'')==='--new-types'?[['template',0],['template',1]]:[['module',0],['module',1],['component',1]]) as [$type,$client]) {
+        $element=($type==='module'?'mod_':($type==='component'?'com_':'')).'nwmtypesqa';
         $where='type='.$db->quote($type).' AND element='.$db->quote($element).' AND client_id='.$client;
         check(!$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$where)->loadResult(),'fixture absent '.$type.$client);
         installZip(fixturePack($type,$client,'1.0.0'));
         $id=(int)$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$where)->loadResult();$ids[]=[$type,$id,$where,$element,$client];
         check($id>0,'extension registered '.$type.$client);
+        if($type==='template'){$db->setQuery('UPDATE #__template_styles SET title='.$db->quote('Custom style to retain').',params='.$db->quote('{"custom":"retain me"}').' WHERE template='.$db->quote($element).' AND client_id='.$client)->execute();$styles=$db->setQuery('SELECT * FROM #__template_styles WHERE template='.$db->quote($element).' AND client_id='.$client.' ORDER BY id')->loadAssocList();check(count($styles)===1,'template style created');}
         $v2=fixturePack($type,$client,'1.1.0');$op='types-'.$type.'-'.$client;
         $prepared=prepare($v2,$op);check($prepared['plan']['extension_id']===$id,'CLI selects exact type/client');
         $provider=new NativeExtensionUpdate($db,$root,JPATH_BASE,true,$root.'/gate');
@@ -53,8 +55,9 @@ try {
         $result=$provider->handle($op,true);check($result['status']==='updated','provider update '.$type.$client);
         $row=$db->setQuery('SELECT extension_id,manifest_cache FROM #__extensions WHERE '.$where)->loadAssoc();
         check((int)$row['extension_id']===$id && json_decode($row['manifest_cache'],true)['version']==='1.1.0','same ID and new version');
-        $path=JPATH_BASE.($client?'/administrator':'').($type==='module'?'/modules/':'/components/').$element;
+        $path=JPATH_BASE.($client?'/administrator':'').(['module'=>'/modules/','component'=>'/components/','template'=>'/templates/'][$type]).$element;
         check(file_get_contents($path.'/version.txt')==='1.1.0','installed bytes changed');
+        if($type==='template')check($db->setQuery('SELECT * FROM #__template_styles WHERE template='.$db->quote($element).' AND client_id='.$client.' ORDER BY id')->loadAssocList()===$styles,'template style preserved');
         check($provider->handle($op,true)===$result,'duplicate returns receipt');
         check(!is_file($root.'/gate/owner.json'),'shared gate released');
     }
@@ -62,8 +65,8 @@ try {
     foreach (array_reverse($ids) as [$type,$id,$where,$element,$client]) {
         $i=new Installer();$i->setDatabase($db);check($i->uninstall($type,$id),'native uninstall '.$type.$client);
         check(!$db->setQuery('SELECT extension_id FROM #__extensions WHERE '.$where)->loadResult(),'extension row removed');
-        check(!is_dir(JPATH_BASE.($client?'/administrator':'').($type==='module'?'/modules/':'/components/').$element),'installed directory removed');
+        check(!is_dir(JPATH_BASE.($client?'/administrator':'').(['module'=>'/modules/','component'=>'/components/','template'=>'/templates/'][$type]).$element),'installed directory removed');
     }
     file_put_contents($root.'/checks.json',json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT));
 }
-echo json_encode(['passed'=>count($checks),'types'=>['site module','administrator module','component'],'cleanup'=>true])."\n";
+echo json_encode(['passed'=>count($checks),'types'=>(($argv[4]??'')==='--new-types'?['site template','administrator template']:['site module','administrator module','component']),'cleanup'=>true])."\n";

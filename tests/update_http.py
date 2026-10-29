@@ -25,7 +25,7 @@ p=argparse.ArgumentParser(description=__doc__)
 for name in ['site','central','php','certificate','private-key','storage']:
     p.add_argument('--'+name,type=Path,required=True)
 p.add_argument('--allow-disposable-writes',action='store_true',required=True)
-p.add_argument('--extension-kind',choices=['plugin','module-site','module-admin','component'],default='plugin')
+p.add_argument('--extension-kind',choices=['plugin','module-site','module-admin','component','template-site','template-admin'],default='plugin')
 a=p.parse_args()
 repo=Path(__file__).resolve().parents[1]
 site=a.site.resolve(); central=a.central.resolve(); store=a.storage.resolve()
@@ -50,8 +50,8 @@ def roles(action,**data):
     if proc.returncode: raise RuntimeError('Role fixture failed')
     return json.loads(proc.stdout)
 kind=a.extension_kind
-extension_type='plugin' if kind=='plugin' else ('component' if kind=='component' else 'module')
-client=1 if kind in ['module-admin','component'] else 0
+extension_type=kind.split('-')[0]
+client=1 if kind in ['module-admin','component','template-admin'] else 0
 element=('mod_' if extension_type=='module' else ('com_' if extension_type=='component' else ''))+'nwmupdateqa'
 identity={'type':extension_type,'element':element,'folder':'system' if extension_type=='plugin' else '', 'client_id':client}
 def package(version):
@@ -63,7 +63,10 @@ def package(version):
         else:
             files='<files><filename '+extension_type+'="'+element+'">'+element+'.php</filename><filename>version.txt</filename></files>'
             code=element+'.php';marker='version.txt'
-        z.writestr(element+'.xml','<extension type="'+extension_type+'" group="system" client="'+('administrator' if client else 'site')+'" method="upgrade"><name>'+element+'</name><version>'+version+'</version>'+files+'</extension>')
+        if extension_type=='template':
+            files='<files><filename>index.php</filename><filename>version.txt</filename></files>'
+            code='index.php';marker='version.txt'
+        z.writestr('templateDetails.xml' if extension_type=='template' else element+'.xml','<extension type="'+extension_type+'" group="system" client="'+('administrator' if client else 'site')+'" method="upgrade"><name>'+element+'</name><version>'+version+'</version>'+files+'</extension>')
         z.writestr(code,"<?php defined('_JEXEC') or die;\n")
         z.writestr(marker,version)
     return dest

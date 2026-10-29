@@ -1,0 +1,35 @@
+Nicode Web Monitor - template integration, 29 October 2026 evening
+Package: Nicode.joomla.webmonitor
+
+Site and administrator templates now use the prepared extension provider.
+The root templateDetails.xml declares a canonical lowercase element/name and a
+site/administrator client. Target identity, version, archive hash and safety checks
+are enforced before a maintenance reservation or native installation.
+
+Verified on disposable Joomla 6.1.4 / PHP 8.4.26 / MariaDB 11.8.9 Windows:
+- 44 HTTP checks per client (88 total): real Joomla users, independent update ACL,
+  CSRF, explicit confirmation, verified TLS, native 1.0.0 -> 1.1.0 -> 1.2.0,
+  stable extension ID, changed installed bytes, lost response reconciled by GET,
+  and no duplicate installation. Fixture users/templates and transport overrides
+  removed after each run.
+- 30 native checks across both clients: CLI preparation, wrong-client denial
+  before effects, stable ID, custom style title/parameters/ID preserved, durable
+  duplicate receipt, released gate and native uninstall cleanup.
+- 17 identity cases including invalid template client/name/manifest path and
+  explicit rejection of packages and libraries.
+
+Reproduce with extension-update-http.txt and --extension-kind template-site or
+template-admin. For native tests use extension_types_native.php with --new-types
+as documented there. Every run requires a fresh private output directory.
+
+An experimental library update exposed Joomla's delete/recreate behavior: its
+extension ID changes. The current same-ID journal correctly failed to certify
+that update. Library acceptance was removed before packaging; library preparation
+and provider execution remain blocked. The disposable fixture was reconciled by
+its current identity and all three remaining experimental fixtures uninstalled.
+No retry of the uncertain operation or weakening of identity checks was used.
+
+Compound packages and libraries still need a separately tested identity/recovery
+contract. Broader PHP/SQL compatibility, guided pairing, external notifications,
+append-only maintenance history and final acceptance remain open. This evidence
+does not certify a complete candidate or recovery of the 29 October target.

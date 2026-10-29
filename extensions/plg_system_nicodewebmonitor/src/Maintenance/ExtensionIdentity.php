@@ -34,6 +34,12 @@ final class ExtensionIdentity
                 throw new \RuntimeException('Canonical component name required');
             }
             $names = [$element.'.xml', substr($element, 4).'.xml'];
+        } elseif ($type === 'template') {
+            $element = (string)$m->element ?: (string)$m->name;
+            $name = (string)$m['client'];
+            if (!in_array($name, ['', 'site', 'administrator'], true)) { throw new \RuntimeException('Invalid client'); }
+            $client = $name === 'administrator' ? 1 : 0;
+            $names = ['templateDetails.xml'];
         } else { throw new \RuntimeException('Unsupported extension type'); }
         if (!preg_match('/^[a-z0-9_]+$/D', $element) || !in_array($filename, $names, true)) {
             throw new \RuntimeException('Invalid manifest identity');

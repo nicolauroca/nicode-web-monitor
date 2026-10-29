@@ -77,3 +77,11 @@ El ensayo instala, actualiza y desinstala extensiones reales; crea un registro
 sintético y conserva sus tablas al terminar. Cada operación de instalador usa un
 proceso nuevo, como peticiones Joomla independientes. No ejecutarlo en un sitio real.
 Consulta lifecycle.json y docs/verification-2026-10-29-types-lifecycle.txt.
+
+Plantillas (verificación 29 octubre, noche)
+Para actualizar una plantilla de sitio o administrador sigue la preparación y el
+panel descritos en extension-update-http.txt. Su ZIP debe incluir templateDetails.xml
+en la raíz y un nombre/elemento canónico en minúsculas. La actualización conserva
+ID y estilos existentes en las pruebas; verifica tu copia y detén los escritores
+antes de prepararla. No actives la plantilla de prueba como predeterminada.
+Las librerías y paquetes compuestos siguen bloqueados; no son funciones aceptadas.

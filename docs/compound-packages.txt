@@ -1,0 +1,49 @@
+Compound packages - development boundary, 30 October 2026
+
+The inventory now includes package_id for each extension. The panel shows the
+extension ID and Package ID. None means Joomla recorded zero; Unknown means the
+collector did not provide a usable value. Compare IDs only within the same site.
+An orphan has package_id=0 too: None does not prove a healthy standalone install.
+
+Read-only diagnosis from a local checkout, using the site's PHP environment:
+php tools/inspect_package.php /path/to/joomla pkg_example
+
+This lists the parent registry row and linked children. To find replacements
+that lost their package relation, supply an optional UTF-8 JSON file containing
+the expected child identities, taken from the trusted package manifests:
+[{"type":"library","element":"example","folder":"","client_id":0}]
+php tools/inspect_package.php /path/to/joomla pkg_example identities.json
+
+Missing parents/children produce empty arrays, not an installation verdict.
+Duplicate identities remain visible. No params, credentials, update URLs, SQL,
+filesystem paths or raw manifest contents are returned. This is a registry and
+version observation; it does not verify file integrity or establish recoverability.
+
+Local implementation boundary
+PackageOperation is a local primitive for a locally bound, trusted installer.
+Its caller MUST hold the shared MaintenanceGate under extension:OPERATION,
+stop writers, put the disposable/site environment offline and verify recovery
+before installation. The target set must match the complete installed child set;
+adding/removing children and downgrades are not supported by this primitive.
+Before/after snapshots retain actual IDs, including library replacements.
+All target versions and parent/child ownership must match before marking updated.
+The durable started receipt precedes effects. False returns, exceptions, lost
+processes, missing/extra/orphaned children and failed observation remain uncertain.
+The same operation never reinstalls. A reused ID with a different plan is rejected.
+The shared gate remains held on uncertainty. There is no automatic rollback,
+retry, gate reset or claim that a registry snapshot is a backup.
+
+Native reproduction on an isolated Joomla 6.1.4 / PHP 8.4.26 / MariaDB laboratory:
+install package 1.0.0 containing library and module; update both to 1.1.0;
+then update to 1.2.0 while rejecting the module in its preflight script.
+The second update leaves library 1.2.0 with a NEW ID and package_id=0, while
+the parent and module remain at 1.1.0. Native installation does not restore the
+first child. The observation includes the orphan by identity and the journal
+preserves this mixed state as uncertain. Another maintenance owner is rejected.
+
+Remote compound-package updates are STILL DISABLED. This local primitive is
+not wired into NativeExtensionUpdate, HTTP or the panel's update action. Before
+enabling them, implement recursive archive/manifest preflight, prepared-plan
+binding to complete child identities and target versions, transport validation,
+panel presentation of partial results, and native HTTPS/ACL/lost-response tests.
+Package-owned standalone libraries remain rejected. This is not release acceptance.

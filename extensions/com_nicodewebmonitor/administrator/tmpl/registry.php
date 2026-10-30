@@ -46,12 +46,12 @@ if ($canBackup ?? false) {
 <?php endforeach; ?></dl>
 <?php $extensionSection=$inventory['sections']['extensions']; if ($extensionSection['status']==='available' && is_array($extensionSection['data'])): ?>
 <div class="table-responsive"><table class="table"><caption>Installed extensions</caption>
-<thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Version</th><th scope="col">Enabled</th></tr></thead><tbody>
+<thead><tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Version</th><th scope="col">Enabled</th><th scope="col">Package ID</th></tr></thead><tbody>
 <?php foreach ($extensionSection['data'] as $extension): if (!is_array($extension)) { continue; }
     $text = static fn($value) => is_scalar($value) ? $escape($value) : 'Unknown';
     $version=is_array($extension['version'] ?? null) ? $extension['version'] : [];
 ?>
-<tr><th scope="row"><?= $text($extension['name'] ?? null) ?></th><td><?= $text($extension['type'] ?? null) ?></td><td><?= ($version['status'] ?? '')==='available' ? $text($version['value'] ?? null) : 'Unknown' ?></td><td><?= ($extension['enabled'] ?? null)===true ? 'Yes' : (($extension['enabled'] ?? null)===false ? 'No' : 'Unknown') ?></td></tr>
+<tr><td><?= $text($extension['id'] ?? null) ?></td><th scope="row"><?= $text($extension['name'] ?? null) ?></th><td><?= $text($extension['type'] ?? null) ?></td><td><?= ($version['status'] ?? '')==='available' ? $text($version['value'] ?? null) : 'Unknown' ?></td><td><?= ($extension['enabled'] ?? null)===true ? 'Yes' : (($extension['enabled'] ?? null)===false ? 'No' : 'Unknown') ?></td><td><?= ($extension['package_id'] ?? null)===0 ? 'None' : (is_int($extension['package_id'] ?? null) && $extension['package_id']>0 ? $escape((string)$extension['package_id']) : 'Unknown / unavailable') ?></td></tr>
 <?php endforeach; ?></tbody></table></div>
 <?php else: ?><p>Extension inventory unavailable.</p><?php endif; ?>
 <?php endif; ?></section>

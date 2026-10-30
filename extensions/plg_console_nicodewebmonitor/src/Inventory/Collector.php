@@ -31,7 +31,7 @@ final class Collector
                 'version' => $this->database->getVersion(),
             ]),
             'extensions' => $this->attempt(function () {
-                $fields = ['extension_id', 'name', 'type', 'element', 'folder', 'client_id', 'enabled', 'manifest_cache'];
+                $fields = ['extension_id', 'name', 'type', 'element', 'folder', 'client_id', 'package_id', 'enabled', 'manifest_cache'];
                 $query = $this->database->getQuery(true)
                     ->select($this->database->quoteName($fields))
                     ->from($this->database->quoteName('#__extensions'))

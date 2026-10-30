@@ -1,0 +1,22 @@
+30 October 2026: compound state observations and local durable operation
+
+26 checks in package_native.php: native package install/update, real replacement
+library ID, installed bytes, both child versions/ownership, partial failure at
+second child's preflight, orphan observation, retained gate, competing maintenance
+denied, duplicate no-op receipts, cleanup of package and orphaned fixtures.
+28 checks in package_operation.php: authorization, wrong child versions/ownership,
+missing/extra children, exceptions, unavailable observations, process exit 73
+after effects, persisted uncertain reservation, no reinstall after restart,
+conflicting operation IDs, duplicate/missing/downgraded child baseline rejection.
+22 live inventory checks compare every package relation with the real DB.
+8 view checks include ownership display and old/malformed inventory handling.
+
+The old inventory-view test lacked the update capability variables introduced
+by the panel; fixed its fixture so PHP warnings fail the test and it now completes.
+Native fixtures and their files are removed; uncertain receipts remain solely
+in disposable evidence storage, not the connector's configured maintenance gate.
+Configuration bytes are restored after the offline test. No real hosting used.
+
+Scope: local compound primitive and read-only CLI; additive inventory/panel field.
+No remote compound update, automated recovery, wider PHP/SQL matrix or release
+acceptance is claimed. See compound-packages.txt for the next integration gates.

@@ -17,6 +17,7 @@ final class ExtensionRecord
             'element' => (string) $row['element'],
             'folder' => (string) $row['folder'],
             'client_id' => (int) $row['client_id'],
+            'package_id' => isset($row['package_id']) ? (int)$row['package_id'] : null,
             'enabled' => (bool) $row['enabled'],
             'version' => ['status' => $version === null ? 'unknown' : 'available', 'value' => $version],
         ];

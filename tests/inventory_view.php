@@ -11,13 +11,15 @@ $inspection=['ok'=>true, 'received_at'=>'2026-10-10T14:00:01Z', 'inventory'=>[
         'hosting'=>['status'=>'unavailable', 'data'=>null],
         'extensions'=>['status'=>'available', 'data'=>[
             ['name'=>'<script>alert(1)</script>', 'type'=>'plugin', 'version'=>['status'=>'unknown','value'=>null], 'enabled'=>false],
-            ['name'=>'Connector', 'type'=>'plugin', 'version'=>['status'=>'available','value'=>'0.2.0-dev'], 'enabled'=>true],
+            ['id'=>123, 'package_id'=>456, 'name'=>'Connector', 'type'=>'plugin', 'version'=>['status'=>'available','value'=>'0.2.0-dev'], 'enabled'=>true],
+            ['id'=>456, 'package_id'=>0, 'name'=>'Package', 'type'=>'package'],
             ['name'=>[], 'type'=>[], 'version'=>'invalid'],
         ]],
     ],
 ]];
 function renderInventory(): string {
     global $user, $sites, $inspectedId, $inspection;
+    $canUpdate=false; $canCoreUpdate=false; $canBackup=false;
     ob_start(); require dirname(__DIR__).'/extensions/com_nicodewebmonitor/administrator/tmpl/registry.php'; return ob_get_clean();
 }
 set_error_handler(static function($severity,$message) { throw new ErrorException($message,0,$severity); });
@@ -28,6 +30,7 @@ $checks=[
     'unknown_values'=>str_contains($html,'Unknown / unavailable') && !str_contains($html,'Array'),
     'extension_version'=>str_contains($html,'0.2.0-dev'),
     'disabled_extension'=>str_contains($html,'<td>No</td>'),
+    'package_relation'=>str_contains($html,'<td>456</td>') && str_contains($html,'<td>123</td>') && str_contains($html,'<td>None</td>'),
 ];
 $inspection['inventory']['sections']['extensions']=['status'=>'error','data'=>null];
 $checks['unavailable_extensions']=str_contains(renderInventory(),'Extension inventory unavailable.');

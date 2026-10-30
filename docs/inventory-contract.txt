@@ -17,6 +17,10 @@ invalid manifest data does not imply version 0 or that an extension is current.
 
 Extensions: id, name (may be a language key), type, element, folder, client_id,
 enabled and version. IDs are local to the source site, not global identities.
+Additive field (30 October): package_id is the observed Joomla package relation.
+Zero means no registered parent, not proof of standalone integrity; null/missing
+means unknown. The panel shows ID and Package ID without inferring installation
+success. Older collectors without the field remain displayable.
 The enabled flag is the Joomla registry value, not proof of execution or health.
 Only the version is extracted from manifest_cache. Params, update URLs, download
 keys, site users, configuration, database host/name/user/password, SQL text and

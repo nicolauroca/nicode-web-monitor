@@ -29,6 +29,12 @@ check($result['sections']['runtime']['data']['php_version'] === PHP_VERSION, 're
 check($result['sections']['database']['data']['version'] === $db->getVersion(), 'real_database_version');
 $expected = (int) $db->setQuery('SELECT COUNT(*) FROM ' . $db->quoteName('#__extensions'))->loadResult();
 check(count($result['sections']['extensions']['data']) === $expected, 'all_installed_extensions_including_disabled');
+$packageIds = $db->setQuery('SELECT extension_id,package_id FROM #__extensions')->loadAssocList();
+$byId = array_column($result['sections']['extensions']['data'], null, 'id');
+foreach ($packageIds as $p) {
+    if ($byId[(int)$p['extension_id']]['package_id'] !== (int)$p['package_id']) { throw new RuntimeException('Package ownership lost'); }
+}
+check(true, 'every_package_relation_matches_live_database');
 check($result['sections']['hosting']['status'] === 'unavailable', 'hosting_not_fabricated');
 check($result['capabilities'] === ['remote_inventory' => false, 'remote_updates' => false, 'remote_backups' => false], 'no_remote_capabilities_claimed');
 check((bool) preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $result['collected_at']), 'utc_timestamp');

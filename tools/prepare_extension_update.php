@@ -28,14 +28,17 @@ try {
         $xml=$zip->getFromIndex($i);
         if(!is_string($xml)||strlen($xml)>65536||stripos($xml,'<!DOCTYPE')!==false||stripos($xml,'<!ENTITY')!==false)continue;
         $m=simplexml_load_string($xml,SimpleXMLElement::class,LIBXML_NONET);
-        if($m && $m->getName()==='extension' && in_array((string)$m['type'],['plugin','module','component','template'],true))$found[]=[$name,$m];
+        if($m && $m->getName()==='extension' && in_array((string)$m['type'],['plugin','module','component','template','library'],true))$found[]=[$name,$m];
     }
     if(count($found)!==1)throw new RuntimeException('Exactly one supported root manifest required');
     [$name,$m]=$found[0];
     $identity=ExtensionIdentity::read($m,$name);$to=(string)$m->version;
 } finally {$zip->close();}
 $db=Factory::getContainer()->get(DatabaseInterface::class);
-$row=$db->setQuery("SELECT extension_id,manifest_cache,protected FROM #__extensions WHERE type=".$db->quote($identity['type']).' AND client_id='.$identity['client_id'].' AND element='.$db->quote($identity['element']).' AND folder='.$db->quote($identity['folder']))->loadAssoc();
+$rows=$db->setQuery("SELECT extension_id,manifest_cache,protected,package_id FROM #__extensions WHERE type=".$db->quote($identity['type']).' AND client_id='.$identity['client_id'].' AND element='.$db->quote($identity['element']).' AND folder='.$db->quote($identity['folder']))->loadAssocList();
+if(count($rows)!==1)throw new RuntimeException('Exactly one installed identity required');
+$row=$rows[0];
+if($identity['type']==='library' && (int)$row['package_id']!==0)throw new RuntimeException('Package-owned library unsupported');
 if(!$row||(int)$row['protected']!==0)throw new RuntimeException('Installed non-core extension required');
 $from=json_decode($row['manifest_cache'],true,16,JSON_THROW_ON_ERROR)['version'];
 if(strlen($to)>64||strlen($from)>64||!version_compare($to,$from,'>'))throw new RuntimeException('Newer version required');

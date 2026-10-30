@@ -40,6 +40,11 @@ final class ExtensionIdentity
             if (!in_array($name, ['', 'site', 'administrator'], true)) { throw new \RuntimeException('Invalid client'); }
             $client = $name === 'administrator' ? 1 : 0;
             $names = ['templateDetails.xml'];
+        } elseif ($type === 'library') {
+            $element = (string)$m->libraryname;
+            if ((string)$m['client'] !== '' && (string)$m['client'] !== 'site') { throw new \RuntimeException('Invalid library client'); }
+            if ((string)$m->element !== '' && (string)$m->element !== $element) { throw new \RuntimeException('Conflicting element'); }
+            $names = [$element.'.xml'];
         } else { throw new \RuntimeException('Unsupported extension type'); }
         if (!preg_match('/^[a-z0-9_]+$/D', $element) || !in_array($filename, $names, true)) {
             throw new \RuntimeException('Invalid manifest identity');

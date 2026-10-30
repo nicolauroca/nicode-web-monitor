@@ -5,8 +5,8 @@ What this version does
 The central Joomla component can execute a locally prepared extension update on a
 second Joomla through verified HTTPS, then query its durable receipt. Inventory,
 backup and update credentials are separate. This provider supports plugins, site and
-administrator modules, components, and site/administrator templates. Packages and libraries remain
-unsupported. Joomla core uses its separate provider described in core-dispatch.txt.
+administrator modules, components, site/administrator templates and standalone libraries.
+Compound packages and package-owned libraries remain unsupported. Joomla core uses its separate provider described in core-dispatch.txt.
 This is development code for disposable installations, not a production release.
 
 Start from source
@@ -114,7 +114,22 @@ for the corresponding full panel/HTTPS/permissions/lost-response fixture.
 29 October evening verification: template-site and template-admin are accepted by
 --extension-kind in the HTTP harness (44 checks each). Native template tests use
 php tests/extension_types_native.php JOOMLA_ROOT NEW_OUTPUT --allow-disposable-writes --new-types
-Library support is intentionally blocked: Joomla 6.1.4 deletes/recreates its extension
-row during upgrade, incompatible with the current same-ID journal. Packages remain
-blocked pending child-identity/partial-install recovery coverage. Do not work around
-these limits by changing a permit or relabelling a package.
+30 October: standalone libraries with a canonical root ELEMENT.xml manifest and
+<libraryname>ELEMENT</libraryname> are supported. Nested library paths and package-owned
+libraries are rejected. Use the same preparation, panel confirmation and status workflow
+above; use --extension-kind library for HTTP QA, or --library for native type QA.
+
+Joomla 6.1.4 uninstalls the old library and installs a new extension row. The plan keeps
+the ORIGINAL extension_id; the successful receipt adds installed_extension_id with the
+observed current ID. Do not edit the original plan to make IDs match. A later update must
+be freshly prepared against the new installed row. Exactly one matching type, element,
+folder and client must exist, with the expected version; the original row must be gone
+if the ID changed. Duplicate identities and package-owned libraries fail before effects.
+
+Native library scripts can fail after the old library has been removed. In the disposable
+postflight failure test, Joomla removed the original and left no replacement. The journal
+stayed uncertain and retained the shared maintenance gate; retry did not reinstall.
+This does NOT provide automatic rollback: keep the verified recovery copy, investigate
+the native state and follow maintenance-gate recovery before allowing further changes.
+The successful native/HTTPS tests also cover lost-response reconciliation without replay.
+Compound packages remain blocked pending child-identity/partial-install recovery coverage.

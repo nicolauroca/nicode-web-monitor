@@ -22,13 +22,13 @@ function installPackage($file) {
 }
 $where="type='plugin' AND folder='system' AND element='nicodewebmonitor'";
 $kind=$d['kind']??'plugin';
-if(!in_array($kind,['plugin','module-site','module-admin','component','template-site','template-admin'],true))throw new RuntimeException('Unknown fixture kind');
+if(!in_array($kind,['plugin','module-site','module-admin','component','template-site','template-admin','library'],true))throw new RuntimeException('Unknown fixture kind');
 $type=explode('-',$kind)[0];
 $client=in_array($kind,['module-admin','component','template-admin'],true)?1:0;
 $element=($type==='module'?'mod_':($type==='component'?'com_':'')).'nwmupdateqa';
 $folder=$type==='plugin'?'system':'';
 $fixture='type='.$db->quote($type).' AND element='.$db->quote($element).' AND folder='.$db->quote($folder).' AND client_id='.$client;
-$fixturePath=JPATH_BASE.($client?'/administrator':'').(['plugin'=>'/plugins/system/','module'=>'/modules/','component'=>'/components/','template'=>'/templates/'][$type]).$element;
+$fixturePath=JPATH_BASE.($client?'/administrator':'').(['plugin'=>'/plugins/system/','module'=>'/modules/','component'=>'/components/','template'=>'/templates/','library'=>'/libraries/'][$type]).$element;
 
 switch($d['action']) {
 case 'install':

@@ -25,7 +25,7 @@ p=argparse.ArgumentParser(description=__doc__)
 for name in ['site','central','php','certificate','private-key','storage']:
     p.add_argument('--'+name,type=Path,required=True)
 p.add_argument('--allow-disposable-writes',action='store_true',required=True)
-p.add_argument('--extension-kind',choices=['plugin','module-site','module-admin','component','template-site','template-admin'],default='plugin')
+p.add_argument('--extension-kind',choices=['plugin','module-site','module-admin','component','template-site','template-admin','library'],default='plugin')
 a=p.parse_args()
 repo=Path(__file__).resolve().parents[1]
 site=a.site.resolve(); central=a.central.resolve(); store=a.storage.resolve()
@@ -63,8 +63,8 @@ def package(version):
         else:
             files='<files><filename '+extension_type+'="'+element+'">'+element+'.php</filename><filename>version.txt</filename></files>'
             code=element+'.php';marker='version.txt'
-        if extension_type=='template':
-            files='<files><filename>index.php</filename><filename>version.txt</filename></files>'
+        if extension_type in ['template','library']:
+            files=('<libraryname>'+element+'</libraryname>' if extension_type=='library' else '')+'<files><filename>index.php</filename><filename>version.txt</filename></files>'
             code='index.php';marker='version.txt'
         z.writestr('templateDetails.xml' if extension_type=='template' else element+'.xml','<extension type="'+extension_type+'" group="system" client="'+('administrator' if client else 'site')+'" method="upgrade"><name>'+element+'</name><version>'+version+'</version>'+files+'</extension>')
         z.writestr(code,"<?php defined('_JEXEC') or die;\n")
@@ -215,11 +215,16 @@ try:
     code,html=panel('updateExecute')
     (store/'panel-result.html').write_text(html,encoding='utf-8')
     check(code==200 and 'state: updated' in html,'native update through panel and verified TLS')
-    current=fixture('inspect');check(current=={'id':remote['id'],'version':'1.1.0','enabled':0,'file':'1.1.0'},'same native extension ID and new files/version')
+    current=fixture('inspect')
+    if kind=='library':
+        receipt=request()[1]
+        check(current['id']!=remote['id'] and receipt['plan']['extension_id']==remote['id'] and receipt['installed_extension_id']==current['id'],'original and replacement IDs recorded honestly')
+    check(current=={'id':current['id'] if kind=='library' else remote['id'],'version':'1.1.0','enabled':1 if kind=='library' else 0,'file':'1.1.0'},'native identity and new files/version verified')
     before=post_effects;panel('updateExecute');check(post_effects==before,'completed panel operation cannot reinstall')
     check(request()[1]['status']=='updated','GET returns persisted receipt')
     check(request(execute=True)[1]['status']=='updated','duplicate remote update returns receipt')
     check(str(store).encode() not in request()[2] and token.encode() not in request()[2],'receipt has no private path or credential')
+    if kind=='library': remote['id']=current['id']
     prepare('native-update-02',v3,'1.1.0','1.2.0');panel('updateBegin','native-update-02')
     drop=True;code,html=panel('updateExecute','native-update-02')
     check('state: uncertain' in html and fixture('inspect')['version']=='1.2.0','lost response after native install leaves central uncertain')

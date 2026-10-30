@@ -40,3 +40,10 @@ Remaining: installed connector adapter, separate real update ACL/credential,
 HTTPS and central UI orchestration, trusted package acquisition and preflight,
 Joomla core update, restore-after-update, compatibility and release acceptance.
 This is an experimental local primitive, not an end-to-end remote update feature.
+
+30 October: the internal library provider can opt into replacement IDs after exact native
+identity verification. The prepared plan keeps its original extension_id; updated receipts
+include installed_extension_id. Other callers still require the same ID. False results,
+missing/ambiguous identity, wrong version and thrown exceptions remain uncertain and cannot
+be retried. This is a journal contract, not rollback. Native library postflight failure
+has been tested with actual removal of the original library and no surviving replacement.

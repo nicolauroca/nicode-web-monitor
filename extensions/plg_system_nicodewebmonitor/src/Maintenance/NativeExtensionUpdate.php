@@ -38,12 +38,22 @@ final class NativeExtensionUpdate
             || $permit['expires_at'] > time()+900) { throw new \RuntimeException('Invalid permit'); }
         $plan = $permit['plan']; $identity = $permit['identity'];
         if (array_keys($identity) !== ['type','element','folder','client_id']
-            || !in_array($identity['type'], ['plugin','module','component','template'], true)
+            || !in_array($identity['type'], ['plugin','module','component','template','library'], true)
             || !in_array($identity['client_id'], [0,1], true)
             || !preg_match('/^[a-z0-9_]+$/D', $identity['element'])
             || !preg_match('/^[a-z0-9_]*$/D', $identity['folder'])) { throw new \RuntimeException('Unsupported identity'); }
         $inspect = function () use ($plan, $identity): array {
-            $row = $this->db->setQuery('SELECT extension_id,type,element,folder,client_id,protected,manifest_cache FROM #__extensions WHERE extension_id='.(int)$plan['extension_id'])->loadAssoc();
+            // Libraries are uninstalled/reinstalled by Joomla: match the complete identity,
+            // never a guessed replacement ID. Duplicates and surviving original rows fail closed.
+            $where = $identity['type'] === 'library'
+                ? 'type='.$this->db->quote($identity['type']).' AND element='.$this->db->quote($identity['element']).' AND folder='.$this->db->quote($identity['folder']).' AND client_id='.$identity['client_id']
+                : 'extension_id='.(int)$plan['extension_id'];
+            $rows = $this->db->setQuery('SELECT extension_id,type,element,folder,client_id,protected,package_id,manifest_cache FROM #__extensions WHERE '.$where)->loadAssocList();
+            if (count($rows) !== 1) { throw new \RuntimeException('Ambiguous installed identity'); }
+            $row = $rows[0];
+            if ($identity['type'] === 'library' && (int)$row['package_id'] !== 0) { throw new \RuntimeException('Package-owned library unsupported'); }
+            if ((int)$row['extension_id'] !== $plan['extension_id']
+                && $this->db->setQuery('SELECT extension_id FROM #__extensions WHERE extension_id='.(int)$plan['extension_id'])->loadResult()) { throw new \RuntimeException('Original extension still present'); }
             if (!$row || (int)$row['protected'] !== 0 || $row['type'] !== $identity['type']
                 || $row['element'] !== $identity['element'] || $row['folder'] !== $identity['folder']
                 || (int)$row['client_id'] !== $identity['client_id']) { throw new \RuntimeException('Identity changed'); }
@@ -105,6 +115,6 @@ final class NativeExtensionUpdate
                 }
                 return $installer->install($p['extractdir']);
             } finally { \Joomla\Filesystem\Folder::delete($p['extractdir']); }
-        }));
+        }, $identity['type'] === 'library'));
     }
 }

@@ -38,7 +38,7 @@ The 0.8.0-dev central component queues prepared Joomla core updates with separat
 credentials and permissions, then reconciles their status. A remote CLI must still
 execute and verify the queued operation; see `docs/core-dispatch.txt`.
 Version 0.7.0-dev of the central component and 0.5.0-dev of the connector add
-locally prepared plugin, module, component and template updates through the panel, with a separate credential and
+locally prepared plugin, module, component, template and standalone library updates through the panel, with a separate credential and
 permission, explicit confirmation, native installation and lost-response
 reconciliation. Start-to-finish instructions: `docs/extension-update-http.txt`.
 The central backup administrator forms support enrollment, explicit single-step
@@ -135,7 +135,7 @@ through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequenci
 reconciliation and private layout. Capture is not proof of restoration. Central
 backup forms, real user permissions and the operation journal are tested; an
 append-only maintenance history and the remaining extension
-types (packages and libraries) remain pending. Prepared extension updates are described in
+types (compound packages and package-owned libraries) remain pending. Prepared extension updates are described in
 `docs/extension-update-http.txt`; current integration evidence is in
 `docs/verification-2026-10-27.txt`.
 

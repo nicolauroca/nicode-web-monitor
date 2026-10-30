@@ -23,6 +23,27 @@ try {
     // A truncated terminal receipt must fail closed, never call provider again.
     file_put_contents($root.'/update-false/completed.json','{');
     try{$core->run('update-false',$plan,true,true,$inspect,$install);check(false);}catch(JsonException $e){check($calls===1);}
+    foreach ([false,true] as $allow) {
+        $state=['extension_id'=>1,'version'=>'1.0.0'];$runs=0;
+        $read=function()use(&$state){return $state;};
+        $replace=function()use(&$state,&$runs){$runs++;$state=['extension_id'=>2,'version'=>'1.1.0'];return true;};
+        $op=$allow?'replace-allowed':'replace-denied';
+        $result=$core->run($op,$plan,true,true,$read,$replace,$allow);
+        check($result['status']===($allow?'updated':'uncertain'));
+        check($result['plan']['extension_id']===1);
+        check($allow?($result['installed_extension_id']===2):!isset($result['installed_extension_id']));
+        check($core->run($op,$plan,true,true,$read,$replace,$allow)===$result && $runs===1);
+    }
+    // Partial replacement and exception after effects remain reserved, never retried.
+    foreach (['old-version','missing-identity','installer-false'] as $failure) {
+        $state=['extension_id'=>1,'version'=>'1.0.0'];$runs=0;
+        $read=function()use(&$state){if($state===null)throw new RuntimeException('Missing identity');return $state;};
+        $partial=function()use(&$state,&$runs,$failure){$runs++;$state=$failure==='missing-identity'?null:['extension_id'=>2,'version'=>'1.0.0'];return $failure!=='installer-false';};
+        $op='partial-'.$failure;
+        try{$core->run($op,$plan,true,true,$read,$partial,true);}catch(RuntimeException $e){check($e->getMessage()==='Missing identity');}
+        check($core->status($op)['status']==='uncertain');
+        check($core->run($op,$plan,true,true,$read,$partial,true)['status']==='uncertain' && $runs===1);
+    }
     echo json_encode(['passed'=>$n])."\n";
 } finally {
     foreach(glob($root.'/*') as $p){if(is_dir($p)){foreach(glob($p.'/*') as $f){unlink($f);}rmdir($p);}else{unlink($p);}}

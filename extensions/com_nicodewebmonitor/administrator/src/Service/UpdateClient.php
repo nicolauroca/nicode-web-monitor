@@ -152,7 +152,13 @@ final class UpdateClient
             || !is_string($plan['from'] ?? null) || !is_string($plan['to'] ?? null)
             || strlen($plan['from'])>64 || strlen($plan['to'])>64 || !version_compare($plan['to'], $plan['from'], '>')
             || !is_string($plan['package_sha256'] ?? null) || !preg_match('/^[a-f0-9]{64}$/D', $plan['package_sha256'])) { return null; }
+        $extra = [];
+        if (array_key_exists('installed_extension_id', $data)) {
+            if ($this->scope !== 'extension_update' || $data['status'] !== 'updated'
+                || !is_int($data['installed_extension_id']) || $data['installed_extension_id'] < 1) { return null; }
+            $extra['installed_extension_id'] = $data['installed_extension_id'];
+        }
         return ['site_id'=>$siteId,'operation'=>$operation,'scope'=>$this->scope,'status'=>$data['status'],
-            'plan'=>array_intersect_key($plan, array_flip(['extension_id','from','to','package_sha256']))];
+            'plan'=>array_intersect_key($plan, array_flip(['extension_id','from','to','package_sha256']))] + $extra;
     }
 }

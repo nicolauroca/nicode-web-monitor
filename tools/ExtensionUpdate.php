@@ -11,7 +11,7 @@ final class ExtensionUpdate
 
     /** Callbacks are locally bound, never supplied by a remote caller. */
     public function run(string $operation, array $plan, bool $authorized, bool $confirmed,
-        \Closure $inspect, \Closure $install): array {
+        \Closure $inspect, \Closure $install, bool $allowReplacement = false): array {
         if (!$authorized || !$confirmed) { throw new \RuntimeException('Permission and confirmation required'); }
         if (!preg_match('/^[a-z0-9-]{8,64}$/D', $operation)
             || array_keys($plan) !== ['extension_id', 'from', 'to', 'package_sha256']
@@ -43,10 +43,13 @@ final class ExtensionUpdate
             $record = ['operation' => $operation, 'fingerprint' => $fingerprint, 'plan' => $plan, 'status' => 'uncertain'];
             $this->write($path . '/started.json', $record);
             // Any exception, false result or process death leaves a non-retryable reservation.
-            if ($install($plan['package_sha256']) !== true
-                || $inspect() !== ['extension_id' => $plan['extension_id'], 'version' => $plan['to']]) {
-                return $record;
-            }
+            if ($install($plan['package_sha256']) !== true) { return $record; }
+            $observed = $inspect();
+            if (array_keys($observed) !== ['extension_id', 'version']
+                || !is_int($observed['extension_id']) || $observed['extension_id'] < 1
+                || (!$allowReplacement && $observed['extension_id'] !== $plan['extension_id'])
+                || $observed['version'] !== $plan['to']) { return $record; }
+            if ($allowReplacement) { $record['installed_extension_id'] = $observed['extension_id']; }
             $record['status'] = 'updated';
             $this->write($path . '/completed.json', $record);
             return $record;

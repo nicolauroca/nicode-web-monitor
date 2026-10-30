@@ -38,6 +38,11 @@ foreach([
     array_replace($valid,['plan'=>array_replace($valid['plan'],['package_sha256'=>'invalid'])]),
 ] as $bad)check($receipt->invoke($client,$bad,$site,'contract-update',true,200)===null,'inconsistent receipt denied');
 check($receipt->invoke($client,$valid,$site,'contract-update',true,202)===null,'HTTP status must match receipt');
+$replacement=$valid+['installed_extension_id'=>8];
+check($receipt->invoke($client,$replacement,$site,'contract-update',true,200)===$replacement,'replacement ID preserved by client');
+foreach([0,-1,'8',null] as $id)check($receipt->invoke($client,array_replace($replacement,['installed_extension_id'=>$id]),$site,'contract-update',true,200)===null,'invalid replacement ID denied');
+$reply=$endpoint->handle($server,[],json_encode($r),fn()=>$replacement);
+check($reply[1]['installed_extension_id']===8 && $reply[1]['plan']['extension_id']===7,'transport preserves both identities');
 $coreClient=new UpdateClient(scope:'core_update');
 $coreValid=array_replace($valid,['scope'=>'core_update','status'=>'queued']);
 check($receipt->invoke($coreClient,$coreValid,$site,'contract-update',true,202)===$coreValid,'core client accepts queued receipt');

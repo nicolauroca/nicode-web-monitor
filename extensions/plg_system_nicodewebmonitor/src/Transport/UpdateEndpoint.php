@@ -57,7 +57,7 @@ final class UpdateEndpoint
             }
             return [in_array($receipt['status'], ['updated','verified'], true) ? 200 : 202,
                 ['site_id'=>$this->siteId, 'operation'=>$r['operation'], 'scope'=>$this->scope]
-                + array_intersect_key($receipt, array_flip(['status','plan']))];
+                + array_intersect_key($receipt, array_flip(['status','plan','installed_extension_id']))];
         } catch (\OutOfBoundsException) { return [404, ['error'=>'operation_unknown']]; }
         catch (\Throwable) { return [409, ['error'=>'update_not_confirmed']]; }
     }

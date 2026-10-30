@@ -42,8 +42,52 @@ first child. The observation includes the orphan by identity and the journal
 preserves this mixed state as uncertain. Another maintenance owner is rejected.
 
 Remote compound-package updates are STILL DISABLED. This local primitive is
-not wired into NativeExtensionUpdate, HTTP or the panel's update action. Before
-enabling them, implement recursive archive/manifest preflight, prepared-plan
-binding to complete child identities and target versions, transport validation,
+not wired into NativeExtensionUpdate, HTTP or the panel's update action. Archive
+inspection and local prepared-plan binding are now available below. Before
+enabling remote execution, implement transport validation and adapter binding,
 panel presentation of partial results, and native HTTPS/ACL/lost-response tests.
 Package-owned standalone libraries remain rejected. This is not release acceptance.
+
+Local archive inspection and preparation (30 October, evening)
+Use a trusted package obtained separately. Hashes bind bytes; they do not prove
+publisher authenticity or make installer scripts safe. Use the site's PHP CLI
+with ZIP and SimpleXML enabled. From a checkout:
+php tools/inspect_package_archive.php /private/package.zip EXPECTED_SHA256
+
+The report contains the parent element/version, every declared child's complete
+identity and version, child ZIP SHA256 values and the outer ZIP SHA256. All ZIPs
+are inspected without extraction or script execution. Temporary child archives
+are deleted. Parent plus child expanded data share a 128 MiB inspection budget;
+each archive has at most 10,000 entries, with at most 32 children. Paths, collisions,
+special files, encryption, entity declarations, ambiguous root manifests, missing
+or duplicate children and declaration/manifest identity conflicts fail closed.
+Supported structure: canonical root package manifest and root-level child ZIPs
+of plugin/module/component/template/library types. Nested package ownership and
+files-folder layouts are rejected, not silently flattened or partially accepted.
+Passing inspection does not predict installer script success or guarantee rollback.
+
+For a disposable rehearsal, first install the previous package, put Joomla offline,
+stop independent writers and independently verify recovery. Create a private
+directory outside and not containing the web root. Then:
+php tools/prepare_package_update.php /path/to/joomla /private/compound /private/package.zip unique-operation-id --writers-stopped-and-recovery-verified
+
+The command reads the native registry and requires the exact complete child set,
+ownership and non-protected rows. A newer parent and no child downgrades are
+required. Adding/removing children remains unsupported. It copies the archive,
+re-inspects that copy and rechecks the installed baseline before writing a durable
+15-minute compound-package-v1 permit. Existing operation directories/receipts
+are never overwritten. Failed preparation can leave a reserved directory without
+a permit; preserve it and investigate, rather than reusing its operation ID.
+This is preparation only: no maintenance gate is acquired, installation is not
+performed and the remote extension provider still rejects compound packages.
+The future consumer must validate kind/expiry/copy/baseline again under the shared
+gate and use PackageOperation; do not send this permit to the current single-
+extension endpoint or infer an execution instruction from the prepared result.
+
+Verification: tests/package_preflight.php exercises adversarial archives and
+plan-to-journal binding without Joomla; 33 checks. The retained native success
+and partial-failure archives from the afternoon all pass archive inspection.
+Evening native preparation adds 12 checks against Joomla 6.1.4 / PHP 8.4.26 /
+MariaDB: exact parent/two-child baseline, verified copy, no installation effects,
+reused-operation rejection, non-upgrade rejection, offline requirement and cleanup.
+The synthetic installed fixture is removed; no update or HTTP acceptance is claimed.

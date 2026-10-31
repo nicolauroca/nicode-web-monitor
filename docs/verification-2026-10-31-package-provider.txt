@@ -1,0 +1,34 @@
+Nicode.joomla.webmonitor — prepared compound package consumer, development status
+
+Local workflow (trusted administrator, disposable/recoverable site first):
+1. Stop application writers, verify an independent recovery procedure and take
+   Joomla offline. The recovery flag is an operator attestation, not a backup test.
+2. Prepare with tools/prepare_package_update.php ROOT PRIVATE_PACKAGE_DIR
+   TRUSTED_ZIP OPERATION --writers-stopped-and-recovery-verified.
+3. Execute tools/run_package_update.php ROOT PRIVATE_PACKAGE_DIR SHARED_GATE_DIR
+   OPERATION execute --explicit-local-maintenance within the 15 minute permit.
+   Use the SAME existing private maintenance gate as all other maintenance
+   providers for this site. Do not create a separate gate to bypass reservations.
+4. Query the same command with status instead of execute to reconcile a lost
+   response. A recorded attempt is returned without reinstalling, including
+   after expiry. Never create another operation to retry uncertain effects.
+
+The consumer rechecks archive/child hashes, exact parent/child baseline,
+ownership, versions and permit under the shared lock before effects. The native
+installer receives the vetted local ZIP. Every recorded attempt has durable
+status. A partial failure retains the shared maintenance reservation; recovery
+and reconciliation are required. No automatic rollback or gate reset exists.
+
+31 October disposable Joomla 6.1.4 / PHP 8.4 / MariaDB lab:
+28 checks: unknown status; expired, tampered, online and changed-baseline
+rejection before reservation with unchanged registry; successful 1.0 -> 1.1
+compound update including replacement library ID; durable replay after expiry
+and online; native module preflight failure in 1.2, exact partial observation,
+retained gate and no repeat install; competing shared maintenance refused without
+installer effects or owner replacement; synthetic fixture removal. Configuration
+restored and lab stopped. The CLI is exercised against retained synthetic ZIPs
+from tests/package_native.php, not production or third-party packages.
+
+HTTP/panel compound transport remains disabled. This closes local permit
+consumption, not full product acceptance. Compatibility matrix, guided pairing,
+external notifications, append-only history and final acceptance remain open.

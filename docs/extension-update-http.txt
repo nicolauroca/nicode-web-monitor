@@ -6,7 +6,9 @@ The central Joomla component can execute a locally prepared extension update on 
 second Joomla through verified HTTPS, then query its durable receipt. Inventory,
 backup and update credentials are separate. This provider supports plugins, site and
 administrator modules, components, site/administrator templates and standalone libraries.
-Compound packages and package-owned libraries remain unsupported. Joomla core uses its separate provider described in core-dispatch.txt.
+Prepared compound packages use the same endpoint with complete parent/child receipts;
+see compound-packages.txt. Updating a package-owned library independently remains
+unsupported. Joomla core uses its separate provider described in core-dispatch.txt.
 This is development code for disposable installations, not a production release.
 
 Start from source
@@ -132,4 +134,5 @@ stayed uncertain and retained the shared maintenance gate; retry did not reinsta
 This does NOT provide automatic rollback: keep the verified recovery copy, investigate
 the native state and follow maintenance-gate recovery before allowing further changes.
 The successful native/HTTPS tests also cover lost-response reconciliation without replay.
-Compound packages remain blocked pending child-identity/partial-install recovery coverage.
+Compound packages are integrated as of 31 October with exact child identities,
+partial observations and non-retryable uncertainty; see compound-packages.txt.

@@ -41,11 +41,12 @@ the parent and module remain at 1.1.0. Native installation does not restore the
 first child. The observation includes the orphan by identity and the journal
 preserves this mixed state as uncertain. Another maintenance owner is rejected.
 
-Remote compound-package updates are STILL DISABLED. This local primitive is
-not wired into NativeExtensionUpdate, HTTP or the panel's update action. Archive
-inspection and local prepared-plan binding are now available below. Before
-enabling remote execution, implement transport validation and adapter binding,
-panel presentation of partial results, and native HTTPS/ACL/lost-response tests.
+Remote compound-package updates are integrated in the development connector as
+of 31 October. The same update_extension endpoint and nwm.update permission use
+the locally prepared permit to select the compound adapter. There is no remote
+package path, URL or kind selector. Parent and child observations, versions and
+replacement IDs survive HTTPS transport and appear in the panel. Partial effects
+remain uncertain; query status and investigate locally, never retry installation.
 Package-owned standalone libraries remain rejected. This is not release acceptance.
 
 Local archive inspection and preparation (30 October, evening)
@@ -78,11 +79,11 @@ re-inspects that copy and rechecks the installed baseline before writing a durab
 15-minute compound-package-v1 permit. Existing operation directories/receipts
 are never overwritten. Failed preparation can leave a reserved directory without
 a permit; preserve it and investigate, rather than reusing its operation ID.
-This is preparation only: no maintenance gate is acquired, installation is not
-performed and the remote extension provider still rejects compound packages.
-The future consumer must validate kind/expiry/copy/baseline again under the shared
-gate and use PackageOperation; do not send this permit to the current single-
-extension endpoint or infer an execution instruction from the prepared result.
+This is preparation only: no maintenance gate is acquired or installation performed.
+Register the prepared operation ID in the panel, then confirm execution explicitly.
+The consumer revalidates kind/expiry/copy/baseline under the shared maintenance
+gate and uses PackageOperation. Status reads remain available after permit expiry.
+Lost responses are reconciled by GET; the panel never resends uncertain operations.
 
 Verification: tests/package_preflight.php exercises adversarial archives and
 plan-to-journal binding without Joomla; 33 checks. The retained native success
@@ -90,4 +91,16 @@ and partial-failure archives from the afternoon all pass archive inspection.
 Evening native preparation adds 12 checks against Joomla 6.1.4 / PHP 8.4.26 /
 MariaDB: exact parent/two-child baseline, verified copy, no installation effects,
 reused-operation rejection, non-upgrade rejection, offline requirement and cleanup.
-The synthetic installed fixture is removed; no update or HTTP acceptance is claimed.
+The synthetic installed fixture was removed; that preparation test alone did not
+establish update or HTTP acceptance.
+
+31 October HTTP acceptance: tests/package_http.py reuses the disposable update
+HTTP harness and accepts --package-fixtures with the three ZIPs produced by
+tests/package_native.php. The library/module fixture upgrades through real Joomla,
+with verified TLS and real reader/backup/update users. Tests cover CSRF, explicit
+confirmation, dropped POST response and GET reconciliation, replacement IDs in the
+panel, partial module failure with orphan library, durable gate retention and no
+reinstallation. Test fixtures and temporary transport overrides are removed.
+Registry observations do not prove file integrity. Compatibility beyond the tested
+Joomla/PHP/MariaDB combination, guided pairing, external notifications and immutable
+history remain separate acceptance work.

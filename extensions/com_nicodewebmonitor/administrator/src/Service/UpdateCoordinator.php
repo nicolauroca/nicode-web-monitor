@@ -70,7 +70,16 @@ final class UpdateCoordinator
     public function recent(): array
     {
         $this->permit();
-        return $this->db->setQuery('SELECT operation,site,status,updated_at FROM #__nwm_update_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        $rows = $this->db->setQuery('SELECT operation,site,status,updated_at,receipt FROM #__nwm_update_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        foreach ($rows as &$row) {
+            $receipt = json_decode($row['receipt'],true);
+            unset($row['receipt']);
+            if (is_array($receipt) && isset($receipt['compound'])) {
+                try { $row['compound']=PackageReceipt::validate($receipt); }
+                catch (\Throwable) { /* Invalid stored observations are not rendered. */ }
+            }
+        }
+        return $rows;
     }
 
     public function run(string $operation, bool $advance = false, bool $confirmed = false): array

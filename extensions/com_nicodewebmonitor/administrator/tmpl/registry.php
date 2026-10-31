@@ -140,6 +140,17 @@ if ($canBackup ?? false) {
 <?php endforeach; ?>
 <?php foreach ($updateOperations as $op): ?>
 <article class="nwm-update"><h3><?= $escape($op['operation']) ?></h3><p>Site #<?= (int)$op['site'] ?>; state: <?= $escape($op['status']) ?></p>
+<?php if (isset($op['compound'])): ?>
+<details><summary>Package and child observations</summary>
+<?php foreach (['before'=>'Before update','observed'=>'Last recorded observation'] as $phase=>$label): ?>
+<h4><?= $label ?></h4>
+<?php if ($op['compound'][$phase] === null): ?><p>No observation available. Query status; do not repeat installation.</p>
+<?php else: ?><ul>
+<?php foreach (array_merge($op['compound'][$phase]['parents'],$op['compound'][$phase]['children']) as $row): ?>
+<li><?= $escape($row['identity']['type'].' '.$row['identity']['element']) ?>; ID <?= (int)$row['id'] ?>; package ID <?= (int)$row['package_id'] ?>; version <?= $escape($row['version'] ?? 'unknown') ?></li>
+<?php endforeach; ?></ul><?php endif; ?>
+<?php endforeach; ?></details>
+<?php endif; ?>
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateStatus"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
 <?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Query update status</button></form>
 <?php if ($op['status']==='ready'): ?>

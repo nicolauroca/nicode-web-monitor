@@ -150,9 +150,14 @@ final class UpdateClient
         $plan = $data['plan'] ?? null;
         if (!is_array($plan) || !is_int($plan['extension_id'] ?? null) || $plan['extension_id'] < 1
             || !is_string($plan['from'] ?? null) || !is_string($plan['to'] ?? null)
-            || strlen($plan['from'])>64 || strlen($plan['to'])>64 || !version_compare($plan['to'], $plan['from'], '>')
+            || strlen($plan['from'])>80 || strlen($plan['to'])>80 || !version_compare($plan['to'], $plan['from'], '>')
             || !is_string($plan['package_sha256'] ?? null) || !preg_match('/^[a-f0-9]{64}$/D', $plan['package_sha256'])) { return null; }
         $extra = [];
+        if (array_key_exists('compound', $data)) {
+            if ($this->scope !== 'extension_update' || array_key_exists('installed_extension_id',$data)) { return null; }
+            try { $extra['compound'] = PackageReceipt::validate($data); }
+            catch (\Throwable) { return null; }
+        }
         if (array_key_exists('installed_extension_id', $data)) {
             if ($this->scope !== 'extension_update' || $data['status'] !== 'updated'
                 || !is_int($data['installed_extension_id']) || $data['installed_extension_id'] < 1) { return null; }

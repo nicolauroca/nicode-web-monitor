@@ -35,6 +35,9 @@ output = root / 'dist/com_nicodewebmonitor-0.8.0-dev.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(component).as_posix(): source_bytes(p) for p in component.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = source_bytes(root / 'LICENSE')
+    for name in ['PackageReceipt', 'PackageState']:
+        files['administrator/src/Service/' + name + '.php'] = source_bytes(root / 'tools' / (name + '.php')).replace(
+            b'Nicode\\Maintenance', b'Nicode\\Component\\NicodeWebMonitor\\Administrator\\Service')
     for name, content in sorted(files.items()):
         info = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
         info.compress_type = zipfile.ZIP_DEFLATED
@@ -51,7 +54,7 @@ for file in (source / 'src/Inventory').glob('*.php'):
     files['src/Inventory/' + file.name] = source_bytes(file).replace(
         b'Nicode\\Plugin\\Console\\NicodeWebMonitor', b'Nicode\\Plugin\\System\\NicodeWebMonitor')
 files['LICENSE.txt'] = source_bytes(root / 'LICENSE')
-for name in ['BackupOperations', 'FileSnapshot', 'DatabaseSnapshot', 'SiteSnapshot', 'TreeOperations', 'TreeManifest', 'ResumableFile', 'ResumableTree', 'ResumableDatabase', 'ResumableSite', 'ExtensionUpdate', 'MaintenanceGate', 'CoreDispatch', 'CoreOperation']:
+for name in ['BackupOperations', 'FileSnapshot', 'DatabaseSnapshot', 'SiteSnapshot', 'TreeOperations', 'TreeManifest', 'ResumableFile', 'ResumableTree', 'ResumableDatabase', 'ResumableSite', 'ExtensionUpdate', 'MaintenanceGate', 'CoreDispatch', 'CoreOperation', 'PackageReceipt', 'PackageState', 'PackagePreflight', 'PackageOperation', 'NativePackageUpdate']:
     files['src/Maintenance/' + name + '.php'] = source_bytes(root / 'tools' / (name + '.php')).replace(
         b'Nicode\\Maintenance', b'Nicode\\Plugin\\System\\NicodeWebMonitor\\Maintenance')
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

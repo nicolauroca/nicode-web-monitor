@@ -134,8 +134,10 @@ Joint resumable file/database capture is available in the development connector
 through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
 reconciliation and private layout. Capture is not proof of restoration. Central
 backup forms, real user permissions and the operation journal are tested; an
-append-only maintenance history and the remaining extension
-types (compound packages and package-owned libraries) remain pending. Prepared extension updates are described in
+append-only maintenance history remains pending. Compound packages now include
+parent/child observations and partial-failure handling; independent updates of
+package-owned libraries remain rejected. See `docs/compound-packages.txt`.
+Prepared extension updates are described in
 `docs/extension-update-http.txt`; current integration evidence is in
 `docs/verification-2026-10-27.txt`.
 

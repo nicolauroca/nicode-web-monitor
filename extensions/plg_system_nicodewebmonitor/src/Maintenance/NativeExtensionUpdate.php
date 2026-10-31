@@ -23,15 +23,23 @@ final class NativeExtensionUpdate
         }
         $core = new ExtensionUpdate($this->storage.'/journal');
         // A receipt is authoritative even after the maintenance permit expires.
-        if (is_dir($this->storage.'/journal/'.$operation)) { return $core->status($operation); }
+        if (is_dir($this->storage.'/journal/'.$operation)) {
+            $receipt = $core->status($operation);
+            return isset($receipt['plan']['before'])
+                ? PackageReceipt::project((new PackageOperation($this->storage.'/journal'))->status($operation)) : $receipt;
+        }
         if (!$execute) { throw new \OutOfBoundsException('Unknown operation'); }
         $dir = $this->storage.'/prepared/'.$operation;
         BackupEndpoint::privateDirectory($dir, $this->webRoot);
         $file = $dir.'/permit.json';
-        if (!$this->offline || !is_file($file) || is_link($file) || filesize($file)>4096) {
+        if (!$this->offline || !is_file($file) || is_link($file) || filesize($file)>65536) {
             throw new \RuntimeException('Maintenance required');
         }
-        $permit = json_decode((string)file_get_contents($file), true, 16, JSON_THROW_ON_ERROR);
+        $permit = json_decode((string)file_get_contents($file), true, 32, JSON_THROW_ON_ERROR);
+        if (($permit['kind'] ?? null)==='compound-package-v1') {
+            return PackageReceipt::project((new NativePackageUpdate($this->db,$this->storage,$this->webRoot,
+                $this->offline,$this->maintenanceStorage))->handle($operation,$execute));
+        }
         if (($permit['operation'] ?? null) !== $operation || ($permit['writers_stopped'] ?? null) !== true
             || ($permit['recovery_verified'] ?? null) !== true
             || !is_int($permit['expires_at'] ?? null) || $permit['expires_at'] < time()

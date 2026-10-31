@@ -1,0 +1,27 @@
+Package: Nicode.joomla.webmonitor
+31 October 2026 - compound packages through central panel and HTTPS
+
+Joomla 6.1.4, PHP 8.4.26, MariaDB 11.8.9; two isolated Windows lab sites.
+31 compound HTTP/panel checks; 45 independent-library regression checks.
+14 receipt validation, 28 package journal and 31 update transport checks.
+Seven changed PHP files pass lint. Four ZIPs match a clean Git tree export.
+
+Prepared library/module package upgrades 1.0.0 to 1.1.0 through native Joomla.
+The test discards the successful POST response: the central journal remains
+uncertain, rejects resend, then reconciles by GET and renders before/after IDs.
+The library replacement ID differs and remains visible with its original ID.
+The next package rejects the module after replacing the library. The exact mixed
+state, including orphan ownership, is retained as uncertain; the common gate is
+held and neither the panel nor duplicate remote requests reinstall the package.
+Reader/backup roles cannot execute updates; CSRF and confirmation are required.
+Private paths and credentials are omitted from the projected observations.
+
+Fixtures and role users removed; temporary transport override restored; lab stopped.
+Partial-operation evidence and its gate remain in isolated test storage only.
+Harness corrections: accept an already-offline remote fixture; replace an expired
+local test certificate without disabling TLS verification. Final version-length
+alignment to the 80-character preparation limit was checked by receipt tests.
+
+No automatic rollback, immutable event history, broad compatibility or complete
+release acceptance is claimed. Nested packages and changes to the child set remain
+unsupported. Guided pairing and external notification delivery remain pending.

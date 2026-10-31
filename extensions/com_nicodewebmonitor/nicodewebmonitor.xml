@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension type="component" method="upgrade">
  <name>com_nicodewebmonitor</name><author>Nicolau Roca</author>
- <version>0.8.0-dev</version><description>Nicode Web Monitor â€” development site registry</description>
+ <version>0.9.0-dev</version><description>Nicode Web Monitor â€” development site registry</description>
  <license>GPL-2.0-or-later</license>
  <namespace path="src">Nicode\Component\NicodeWebMonitor</namespace>
  <scriptfile>script.php</scriptfile>

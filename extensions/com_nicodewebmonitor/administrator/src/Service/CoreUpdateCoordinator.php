@@ -7,6 +7,8 @@ namespace Nicode\Component\NicodeWebMonitor\Administrator\Service;
 use Joomla\CMS\User\User;
 use Joomla\Database\DatabaseInterface;
 
+require_once __DIR__ . '/MaintenanceHistory.php';
+
 /** Central journal: persist uncertainty before effects and reconcile with a read after failure. */
 final class CoreUpdateCoordinator
 {
@@ -62,7 +64,9 @@ final class CoreUpdateCoordinator
         }
         $record = (object)['operation'=>$id, 'site'=>$site, 'site_id'=>$row['site_id'], 'status'=>'ready',
             'receipt'=>'', 'updated_at'=>time()];
-        $this->db->insertObject('#__nwm_core_update_operations', $record);
+        (new MaintenanceHistory($this->db))->write('core', $id, (int)$this->user->id, function () use ($record) {
+            $this->db->insertObject('#__nwm_core_update_operations', $record);
+        });
         return $id;
     }
 
@@ -70,7 +74,9 @@ final class CoreUpdateCoordinator
     public function recent(): array
     {
         $this->permit();
-        return $this->db->setQuery('SELECT operation,site,status,updated_at FROM #__nwm_core_update_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        $rows = $this->db->setQuery('SELECT operation,site,status,updated_at FROM #__nwm_core_update_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        foreach ($rows as &$row) { $row['history'] = (new MaintenanceHistory($this->db))->recent('core', $row['operation']); }
+        return $rows;
     }
 
     public function run(string $operation, bool $advance = false, bool $confirmed = false): array
@@ -119,8 +125,10 @@ final class CoreUpdateCoordinator
 
     private function save(string $operation, string $status, string $receipt): void
     {
+        (new MaintenanceHistory($this->db))->write('core', $operation, (int)$this->user->id, function () use ($operation, $status, $receipt) {
         $this->db->setQuery('UPDATE #__nwm_core_update_operations SET status=' . $this->db->quote($status)
             . ',receipt=' . $this->db->quote($receipt) . ',updated_at=' . time()
             . ' WHERE operation=' . $this->db->quote($operation))->execute();
+        });
     }
 }

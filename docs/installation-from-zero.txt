@@ -12,7 +12,7 @@ Joomla y ejecutar PHP localmente para preparar mantenimiento en el supervisado.
 Clona el repositorio público y conserva el commit que estás probando. Desde su raíz
 ejecuta python tools/build.py. Python solo prepara los ZIP; no se instala en Joomla.
 El directorio dist contendrá cuatro paquetes independientes:
- - com_nicodewebmonitor-0.8.0-dev.zip: panel del Joomla central.
+ - com_nicodewebmonitor-0.9.0-dev.zip: panel del Joomla central.
  - plg_system_nicodewebmonitor-0.5.0-dev.zip: conector del Joomla supervisado.
  - plg_console_nicodewebmonitor-0.1.1-dev.zip: inventario local por CLI, opcional.
  - plg_task_nicodewebmonitor-0.1.0-dev.zip: comprobaciones programadas, opcional.
@@ -85,3 +85,5 @@ en la raíz y un nombre/elemento canónico en minúsculas. La actualización con
 ID y estilos existentes en las pruebas; verifica tu copia y detén los escritores
 antes de prepararla. No actives la plantilla de prueba como predeterminada.
 Las librerías y paquetes compuestos siguen bloqueados; no son funciones aceptadas.
+
+Actualizaci?n 31oct: 0.8.0-dev -> 0.9.0-dev comprobada por instalador nativo. Historial de mantenimiento desde 0.9; ver maintenance-history.txt. No reconstruye transiciones previas.

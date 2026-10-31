@@ -80,7 +80,7 @@ def request(execute=False,bearer=token):
     return cli('tests/core_client.php',data={'ca':str(a.certificate.resolve()),'url':url,'site_id':site_id,'token':bearer,'operation':operation,'execute':execute})
 
 central=a.central.resolve()
-cli('tests/update_fixture.php',central,'--allow-disposable-writes',data={'action':'install','packages':[str(repo/'dist/com_nicodewebmonitor-0.8.0-dev.zip')]})
+cli('tests/update_fixture.php',central,'--allow-disposable-writes',data={'action':'install','packages':[str(repo/'dist/com_nicodewebmonitor-0.9.0-dev.zip')]})
 path=central/'administrator/components/com_nicodewebmonitor/src/Service/CoreUpdateCoordinator.php'
 original=path.read_bytes()
 assert original.replace(b'\r\n',b'\n')==(repo/'extensions/com_nicodewebmonitor/administrator/src/Service/CoreUpdateCoordinator.php').read_bytes().replace(b'\r\n',b'\n')

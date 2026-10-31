@@ -18,7 +18,7 @@ $d=json_decode(stream_get_contents(STDIN),true,32,JSON_THROW_ON_ERROR);
 $asset=(int)$db->setQuery("SELECT id FROM #__assets WHERE name='com_nicodewebmonitor'")->loadResult();
 if ($d['action']==='snapshot') {
     $rows=[];
-    foreach (['sites','backup_credentials','backup_operations'] as $table) {
+    foreach (['sites','backup_credentials','backup_operations','maintenance_events'] as $table) {
         $rows[$table]=$db->setQuery('SELECT * FROM #__nwm_'.$table.' ORDER BY 1')->loadAssocList();
     }
     echo json_encode(['sha256'=>hash('sha256',json_encode($rows))]); exit;
@@ -73,6 +73,7 @@ try {
             $db->insertObject('#__nwm_backup_operations',$op);
         }
     } elseif ($d['action']==='cleanup') {
+        $db->setQuery('DELETE FROM #__nwm_maintenance_events WHERE site='.(int)$d['site'])->execute();
         foreach (['backup_operations','backup_credentials'] as $table) { $db->setQuery('DELETE FROM #__nwm_'.$table.' WHERE site='.(int)$d['site'])->execute(); }
         if (isset($d['users']['backup_operator'])) {
             foreach (['update_operations','update_credentials'] as $table) { $db->setQuery('DELETE FROM #__nwm_'.$table.' WHERE site='.(int)$d['site'])->execute(); }

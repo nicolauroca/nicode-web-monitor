@@ -119,7 +119,13 @@ if ($canBackup ?? false) {
 <button class="btn btn-outline-secondary nwm-backup-pause" type="button" disabled>Pause after current step</button>
 <p class="nwm-backup-progress" role="status" aria-live="polite">Ready. Keep this tab open. Pause finishes the current request; it does not undo a capture.</p>
 </form>
-<?php endif; ?></article>
+<?php endif; ?>
+<details><summary>Maintenance history (latest 50 observations)</summary>
+<p>Recorded from version 0.9. Earlier states are not reconstructed. Times are UTC.</p>
+<ol><?php foreach ($operation['history'] ?? [] as $event): ?>
+<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['recorded_at'])) ?> — <?= $escape($event['status']) ?>; actor #<?= (int)$event['actor_id'] ?><?php if ($event['next_sequence'] !== null): ?>; next step <?= (int)$event['next_sequence'] ?><?php endif; ?></li>
+<?php endforeach; ?></ol></details>
+</article>
 <?php endforeach; ?></section>
 <?php endif; ?>
 <?php if ($canUpdate): ?>
@@ -157,7 +163,13 @@ if ($canBackup ?? false) {
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
 <label><input type="checkbox" name="confirmed" value="1" required> Execute this prepared update now.</label>
 <?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Execute update</button></form>
-<?php endif; ?></article>
+<?php endif; ?>
+<details><summary>Maintenance history (latest 50 observations)</summary>
+<p>Recorded from version 0.9. Earlier states are not reconstructed. Times are UTC.</p>
+<ol><?php foreach ($op['history'] ?? [] as $event): ?>
+<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['recorded_at'])) ?> — <?= $escape($event['status']) ?>; actor #<?= (int)$event['actor_id'] ?><?php if ($event['next_sequence'] !== null): ?>; next step <?= (int)$event['next_sequence'] ?><?php endif; ?></li>
+<?php endforeach; ?></ol></details>
+</article>
 <?php endforeach; ?></section>
 <?php endif; ?>
 <?php if ($canCoreUpdate): ?>
@@ -184,7 +196,13 @@ if ($canBackup ?? false) {
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="coreUpdateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
 <label><input type="checkbox" name="confirmed" value="1" required> Queue this prepared Joomla update. The remote CLI runner must execute and verify it.</label>
 <?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Queue Joomla update</button></form>
-<?php endif; ?></article>
+<?php endif; ?>
+<details><summary>Maintenance history (latest 50 observations)</summary>
+<p>Recorded from version 0.9. Earlier states are not reconstructed. Times are UTC.</p>
+<ol><?php foreach ($op['history'] ?? [] as $event): ?>
+<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['recorded_at'])) ?> — <?= $escape($event['status']) ?>; actor #<?= (int)$event['actor_id'] ?><?php if ($event['next_sequence'] !== null): ?>; next step <?= (int)$event['next_sequence'] ?><?php endif; ?></li>
+<?php endforeach; ?></ol></details>
+</article>
 <?php endforeach; ?></section>
 <?php endif; ?>
 <?php if ($user->authorise('core.create', 'com_nicodewebmonitor')): ?>

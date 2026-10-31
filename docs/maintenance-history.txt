@@ -1,0 +1,34 @@
+Maintenance history — component 0.9.0-dev
+Package: Nicode.joomla.webmonitor
+
+Install or upgrade the central component using Joomla's extension installer.
+The schema update adds nwm_maintenance_events without changing existing operations.
+The connector does not need updating for this central-only feature.
+
+Open Nicode Web Monitor as an administrator with the relevant maintenance
+permission: nwm.backup, nwm.update or nwm.coreupdate, plus core.manage.
+Register a prepared operation or begin a backup, then expand Maintenance history
+under the operation. It shows the latest 50 observations, newest first, with UTC
+time, numeric actor ID and (for backups) next step. Observe the ready entry before
+confirming execution. An uncertain entry means query status before any further
+action. A successful reconciliation adds an observation and preserves uncertainty
+in the history. Repeated successful queries also append observations.
+
+Every new operation and persisted observation commits its current-state change
+and history entry atomically. Failure to persist uncertainty prevents remote
+dispatch. If persistence fails after remote effects, the earlier uncertainty
+remains: reconcile, never repeat the write blindly. Sequence IDs order observations
+within the same second. The table stores a receipt SHA-256, not raw receipts,
+credentials, URLs or exception messages. A hash is not proof of remote success.
+
+History begins on upgrade; previous transitions cannot be reconstructed.
+Application code appends events and does not rewrite or automatically prune them.
+Site removal keeps the event table for audit, while removing that site's operations
+from the panel. An operation ID reused for a different site does not expose the old
+site's events. Include this table in database backups. Storage grows with observations;
+there is no retention/export administration UI yet. These records are not tamper-proof:
+database administrators can change them. They are not a remote connector event log.
+
+Validation: real MariaDB transactions and Joomla users for all three coordinators;
+lost-response reconciliation, denied reader access, atomic history failure and no
+remote dispatch. Native installer upgrade and administrator HTTP backup history.

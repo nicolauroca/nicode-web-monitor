@@ -1,4 +1,4 @@
-Central sequenced backups (0.8.0-dev, 29 October 2026)
+Central sequenced backups (0.9.0-dev, 31 October 2026)
 
 The component now contains BackupClient and BackupCoordinator. These are backend
 services connected to the administrator panel through POST-only CSRF-protected forms.
@@ -23,8 +23,8 @@ requires autocommit and rejects an enclosing transaction. MariaDB named locks
 serialize each operation. A transport failure leaves uncertainty and prevents
 another advance. An explicit status read reconciles the same operation identity;
 an unknown remote operation is not permission to restart or create another copy.
-Receipts cannot regress the sequence or reopen a completed operation. This is a
-current operation journal, not yet an append-only audit/history interface.
+Receipts cannot regress the sequence or reopen a completed operation. The current-state journal is complemented by atomically appended observations;
+see maintenance-history.txt.
 
 HTTPS verifies certificate and hostname, pins the enrolled IP, disables redirects
 and proxies, bounds time/body/headers and never retries. Private IP exceptions and

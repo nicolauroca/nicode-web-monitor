@@ -81,10 +81,25 @@ try {
     $mode='throw'; check($service->run($id,true,true)['error']==='transport_failed','exception sanitized');
     $mode='complete'; check($service->run($id)['receipt']['status']==='complete','reconcile completed operation');
     $before=$calls; check(!$service->run($id,true,true)['ok'] && $calls===$before,'completed operation cannot advance');
+    $events=$service->recent()[0]['history'];
+    check(array_column($events,'status')===['complete','uncertain','progress','uncertain','progress','uncertain','ready'],'all prior states retained in order');
+    check(count(array_unique(array_column($events,'id')))===7,'same-second observations have distinct sequence IDs');
+    check(!str_contains(json_encode($events),$backup) && !str_contains(json_encode($events),'receipt'),'history projection omits secrets and receipts');
+    $preserved=$events;
+    $service->run($id);
+    check(array_slice($service->recent()[0]['history'],1)===$preserved,'later observation never overwrites previous events');
+    $before=$calls;
     $id2=$service->begin($site,true);
     $db->transactionStart();
     check($service->run($id2,true,true)['error']==='autocommit_required' && $calls===$before,'transaction prevents non-durable dispatch');
     $db->transactionRollback();
+    $db->setQuery('ALTER TABLE #__nwm_maintenance_events CHANGE recorded_at broken_column bigint NOT NULL')->execute();
+    try { $service->run($id2,true,true); throw new LogicException('missing history accepted'); }
+    catch (\Joomla\Database\Exception\ExecutionFailureException) { check($calls===$before,'history failure prevents remote dispatch'); }
+    check($db->setQuery('SELECT status FROM #__nwm_backup_operations WHERE operation='.$db->quote($id2))->loadResult()==='ready','history failure rolls state back');
+    try { $service->begin($site,true); throw new LogicException('missing history accepted'); }
+    catch (\Joomla\Database\Exception\ExecutionFailureException) { check((int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_backup_operations')->loadResult()===2,'begin rolls back on history failure'); }
+    $db->setQuery('ALTER TABLE #__nwm_maintenance_events CHANGE broken_column recorded_at bigint NOT NULL')->execute();
     $db->setQuery('UPDATE #__nwm_backup_credentials SET credential='.$db->quote('broken').' WHERE site='.$site)->execute();
     check($service->run($id2,true,true)['error']==='credential_unavailable' && $calls===$before,'corrupt secret prevents dispatch');
     check($db->setQuery('SELECT status FROM #__nwm_backup_operations WHERE operation='.$db->quote($id2))->loadResult()==='ready','pre-dispatch failure leaves ready journal');

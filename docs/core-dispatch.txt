@@ -1,14 +1,14 @@
 Nicode Web Monitor — prepared core dispatch (development, 28 October 2026)
 Package: Nicode.joomla.webmonitor
 
-This is an integration stage, not a release candidate. The 0.8.0-dev central panel
+This is an integration stage, not a release candidate. The 0.9.0-dev central panel
 has core credentials, ACL and a queue/status journal. An opt-in host runner now
 discovers queued core work and uses fresh CLI children. Queueing alone does not install;
 the host must invoke the runner. No host scheduling is installed by this product.
 The existing extension panel remains limited to plugins.
 
 CENTRAL PANEL FROM AN EXISTING JOOMLA 6 INSTALLATION
-Build with python tools/build.py and install com_nicodewebmonitor-0.8.0-dev.zip
+Build with python tools/build.py and install com_nicodewebmonitor-0.9.0-dev.zip
 through Joomla's extension installer. Existing versions migrate their tables;
 plugin update credentials and journals are retained in their own tables.
 First enroll the remote inventory identity as described in docs/site-registry.txt.

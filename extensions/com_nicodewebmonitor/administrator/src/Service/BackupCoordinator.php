@@ -7,6 +7,8 @@ namespace Nicode\Component\NicodeWebMonitor\Administrator\Service;
 use Joomla\CMS\User\User;
 use Joomla\Database\DatabaseInterface;
 
+require_once __DIR__ . '/MaintenanceHistory.php';
+
 /** Central journal: persist uncertainty before effects and reconcile with a read after failure. */
 final class BackupCoordinator
 {
@@ -59,7 +61,9 @@ final class BackupCoordinator
         $id = 'backup-' . bin2hex(random_bytes(16));
         $record = (object)['operation'=>$id, 'site'=>$site, 'site_id'=>$row['site_id'], 'status'=>'ready',
             'next_sequence'=>0, 'receipt'=>'', 'updated_at'=>time()];
-        $this->db->insertObject('#__nwm_backup_operations', $record);
+        (new MaintenanceHistory($this->db))->write('backup', $id, (int)$this->user->id, function () use ($record) {
+            $this->db->insertObject('#__nwm_backup_operations', $record);
+        });
         return $id;
     }
 
@@ -67,7 +71,9 @@ final class BackupCoordinator
     public function recent(): array
     {
         $this->permit();
-        return $this->db->setQuery('SELECT operation,site,status,next_sequence,updated_at FROM #__nwm_backup_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        $rows = $this->db->setQuery('SELECT operation,site,status,next_sequence,updated_at FROM #__nwm_backup_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        foreach ($rows as &$row) { $row['history'] = (new MaintenanceHistory($this->db))->recent('backup', $row['operation']); }
+        return $rows;
     }
 
     public function run(string $operation, bool $advance = false, bool $confirmed = false, ?int $expectedSequence = null): array
@@ -124,8 +130,10 @@ final class BackupCoordinator
 
     private function save(string $operation, string $status, int $next, string $receipt): void
     {
+        (new MaintenanceHistory($this->db))->write('backup', $operation, (int)$this->user->id, function () use ($operation, $status, $receipt, $next) {
         $this->db->setQuery('UPDATE #__nwm_backup_operations SET status=' . $this->db->quote($status)
             . ',next_sequence=' . $next . ',receipt=' . $this->db->quote($receipt) . ',updated_at=' . time()
             . ' WHERE operation=' . $this->db->quote($operation))->execute();
+        });
     }
 }

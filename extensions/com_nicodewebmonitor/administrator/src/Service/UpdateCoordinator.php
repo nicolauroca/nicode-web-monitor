@@ -7,6 +7,8 @@ namespace Nicode\Component\NicodeWebMonitor\Administrator\Service;
 use Joomla\CMS\User\User;
 use Joomla\Database\DatabaseInterface;
 
+require_once __DIR__ . '/MaintenanceHistory.php';
+
 /** Central journal: persist uncertainty before effects and reconcile with a read after failure. */
 final class UpdateCoordinator
 {
@@ -62,7 +64,9 @@ final class UpdateCoordinator
         }
         $record = (object)['operation'=>$id, 'site'=>$site, 'site_id'=>$row['site_id'], 'status'=>'ready',
             'receipt'=>'', 'updated_at'=>time()];
-        $this->db->insertObject('#__nwm_update_operations', $record);
+        (new MaintenanceHistory($this->db))->write('update', $id, (int)$this->user->id, function () use ($record) {
+            $this->db->insertObject('#__nwm_update_operations', $record);
+        });
         return $id;
     }
 
@@ -72,6 +76,7 @@ final class UpdateCoordinator
         $this->permit();
         $rows = $this->db->setQuery('SELECT operation,site,status,updated_at,receipt FROM #__nwm_update_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
         foreach ($rows as &$row) {
+            $row['history'] = (new MaintenanceHistory($this->db))->recent('update', $row['operation']);
             $receipt = json_decode($row['receipt'],true);
             unset($row['receipt']);
             if (is_array($receipt) && isset($receipt['compound'])) {
@@ -128,8 +133,10 @@ final class UpdateCoordinator
 
     private function save(string $operation, string $status, string $receipt): void
     {
+        (new MaintenanceHistory($this->db))->write('update', $operation, (int)$this->user->id, function () use ($operation, $status, $receipt) {
         $this->db->setQuery('UPDATE #__nwm_update_operations SET status=' . $this->db->quote($status)
             . ',receipt=' . $this->db->quote($receipt) . ',updated_at=' . time()
             . ' WHERE operation=' . $this->db->quote($operation))->execute();
+        });
     }
 }

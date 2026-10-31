@@ -26,6 +26,8 @@ Joomla/PHP/database versions, section availability and installed extensions with
 versions and enabled state. Unknown data stays explicit. Full inventory is not retained.
 Bounded check summaries and freshness states persist across visits; the dashboard
 shows recent history (see `docs/check-history.txt`).
+Central maintenance observations are now appended atomically with operation state;
+the panel retains prior uncertainty and reconciliation (see `docs/maintenance-history.txt`).
 Internal inventory alerts and bounded state transitions are now shown in the
 dashboard (see `docs/check-alerts.txt`). On narrow screens, each site's details,
 alerts and actions stack vertically without hiding columns off screen. Browser
@@ -34,7 +36,7 @@ An optional native Joomla task plugin now performs bounded automatic inventory
 batches with explicit permissions and oldest-first selection. Setup and current
 verification limits: `docs/automatic-monitoring.txt`.
 Guided pairing and external notifications remain pending.
-The 0.8.0-dev central component queues prepared Joomla core updates with separate
+The 0.9.0-dev central component queues prepared Joomla core updates with separate
 credentials and permissions, then reconciles their status. A remote CLI must still
 execute and verify the queued operation; see `docs/core-dispatch.txt`.
 Version 0.7.0-dev of the central component and 0.5.0-dev of the connector add
@@ -133,8 +135,8 @@ See `docs/connector-contract.txt` and `docs/verification-2026-10-05.txt`.
 Joint resumable file/database capture is available in the development connector
 through `backup_site`; see `docs/resumable-site.txt` for prerequisites, sequencing,
 reconciliation and private layout. Capture is not proof of restoration. Central
-backup forms, real user permissions and the operation journal are tested; an
-append-only maintenance history remains pending. Compound packages now include
+backup forms, real user permissions and the append-only central observation history
+are tested; see `docs/maintenance-history.txt` for scope and retention. Compound packages now include
 parent/child observations and partial-failure handling; independent updates of
 package-owned libraries remain rejected. See `docs/compound-packages.txt`.
 Prepared extension updates are described in

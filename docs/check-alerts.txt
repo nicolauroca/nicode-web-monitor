@@ -18,7 +18,8 @@ The first retained observation cannot establish recovery from discarded history.
 Failure reasons remain in the adjacent recent-check history. Distinct error
 reasons within the failed state do not generate additional state transitions.
 
-No notification, polling, acknowledgement or background task is implemented here.
+This projection does not itself send notifications or start tasks. Optional mail
+notifications run in the monitoring task; see pairing-and-notifications.txt.
 Reading the panel makes no database writes. Existing ACL, CSRF and retention
 controls are unchanged; removing a site also removes the data behind its alerts.
 Inventory alerts never establish whether the public website is available.

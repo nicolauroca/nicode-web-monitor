@@ -15,7 +15,7 @@ def source_bytes(path):
 
 root = Path(__file__).resolve().parents[1]
 source = root / 'extensions/plg_console_nicodewebmonitor'
-output = root / 'dist/plg_console_nicodewebmonitor-0.1.1-dev.zip'
+output = root / 'dist/plg_console_nicodewebmonitor-1.0.0-rc1.zip'
 output.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for file in sorted(source.rglob('*')):
@@ -31,7 +31,7 @@ with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compressleve
 print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
 component = root / 'extensions/com_nicodewebmonitor'
-output = root / 'dist/com_nicodewebmonitor-0.9.0-dev.zip'
+output = root / 'dist/com_nicodewebmonitor-1.0.0-rc1.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(component).as_posix(): source_bytes(p) for p in component.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = source_bytes(root / 'LICENSE')
@@ -48,7 +48,7 @@ print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 # Bundle the same collector into the independent HTTP plugin, with its own namespace.
 # Generated copies live only in the ZIP: one reviewed source of inventory behavior.
 connector = root / 'extensions/plg_system_nicodewebmonitor'
-output = root / 'dist/plg_system_nicodewebmonitor-0.5.0-dev.zip'
+output = root / 'dist/plg_system_nicodewebmonitor-1.0.0-rc1.zip'
 files = {p.relative_to(connector).as_posix(): source_bytes(p) for p in connector.rglob('*') if p.is_file()}
 for file in (source / 'src/Inventory').glob('*.php'):
     files['src/Inventory/' + file.name] = source_bytes(file).replace(
@@ -67,7 +67,7 @@ print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
 # Native Joomla scheduler plugin; no tasks are created during installation.
 source = root / 'extensions/plg_task_nicodewebmonitor'
-output = root / 'dist/plg_task_nicodewebmonitor-0.1.0-dev.zip'
+output = root / 'dist/plg_task_nicodewebmonitor-1.0.0-rc1.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(source).as_posix(): source_bytes(p) for p in source.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = source_bytes(root / 'LICENSE')

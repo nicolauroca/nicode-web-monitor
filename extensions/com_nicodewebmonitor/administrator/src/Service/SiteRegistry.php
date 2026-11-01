@@ -23,6 +23,7 @@ final class SiteRegistry
             $site['checks'] = array_slice($retained, 0, 10);
             $site['alerts'] = CheckAlerts::summarize($retained);
             $site['check_state'] = CheckHistory::state($site['checks'][0] ?? null);
+            $site['notification'] = $this->db->setQuery('SELECT delivery,evaluated_at,attempted_at FROM #__nwm_notifications WHERE site='.(int)$site['id'])->loadAssoc();
         }
         return $sites;
     }
@@ -61,6 +62,12 @@ final class SiteRegistry
     public function add(string $label, string $url, string $address, string $siteId, #[\SensitiveParameter] string $token): void
     {
         $this->permit('core.create');
+        self::validateEnrollment($label, $url, $address, $siteId, $token);
+        $row = (object) ['site_id'=>$siteId, 'label'=>trim($label), 'base_url'=>rtrim($url, '/'), 'address'=>$address, 'credential'=>$this->vault->seal($siteId, $token)];
+        $this->db->insertObject('#__nwm_sites', $row);
+    }
+    private static function validateEnrollment(string $label, string $url, string $address, string $siteId, #[\SensitiveParameter] string $token): void
+    {
         if (trim($label) === '' || strlen($label) > 120 || preg_match('/[\x00-\x1f\x7f]/', $label)
             || (new InventoryClient())->endpoint($url) === null
             || !filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)
@@ -68,8 +75,28 @@ final class SiteRegistry
             || !preg_match('/^[a-f0-9]{64}$/D', $token)) {
             throw new \InvalidArgumentException('Invalid enrollment');
         }
-        $row = (object) ['site_id'=>$siteId, 'label'=>trim($label), 'base_url'=>rtrim($url, '/'), 'address'=>$address, 'credential'=>$this->vault->seal($siteId, $token)];
-        $this->db->insertObject('#__nwm_sites', $row);
+    }
+    /** Verify read-only identity before persisting a guided enrollment. No maintenance is enabled. */
+    public function pair(string $label, string $url, string $address, string $siteId, #[\SensitiveParameter] string $token): array
+    {
+        $this->permit('core.create');
+        self::validateEnrollment($label, $url, $address, $siteId, $token);
+        $client = $this->clientFactory ? ($this->clientFactory)(5000) : new InventoryClient(timeoutMs: 5000);
+        $result = $client->fetch($url, $address, $siteId, $token);
+        if (($result['ok'] ?? false) !== true) {
+            throw new \RuntimeException('Pairing could not verify the connector');
+        }
+        $this->db->transactionStart(true);
+        try {
+            $this->add($label, $url, $address, $siteId, $token);
+            $id = (int)$this->db->insertid();
+            (new CheckHistory($this->db))->record($id, $result);
+            $this->db->transactionCommit(true);
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback(true);
+            throw $e;
+        }
+        return ['id'=>$id, 'status'=>$result['inventory']['status']];
     }
     public function remove(int $id): void
     {
@@ -78,6 +105,7 @@ final class SiteRegistry
         try {
             $this->db->setQuery('SELECT id FROM #__nwm_sites WHERE id=' . $id . ' FOR UPDATE')->loadResult();
             $this->db->setQuery('DELETE FROM #__nwm_checks WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_notifications WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_backup_credentials WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_backup_operations WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_core_update_credentials WHERE site=' . $id)->execute();

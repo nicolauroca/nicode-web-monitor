@@ -8,6 +8,7 @@ use Joomla\CMS\User\User;
 use Joomla\Database\DatabaseInterface;
 
 require_once __DIR__ . '/MaintenanceHistory.php';
+require_once __DIR__ . '/DurableDispatch.php';
 
 /** Central journal: persist uncertainty before effects and reconcile with a read after failure. */
 final class BackupCoordinator
@@ -104,8 +105,7 @@ final class BackupCoordinator
             catch (\Throwable) { return ['ok'=>false, 'error'=>'credential_unavailable']; }
             $sequence = $advance ? (int)$op['next_sequence'] : null;
             // Autocommit is required: a crash after dispatch must leave the durable uncertain marker.
-            if ((int)$this->db->setQuery('SELECT @@in_transaction')->loadResult() !== 0
-                || (int)$this->db->setQuery('SELECT @@autocommit')->loadResult() !== 1) {
+            if (!DurableDispatch::ready($this->db)) {
                 return ['ok'=>false, 'error'=>'autocommit_required'];
             }
             if ($advance) { $this->save($operation, 'uncertain', (int)$op['next_sequence'], ''); }

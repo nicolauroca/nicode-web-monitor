@@ -33,8 +33,15 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
             }
-            if (!in_array($task, ['add', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupContinue', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
+            if (!in_array($task, ['add', 'pair', 'notificationRetry', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupContinue', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
                 throw new \RuntimeException('Unknown task', 404);
+            }
+            if ($task === 'notificationRetry') {
+                if ($this->input->post->getString('confirmed') !== '1') { throw new \RuntimeException('Confirmation required',403); }
+                (new \Nicode\Component\NicodeWebMonitor\Administrator\Service\Notifications(Factory::getContainer()->get(DatabaseInterface::class), $user))->retry($this->input->post->getInt('id'));
+                $this->app->enqueueMessage('One notification attempt authorized for the next monitoring task. No email was sent by this action.');
+                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                return;
             }
             if (str_starts_with($task, 'update')) {
                 if (!$canUpdate || ($task === 'updateEnroll' && !$user->authorise('core.admin', 'com_nicodewebmonitor'))) {
@@ -130,7 +137,10 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             }
             try {
                 $post = $this->input->post;
-                if ($task === 'add') {
+                if ($task === 'pair') {
+                    $paired = $registry->pair($post->getString('label'), $post->getString('base_url'), $post->getString('address'), $post->getString('site_id'), $post->getString('credential'));
+                    $this->app->enqueueMessage($paired['status'] === 'complete' ? 'Connector identity verified; first inventory saved.' : 'Connector identity verified; inventory is partial. Review the site details.', $paired['status'] === 'complete' ? 'message' : 'warning');
+                } elseif ($task === 'add') {
                     $registry->add($post->getString('label'), $post->getString('base_url'), $post->getString('address'), $post->getString('site_id'), $post->getString('credential'));
                 } else {
                     $registry->remove($post->getInt('id'));
@@ -138,7 +148,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 $this->app->enqueueMessage('Site registry updated. Remote connector unchanged.');
             } catch (\Throwable $error) {
                 // Never expose driver errors, query values or submitted credentials.
-                $this->app->enqueueMessage('Site not changed. Check permissions, unique identity and enrollment fields.', 'error');
+                $this->app->enqueueMessage('Site not changed. Check permissions, unique identity and enrollment fields. For guided pairing, also check HTTPS, the pinned public IP, enabled connector and credential digest. No automatic retry was made.', 'error');
             }
             $this->app->redirect('index.php?option=com_nicodewebmonitor');
             return;

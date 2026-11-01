@@ -1,0 +1,56 @@
+Verification — 1 November 2026, candidate 1.0.0-rc1
+Package: Nicode.joomla.webmonitor
+
+New behavior: guided pairing, browser-generated UUID/credential/digest, atomic
+first observation, optional Joomla SMTP notifications, one-attempt reservation,
+explicit retry authorization, notification state in the panel. No production
+hosting, connector or inbox accessed. Notifications remain disabled by default.
+
+Executed focused checks:
+ - Pairing database integration: 17 checks; browser event logic: 6 checks.
+ - Real administrator HTTP: 13 checks, including CSRF, GET rejection, failed
+   pairing without registration and explicit notification retry confirmation.
+ - Real Edge at 1440 and 390 pixels: generation/digest, password masking,
+   submission task, no silent replacement, no horizontal overflow or JS errors.
+ - Notifications: 20 checks, including enclosing transaction denial, durable
+   reservation before send, unchanged-state suppression, uncertain result,
+   explicit one-shot retry, recovery and staleness without a new observation.
+ - Real Joomla mailer to disposable SMTP with TLS peer verification: one message
+   accepted, no second attempt for the unchanged observation. No real delivery.
+ - PHP 8.3.36: 69 then-current implementation files parsed; native Joomla services
+   inventory 22, registry 36, pairing 17, notifications 19 before the added
+   transaction guard, monitor 21, backup coordinator 44, maintenance history 16.
+   After the guard change: backup coordinator 44, maintenance history 16 and
+   notifications 20 passed under PHP 8.3.36.
+ - MySQL 8.4.13/PHP 8.3.36: 13 checks covering all ten schema tables and upgrades,
+   registry/history, GET_LOCK, grouped batch query, notification upsert,
+   update/core journals, nested rollback and deletion. Uses real Joomla driver
+   with simulated transport; not an entire Joomla installation on MySQL.
+
+Found and fixed: three maintenance coordinators queried MariaDB-only
+@@in_transaction. MySQL rejected it before dispatch. DurableDispatch now checks
+autocommit and SET TRANSACTION READ WRITE; both engines reject the latter inside
+an active transaction, including an empty explicit transaction. It does not
+commit caller work or require diagnostic-table privileges. The next journal
+transaction is explicitly read-write; session/global defaults stay unchanged.
+This guard also prevents sending mail inside an uncommitted caller transaction.
+Reference: https://dev.mysql.com/doc/refman/8.4/en/set-transaction.html
+
+Test harness fixes: simulated pairing client was incompatible with the strongly
+typed monitoring client; monitoring now uses the real client with deliberately
+unreadable fixture credentials, causing no network access. Joomla protects its
+mailer factory binding; the SMTP fixture supplies a constructor-only factory.
+These do not weaken the product's network or credential protections.
+
+Portable dependencies, isolated to this session's laboratory:
+PHP official binary and SHA256: https://www.php.net/downloads.php?os=windows&version=8.3
+MySQL official binary/MD5 and local SHA256 recorded:
+https://dev.mysql.com/downloads/mysql/8.4.html?os=3
+No global installation, Windows service, firewall change or external credentials.
+Existing complete transport/recovery/lifecycle evidence was reused. Production
+installation and user acceptance are delegated to the owner, not declared passed.
+
+One final native Joomla upgrade pass installed all four 1.0.0-rc1 ZIPs successfully
+in the existing disposable installation. This consumes the owner's single final
+installation check allowance; it is not a clean production install or permission
+to repeat the installation matrix. Final acceptance remains with the owner.

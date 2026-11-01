@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config><fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL">
  <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL" filter="rules" component="com_nicodewebmonitor" section="component" />
+</fieldset>
+<fieldset name="notifications" label="Email notifications">
+ <field name="notifications_enabled" type="radio" default="0" label="Send connector observation alerts" description="Uses Joomla mail settings and the existing Nicode scheduled task. Disabled by default. SMTP acceptance is not final delivery."><option value="0">JNO</option><option value="1">JYES</option></field>
+ <field name="notification_recipient" type="email" label="Recipient" description="One authorized recipient. No email is sent merely by saving these settings." filter="string" />
 </fieldset></config>

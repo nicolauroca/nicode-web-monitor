@@ -1,43 +1,52 @@
-Nicode Web Monitor — recorrido desde cero (desarrollo, 29 octubre 2026)
+Nicode Web Monitor — instalación desde cero, candidato 1.0.0-rc1 (1 noviembre 2026)
 Package: Nicode.joomla.webmonitor
 
 Qué vas a montar
 Un Joomla central contiene el panel; cada Joomla supervisado tiene su conector.
-Puedes probar con dos instalaciones desechables. No uses esta versión como una
-release estable: faltan compatibilidad ampliada y aceptación del producto completo.
+El desarrollo está preparado para validación de instalación y uso por el propietario.
+Es un candidato de entrega; la aceptación en tus instalaciones sigue pendiente.
 No necesitas contratar servicios. Necesitas poder instalar extensiones en ambos
 Joomla y ejecutar PHP localmente para preparar mantenimiento en el supervisado.
 
 1. Preparar los paquetes
-Clona el repositorio público y conserva el commit que estás probando. Desde su raíz
+Si descargaste el ZIP de entrega, extráelo y usa los ZIP de packages/ directamente.
+Para reconstruir desde código, clona el repositorio público. Desde su raíz
 ejecuta python tools/build.py. Python solo prepara los ZIP; no se instala en Joomla.
 El directorio dist contendrá cuatro paquetes independientes:
- - com_nicodewebmonitor-0.9.0-dev.zip: panel del Joomla central.
- - plg_system_nicodewebmonitor-0.5.0-dev.zip: conector del Joomla supervisado.
- - plg_console_nicodewebmonitor-0.1.1-dev.zip: inventario local por CLI, opcional.
- - plg_task_nicodewebmonitor-0.1.0-dev.zip: comprobaciones programadas, opcional.
+ - com_nicodewebmonitor-1.0.0-rc1.zip: panel del Joomla central.
+ - plg_system_nicodewebmonitor-1.0.0-rc1.zip: conector del Joomla supervisado.
+ - plg_console_nicodewebmonitor-1.0.0-rc1.zip: inventario local por CLI, opcional.
+ - plg_task_nicodewebmonitor-1.0.0-rc1.zip: comprobaciones programadas, opcional.
 Instala cada ZIP con Sistema > Instalar > Extensiones en su Joomla correspondiente.
 No hay un ZIP de paquete que los instale todos. No se crean tareas al instalarlos.
-La base comprobada es Joomla 6.1.4/PHP 8.4.26/MariaDB 11.8.9 en Windows; otras
-combinaciones requieren comprobación, incluidas futuras versiones mayores de Joomla.
+La base comprobada es Joomla 6.1.4, PHP 8.3.36/8.4.26 y MariaDB 11.8.9 en Windows.
+MySQL 8.4.13 tiene comprobación de esquema y servicios con el driver de Joomla,
+no una instalación Joomla completa. Tu entorno se valida durante tus pruebas.
 
 2. Conectar el primer sitio
-Sigue la sección HTTP connector de README.md para crear UUID y credencial privada,
-y configurar su digest en el plugin System - Nicode Web Monitor. Habilítalo después
-de completar los campos. Usa HTTPS con certificado válido en el sitio supervisado.
+En el panel central, Enroll a site guía la generación de UUID y credencial privada.
+Guarda la credencial original en tu gestor de contraseñas antes de enviar. Copia
+el UUID y el digest SHA-256 al plugin System - Nicode Web Monitor del supervisado.
+Guarda y habilita ese plugin. El generador PHP de README.md es la alternativa
+si el navegador no permite Web Crypto. Usa HTTPS válido en ambos Joomla.
 En Componentes > Nicode Web Monitor del central, registra nombre, URL canónica,
-IP pública fijada, UUID y credencial de inventario; después ejecuta Check.
+IP pública fijada, UUID y credencial de inventario; pulsa Verify and enroll.
+Se comprueba la identidad antes de guardar el sitio y su primera observación.
 La credencial se introduce en el campo privado del panel; no en comandos ni URLs.
 Consulta docs/site-registry.txt y docs/central-client.txt para los campos y permisos.
 El formulario público rechaza IP privadas; los ensayos locales usan un adaptador
 exclusivo de pruebas. No desactives esa protección para usar esta guía en producción.
 
 3. Interpretar resultados
-Un alta guarda datos de conexión, no acredita disponibilidad. Una comprobación
+El alta guiada verifica el conector, no la disponibilidad pública. Una comprobación
 correcta muestra inventario y fecha; un dato desconocido o antiguo no es un estado
 sano. Los avisos internos y el historial se describen en check-alerts.txt y
 check-history.txt. Para automatizar las consultas usa automatic-monitoring.txt:
 instalar el plugin de tareas no activa por sí solo el disparador del hosting.
+Para correo, configura SMTP con TLS/SSL en Joomla y activa destinatario y avisos
+en la configuración del componente. La misma tarea evalúa cambios de estado.
+Consulta pairing-and-notifications.txt: aceptado por SMTP no significa entregado;
+los resultados inciertos no se reintentan sin una acción expresa.
 
 4. Activar mantenimiento de forma deliberada
 Inventario, copias, actualizaciones de extensiones y core tienen credenciales y

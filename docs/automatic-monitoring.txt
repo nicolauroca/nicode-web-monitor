@@ -1,6 +1,6 @@
 Automatic inventory monitoring (development, 13 October 2026)
 
-Install central component 0.5.1-dev and task plugin 0.1.0-dev, then enable
+Install central component 0.10.0-dev and task plugin 0.2.0-dev, then enable
 Task - Nicode Web Monitor in a disposable Joomla 6 installation first.
 Create one Nicode: check enrolled sites task in System > Scheduled Tasks.
 The task creator must remain an enabled component administrator (core.admin).
@@ -28,7 +28,10 @@ Manual inspections remain possible. Requires MySQL/MariaDB, as does this
 development component's schema. Lock contention, persistence errors and failed
 reads produce a failed native task result. A partial inventory remains a partial
 panel alert; a task can complete successfully while finding partial inventory.
-No email, external notification, update or backup is performed.
+Optional email state notifications run after the inventory batch when configured
+in the component. They require explicit TLS SMTP and use a separate bounded
+oldest-evaluation-first pass of five sites. See pairing-and-notifications.txt.
+Updates and backups are never performed by this task.
 
 The plugin records aggregate counts only in task output; credentials and remote
 inventory are excluded. Check history and alerts use the existing bounded store.

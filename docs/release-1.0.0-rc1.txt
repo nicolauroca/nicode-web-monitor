@@ -1,0 +1,68 @@
+Nicode Web Monitor 1.0.0-rc1 — entrega para validación del propietario
+Package: Nicode.joomla.webmonitor
+Fecha: 1 noviembre 2026. Licencia GPL-2.0-or-later.
+
+El desarrollo y el empaquetado se entregan para tus pruebas de instalación y uso.
+No se declara aceptación de producción. Las verificaciones previas se conservan;
+no hay una campaña pendiente de repetir ensayos ya superados.
+
+Contenido del ZIP de entrega
+ - packages/com_nicodewebmonitor-1.0.0-rc1.zip: panel; instalar en el Joomla central.
+ - packages/plg_system_nicodewebmonitor-1.0.0-rc1.zip: conector; instalar en cada
+   Joomla que quieras supervisar, incluido el central solo si quieres supervisarlo.
+ - packages/plg_task_nicodewebmonitor-1.0.0-rc1.zip: tarea de seguimiento y avisos;
+   instalar en el central y habilitar/configurar expresamente la tarea en Joomla.
+ - packages/plg_console_nicodewebmonitor-1.0.0-rc1.zip: inventario CLI opcional;
+   instalar en los sitios donde quieras usar ese comando.
+ - docs/: instrucciones de instalación, mantenimiento, límites y verificaciones.
+ - tools/: código de preparación local de copias/actualizaciones y recuperación.
+ - SHA256SUMS.txt: hashes de los cuatro paquetes instalables.
+El ZIP exterior es un contenedor de entrega: extráelo, no lo subas al instalador.
+
+Empieza por docs/installation-from-zero.txt. Instala los ZIP correspondientes
+desde Sistema > Instalar > Extensiones. Abre el panel central y sigue Enroll a
+site: genera o introduce UUID y credencial, configura el digest en el conector,
+y pulsa Verify and enroll. Guarda antes la credencial original en tu gestor.
+Después podrás consultar inventario, historial y estados. Para correo, configura
+SMTP TLS/SSL en Joomla, destinatario y avisos en el componente y su tarea nativa.
+
+Las operaciones de mantenimiento requieren preparación explícita en el sitio
+supervisado. Copias y actualizaciones usan permisos y credenciales separados.
+Las guías central-backups.txt, extension-update-http.txt y core-dispatch.txt
+explican el flujo completo. Joomla core se ejecuta mediante el runner PHP remoto:
+encolar desde el panel no instala por sí solo una actualización.
+
+Verificado
+Joomla 6.1.4, PHP 8.3.36/8.4.26 y MariaDB 11.8.9 en laboratorio Windows. MySQL
+8.4.13 se ha contrastado con el driver real de Joomla: esquemas/migraciones,
+altas, bloqueos, seguimiento, notificaciones, historial y transacciones. Eso no
+equivale a haber instalado y recorrido un Joomla completo sobre MySQL.
+SMTP: correo nativo de Joomla recibido por un servidor local con TLS verificado;
+sin envío a buzones reales. Emparejamiento: permisos, rechazo, cifrado y registro
+atómico; formulario real en escritorio y móvil. La integración previa acredita
+copias/restauración, updates de extensiones y core, pérdida de respuestas y ACL.
+Detalle de la última revisión: verification-2026-11-01-pairing-mail.txt.
+
+Límites de operación que debes conocer
+ - Joomla 6; futuras versiones mayores necesitan validación. Esquema central
+   MySQL/MariaDB; PostgreSQL no está implementado. El cliente fija una IP pública
+   por sitio: un cambio de IP requiere actualizar su registro.
+ - El inventario depende de lo que PHP y la cuenta de base de datos pueden leer.
+   Ausencia o antigüedad de datos no equivale a estado sano.
+ - No hay rollback automático de actualizaciones. Un resultado incierto exige
+   consultar estado y efectos; no repetir la operación con otro identificador.
+ - Los paquetes de extensiones anidados o que cambian su conjunto de hijos se
+   rechazan; consulta compound-packages.txt para el contrato soportado.
+ - Las copias requieren detener escritores y espacio/directorios privados. Los
+   límites de tamaño/entradas y la configuración se describen en resumable-site.txt.
+   El lote del panel necesita la pestaña abierta; no renueva permisos remotos.
+ - El historial de mantenimiento conserva eventos; no tiene exportación/purga UI
+   ni protección frente a un administrador de la propia base de datos.
+ - Avisos: una aceptación SMTP no confirma entrega al buzón. Tras incertidumbre,
+   solo un cambio de estado o una autorización expresa habilita otro intento.
+
+Pendiente del propietario
+Instalar y usar el candidato en sus Joomla: conexión real HTTPS, configuración
+de correo y cron, permisos de sus usuarios, inventario y mantenimiento en un sitio
+recuperable. Registrar versión, paso concreto, resultado esperado y observado
+si encuentra un defecto. No enviar credenciales en incidencias ni capturas.

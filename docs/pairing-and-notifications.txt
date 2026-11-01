@@ -1,0 +1,71 @@
+Pairing and email notifications — component 0.10.0-dev / task plugin 0.2.0-dev
+Package: Nicode.joomla.webmonitor
+
+Guided pairing
+Install or upgrade the component on the central Joomla. Open Components > Nicode
+Web Monitor > Enroll a site. Install the system connector on the remote Joomla.
+Generate a new UUID and random 256-bit credential in the central browser, using
+HTTPS. Nothing is sent or stored by generation. Copy the UUID and SHA-256 digest
+to System - Nicode Web Monitor on the remote site; save and enable that plugin.
+Save the original credential in your password manager before submitting. It is
+not displayed in the response. For an already configured connector, use its UUID
+and original credential; generating another identity does not rotate it remotely.
+If Web Crypto is unavailable, use the PHP generator in README instead.
+
+Enter a label, canonical HTTPS URL (including any Joomla subdirectory) and public
+IP from the remote hosting settings. Verify and enroll makes one bounded read,
+using the existing certificate, address pinning and identity checks. A rejected
+credential, mismatched UUID or transport failure leaves no registration. Success
+atomically saves the encrypted credential and first check. Partial inventory is
+allowed and explicitly reported as partial, not healthy. The check observes the
+connector; it does not establish public website availability. Failed submission
+requires re-entering the credential from your password manager, not automatic retry.
+The legacy add task still saves an unverified registration for existing clients;
+the guided administrator form always uses pair. No maintenance permission is added.
+
+Email setup
+1. Configure Joomla's global Mail settings with your authorized sender and SMTP
+   account, using explicit TLS or SSL and a valid server certificate. Plain SMTP,
+   PHP mail and sendmail are not used by this feature. Credentials stay in Joomla.
+2. In the central dashboard open Permissions and email notification settings.
+   Enter one authorized recipient and enable connector observation alerts.
+   Only component administrators may configure or authorize another attempt.
+   Saving settings does not send a message. Email is disabled by default.
+3. Upgrade and enable Task - Nicode Web Monitor 0.2.0-dev. Use the existing Nicode
+   monitoring task and authorized monitoring user described in automatic-monitoring.txt.
+   No extra scheduler is installed or enabled. Without a working native trigger,
+   no notifications are evaluated or sent.
+
+Every monitoring run evaluates up to five sites, oldest notification evaluation
+first, independently of the five inventory checks. Observations include failed,
+partial, stale, uncertain-clock and never-checked states. A healthy initial
+baseline is silent; subsequent state changes and recovery send one notification.
+Staleness is evaluated even without a new check. State changes that occur entirely
+between runs cannot be reconstructed. Large registries require a suitable cadence.
+Changing recipient establishes a new baseline for that recipient.
+
+A database lock excludes concurrent notification batches. Before contacting SMTP,
+the component reserves an uncertain attempt durably. The dashboard distinguishes
+baseline, accepted, not_accepted and uncertain. Accepted is the server's response,
+not proof of final inbox delivery. Exceptions or missing acknowledgements never
+cause automatic repeats for the same state. The next state change can send again.
+After checking delivery, an administrator may explicitly authorize one further
+attempt from the site's history area; it occurs in the next monitoring run and
+can duplicate an email if the previous attempt reached the inbox.
+
+TLS verification stays enabled. Joomla's opportunistic TLS fallback is disabled
+to prevent retrying with downgraded transport. SMTP connect/command timeouts are
+ten seconds each; the overall task also includes inventory, database and mail
+overhead and is not a hard wall-clock deadline. No mail body, credential, SMTP
+exception or recipient address is stored in the notification ledger. It retains
+the latest state, recipient digest, evaluation/attempt time and outcome per site,
+not a full delivery archive. Removing a site removes its notification state.
+
+Verification and limits
+PHP 8.3.36 and 8.4.26 / Joomla 6.1.4 / MariaDB 11.8.9, Windows. Native database
+tests cover pairing failures, ACL, encryption, first observation and duplicates;
+notification state changes, stale data, reservation, lost acknowledgement and
+explicit retry. A real Joomla mailer delivered exactly one message to a disposable
+loopback SMTP sink over verified TLS. This is not delivery to an external inbox.
+No production connector, SMTP account or hosting was accessed. Existing transport
+tests cover HTTPS validation separately. See verification-2026-11-01-pairing-mail.txt.

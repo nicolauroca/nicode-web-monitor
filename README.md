@@ -4,8 +4,11 @@ Free, open-source monitoring and maintenance for multiple Joomla sites, managed
 from a component installed in a principal Joomla. Joomla 6 is the baseline;
 future major versions will require compatibility testing.
 
-Development is public from the beginning. **This is a development prototype,
-not a complete or production-ready monitoring product.**
+Development is public from the beginning. **1.0.0-rc1 is ready for owner installation
+and usage validation. Production acceptance is pending.**
+
+Start with `docs/installation-from-zero.txt` and `docs/release-1.0.0-rc1.txt`.
+The release bundle includes ready-to-install ZIPs; Python is needed only to rebuild.
 
 ## Working today
 
@@ -35,7 +38,9 @@ coverage and reproduction: `docs/verification-2026-10-11-browser.txt`.
 An optional native Joomla task plugin now performs bounded automatic inventory
 batches with explicit permissions and oldest-first selection. Setup and current
 verification limits: `docs/automatic-monitoring.txt`.
-Guided pairing and external notifications remain pending.
+Guided pairing now verifies connector identity before enrollment. Optional email
+alerts use Joomla SMTP with explicit TLS and durable one-attempt state tracking.
+Setup and delivery limits: `docs/pairing-and-notifications.txt`.
 The 0.9.0-dev central component queues prepared Joomla core updates with separate
 credentials and permissions, then reconciles their status. A remote CLI must still
 execute and verify the queued operation; see `docs/core-dispatch.txt`.
@@ -64,7 +69,7 @@ It backs the synchronous Joomla backup route; the separate sequenced backup_site
 route combines bounded file/database capture and is available in the central panel.
 Contract and historical checks:
 `docs/backup-operations.txt` and `docs/verification-2026-10-16.txt`.
-No data is pushed to external services. The console command uses the operating-system
+Email summaries are sent only when explicitly configured; no inventory payload is pushed to external services. The console command uses the operating-system
 account's existing access; HTTP inventory and backup use separate credentials.
 
 ## Build and try in a disposable Joomla 6 installation
@@ -76,7 +81,7 @@ Requirements: Python 3 for packaging; an installed Joomla 6 with its supported P
 and database. First tested on Joomla 6.1.4, PHP 8.4.26 and MariaDB 11.8.9 on Windows.
 
 1. Run `python tools/build.py` from this repository.
-2. Install `dist/plg_console_nicodewebmonitor-0.1.1-dev.zip` using Joomla's extension
+2. Install `dist/plg_console_nicodewebmonitor-1.0.0-rc1.zip` using Joomla's extension
    installer, or `php cli/joomla.php extension:install --path=/absolute/path/to/the.zip`
    from the disposable Joomla root.
 3. In System > Manage > Plugins, enable **Console - Nicode Web Monitor**.
@@ -106,7 +111,7 @@ of Git. License: GPL-2.0-or-later; see LICENSE.
 
 ## HTTPS connector (development)
 
-The build also produces `dist/plg_system_nicodewebmonitor-0.5.0-dev.zip`.
+The build also produces `dist/plg_system_nicodewebmonitor-1.0.0-rc1.zip`.
 Install it in a disposable Joomla 6 site. In **System - Nicode Web Monitor**,
 configure a unique lowercase UUID v4 and the SHA-256 digest of a cryptographically
 random 32-byte credential encoded as 64 hex characters. Hash the encoded text,

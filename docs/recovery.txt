@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.1 — capturas y recuperación local
+Nicode Web Monitor 1.1.1-dev.2 — capturas y recuperación local
 
 Una captura completa no demuestra que una instalación Joomla pueda restaurarse.
 Las primitivas locales de tools permiten ensayar recuperación en destinos aislados;

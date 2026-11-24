@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension type="component" method="upgrade">
  <name>com_nicodewebmonitor</name><author>Nicolau Roca</author>
- <version>1.1.1-dev.1</version><description>Panel central de monitorización para sitios Joomla.</description>
+ <version>1.1.1-dev.2</version><description>Panel central de monitorización para sitios Joomla.</description>
  <license>GPL-2.0-or-later</license>
  <namespace path="src">Nicode\Component\NicodeWebMonitor</namespace>
  <scriptfile>script.php</scriptfile>

@@ -6,7 +6,7 @@ $escape=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UT
 $connected=$state['state']==='connected'; $pending=$state['state']==='pending';
 ?>
 <h1>Nicode Web Monitor — Conector</h1>
-<p><span class="badge bg-warning text-dark">Versión de desarrollo · 1.1.1-dev.1 · No definitiva</span></p>
+<p><span class="badge bg-warning text-dark">Versión de desarrollo · 1.1.1-dev.2 · No definitiva</span></p>
 <p>Conecta este Joomla a tu panel Nicode Web Monitor. También puedes conectar el Joomla que aloja el propio panel.</p>
 <section aria-label="Estado de conexión">
 <h2><?= $connected ? 'Conectado' : ($pending ? 'Conexión pendiente de confirmar' : 'Conectar este sitio') ?></h2>

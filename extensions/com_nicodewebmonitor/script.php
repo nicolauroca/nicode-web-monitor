@@ -5,7 +5,19 @@ class Com_NicodewebmonitorInstallerScript
 {
     public function preflight(string $type, $parent): bool
     {
-        return $type === 'uninstall' || (version_compare(JVERSION, '6.0.0', '>=') && extension_loaded('sodium') && extension_loaded('curl'));
+        if ($type === 'uninstall') return true;
+        if (version_compare(JVERSION, '6.0.0', '<') || !extension_loaded('sodium') || !extension_loaded('curl')) return false;
+
+        // Joomla may record the newest schema version on reinstall even when
+        // CREATE TABLE IF NOT EXISTS kept an older, deliberately retained table.
+        // Establish the current invariant BEFORE incremental SQL is considered.
+        $db=\Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+        $table=$db->replacePrefix('#__nwm_sites');
+        if (in_array($table,$db->getTableList(),true)
+            && !isset($db->getTableColumns($table)['connection_type'])) {
+            $db->setQuery('ALTER TABLE '.$db->quoteName($table)." ADD COLUMN ".$db->quoteName('connection_type')." varchar(8) NOT NULL DEFAULT 'https'")->execute();
+        }
+        return true;
     }
 
     public function uninstall($parent): void

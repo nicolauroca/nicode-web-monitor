@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.1 — arquitectura
+Nicode Web Monitor 1.1.1-dev.2 — arquitectura
 
 Producto e instalación
 Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.
@@ -8,6 +8,9 @@ independiente. blockChildUninstall evita dejar instalaciones incompletas.
 Los nombres visibles son Nicode Web Monitor — Central y Nicode Web Monitor — Conector.
 La identidad interna com_nicodeconnector no depende del texto traducido del menú.
 El plugin de consola es una herramienta opcional para inventario local por CLI.
+El preflight de Central asegura la columna connection_type en tablas ya existentes,
+antes de los SQL de Joomla. No confía exclusivamente en el marcador de #__schemas:
+una reinstalación puede conservar una tabla antigua y marcar el esquema actual.
 
 Componentes
 com_nicodewebmonitor administra sitios, comprobaciones, alertas, correo y operaciones

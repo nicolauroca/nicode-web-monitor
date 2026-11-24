@@ -13,7 +13,16 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.1 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.2 y la verificación vigente está en verification.txt.
+
+Invariante del instalador
+Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
+columnas de una tabla conservada, y Joomla puede marcar el esquema como actual
+durante una reinstalación. El preflight comprueba la tabla real y asegura
+connection_type antes de que Joomla procese SQL incremental. El ancla 1.1.1.sql
+no repite ALTER. No sustituir esta comprobación por confiar solo en #__schemas,
+ni ocultar el error mediante valores por defecto en las consultas del panel.
+schema_repair.php reproduce esquemas marcados como actuales, anteriores y ausentes.
 
 Decisiones implementadas
 Paquetes Central/Connector sin piezas compartidas entre propietarios. Código de

@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.1 — pruebas
+Nicode Web Monitor 1.1.1-dev.2 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -40,6 +40,11 @@ aproximadamente setenta segundos y restaura tareas previas. No crea cron del SO.
 php tests/lifecycle_native.php JOOMLA_ROOT PRIVATE_OUTPUT --allow-disposable-writes
 Comprueba reinstalación actual y retirada independiente de los dos paquetes,
 conservación de datos y pausa de tareas. No necesita un ZIP histórico.
+php tests/schema_repair.php JOOMLA_ROOT --allow-disposable-writes
+Requiere registro vacío. Elimina deliberadamente connection_type en el laboratorio
+y reproduce el error del panel con marcador de esquema actual, anterior y ausente.
+Instala el paquete real en procesos nuevos y comprueba reparación, conservación
+de credenciales/historial e idempotencia. Nunca ejecutar en el Joomla del usuario.
 
 Navegador y HTTPS reales, un Joomla con ambas funciones
 Requiere Python Playwright, Chrome/Chromium, php-cgi y certificado local de prueba

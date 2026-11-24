@@ -26,9 +26,8 @@ $checks=[];function check($ok,$name){global $checks;if(!$ok)throw new RuntimeExc
 try{
  $schema=file_get_contents(__DIR__.'/../extensions/com_nicodewebmonitor/administrator/sql/install.mysql.utf8.sql');
  foreach(explode(';',$schema)as$sql)if(trim($sql))$db->setQuery($sql)->execute();
- check(count($db->getTableList())===10,'all ten component tables install on MySQL');
- foreach(glob(__DIR__.'/../extensions/com_nicodewebmonitor/administrator/sql/updates/mysql/*.sql')as$file){foreach(explode(';',file_get_contents($file))as$sql)if(trim($sql))$db->setQuery($sql)->execute();}
- check(true,'all existing incremental schema upgrades accepted');
+ check(count($db->getTableList())===11,'all eleven component tables install on MySQL');
+ check(isset($db->getTableColumns('#__nwm_sites')['connection_type']),'current schema includes explicit local/HTTPS transport');
  check(\Nicode\Component\NicodeWebMonitor\Administrator\Service\DurableDispatch::ready($db),'autocommit permits durable dispatch');
  $db->transactionStart();
  check(!\Nicode\Component\NicodeWebMonitor\Administrator\Service\DurableDispatch::ready($db),'even empty explicit transaction blocks dispatch');

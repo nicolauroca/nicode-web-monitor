@@ -1,47 +1,74 @@
-Nicode Web Monitor read-only connector protocol 1 / development 0.2.0
+Nicode Web Monitor 1.1.1-dev.1 — protocolo de conexión
 
-Route: GET /index.php?option=com_nicodewebmonitor&task=inventory
-System plugin handles only the frontend onAfterInitialise event; it terminates
-before page rendering. It does not handle administrator or API applications.
-The standalone system ZIP bundles a namespaced copy of the existing collector;
-the console plugin is not a dependency. Build output has deterministic metadata.
+Seguridad de transporte
+HTTPS obligatorio según el entorno fiable de PHP. No se confía automáticamente
+en cabeceras proxy. Los clientes verifican certificado y nombre, desactivan proxies
+heredados y redirecciones, y fijan mediante CURLOPT_RESOLVE la IP ya validada.
+PublicAddress solo admite URL HTTPS canónica con hostname y subdirectorios simples,
+sin usuario, contraseña, query, fragmentos, escapes ni direcciones IP literales.
+Se siguen alias CNAME con un máximo de ocho nombres y 64 registros. Se validan
+TODOS los resultados A/AAAA; una dirección no global rechaza el conjunto.
+Se prefiere IPv4; también se admite IPv6 pública. No hay excepciones de red o CA
+configurables por formulario. Las excepciones de constructor son solo para ensayos.
+El inventario y mantenimiento REMOTOS posteriores usan la IP fijada al dar de alta.
+Un cambio de IP del hosting requiere volver a vincular el sitio con su destino actual.
 
-Authentication: Authorization: Bearer <64 hex characters from 32 random bytes>.
-SHA-256 of the exact encoded credential is stored in Joomla plugin parameters.
-Comparison uses hash_equals. Each installation requires a unique UUID v4.
-Empty/invalid digest or invalid UUID closes the connector. Replacing the digest
-rotates the credential immediately. Disabling the plugin removes the endpoint.
-No tokens in query parameters, cookies or POST bodies. No users or passwords in
-inventory. Authentication must precede collection. One read-only scope exists;
-no update or backup command is implemented or implied by this credential.
+Mismo Joomla
+El conector detecta la coincidencia entre URL central y URL canónica local, comprueba
+que el componente Central está instalado y verifica las versiones. Invoca claimLocal
+en proceso; el código y su recibo siguen limitados y autenticados. No se resuelve
+DNS, no se invoca un endpoint HTTP propio y no se finge un contexto HTTPS.
+Las comprobaciones de inventario local validan identidad, hash y estado habilitado
+del motor en cada consulta; execution_context es local_web/local_cli y la capacidad
+remote_inventory permanece false. Desconectar o desactivar el motor revoca también
+estas consultas. Un JSON remoto nunca selecciona el modo local.
 
-HTTPS must be established by the trusted PHP server environment. Forwarded and
-X-Forwarded-Proto are ignored. Production web-server/proxy deployment and rate
-limiting remain to be validated. Protect Authorization from access/error logs.
-A bearer credential can be reused until revoked: this is not request signing.
+Vinculación
+POST /index.php?option=com_nicodewebmonitor&task=connection.claim
+Content-Type: application/json. Máximo 4096 bytes, profundidad JSON 8.
+Cuerpo: code (64 hex), site_id (UUID v4 minúsculo), credential (64 hex de 32 bytes
+aleatorios), base_url (URL canónica del supervisado). Sin cookies de administrador
+ni tokens en la URL. El código es la autorización temporal de esta única alta.
+Antes de guardar el alta, el central efectúa un GET autenticado de inventario, con
+timeout de cinco segundos, y verifica UUID, protocolo y esquema de inventario.
+Resultado 200: {ok:true,site_id,site}; no devuelve secretos. GET se rechaza con 405;
+HTTP sin TLS con 403; reclamaciones inválidas con 400 y error acotado.
+code_unavailable cubre caducidad, revocación y reutilización distinta.
+verification_failed indica que no se ha podido verificar el inventario remoto.
+Los errores no incluyen cuerpo remoto, SQL, credenciales ni excepciones internas.
+Todas las respuestas llevan Cache-Control: no-store, private.
+El cliente distingue central_auth_required (401 inesperado, posible motor anterior),
+central_access_denied (403), central_component_missing (404), central_server_error
+(5xx), invalid_response (HTML/JSON no válido), TLS, DNS, redirección y timeout.
 
-Response 200: protocol_version=1, site_id and inventory (existing schema 1).
-inventory.execution_context=remote_https; remote_inventory=true; remote_updates
-and remote_backups=false. Partial collection remains explicit inside inventory.
-200 is not an assertion that the monitored site is healthy or fully inventoried.
-Runtime reports web PHP, which may differ from local CLI. No persistence is added.
+Concurrencia y recuperación
+La emisión invalida el código anterior del mismo usuario. La reclamación usa una
+transacción y bloqueo de fila: alta, primer historial y asociación del código se
+confirman conjuntamente. Repetir exactamente code/URL/UUID/credential permite
+recuperar el recibo consumido mientras siga vigente. No crea otra alta ni vuelve
+a consultar inventario. Un recibo de un sitio eliminado no se recupera.
+El conector serializa conectar/desconectar con un bloqueo por instalación. Un
+intento pendiente solo puede repetirse con los mismos datos o cancelarse.
+Si vence el código, cancelar revoca el secreto pendiente antes de emitir otro.
+Un estado Conectado conserva el resultado de vinculación, no promete que el
+central o la programación estén disponibles en el momento actual.
 
-403 https_required; 503 connector_unavailable (configuration/revocation);
-401 unauthorized; 405 method_not_allowed (Allow: GET); 404 operation_not_found;
-503 collection_failed for exceptions escaping the collector. Errors omit internal
-exception text and site identity. Responses are JSON with no-store/private.
+Inventario (protocolo 1)
+GET /index.php?option=com_nicodewebmonitor&task=inventory
+Authorization: Bearer <credential>. El motor almacena SHA-256 del texto hexadecimal,
+no de sus bytes decodificados, y compara con hash_equals. Vaciar el hash revoca.
+JSON 200: protocol_version=1, site_id, inventory. inventory incluye schema_version=1,
+collected_at UTC, status complete/partial, execution_context=remote_https,
+capabilities booleanas y sections: joomla/runtime/database/extensions/hosting.
+Cada sección tiene status available/unavailable/error y data objeto/array o null.
+Versiones desconocidas permanecen explícitas. No se envían usuarios ni contraseñas.
+Autenticación precede a la colección. 200 no afirma que el sitio esté saludable.
+401 unauthorized, 403 https_required, 503 connector_unavailable o collection_failed,
+405 method_not_allowed, 404 operation_not_found. Respuestas privadas y no cacheables.
+El cliente limita cuerpo a 2 MiB, cabeceras a 32 KiB y tiempos; rechaza identidad,
+estructura, redirecciones o TLS incorrectos. No reintenta automáticamente.
 
-Client contract for the upcoming central component: validate HTTPS certificate,
-reject redirects, use bounded timeouts/body size, check protocol and enrolled
-site UUID before storing data. Authentication failure is not a healthy/empty
-inventory. Preserve last successful observation with its age and latest error.
-Central HTTPS requests are implemented in InventoryClient (2026-10-06).
-Client-side storage and UI are implemented; see site-registry.txt and subsequent
-verification records. The separate backup credential and opt-in route added in
-connector 0.3.0-dev are documented in backup-http.txt; they do not change this
-inventory credential's scope.
-
-Implementation references consulted 2026-10-05:
-https://manual.joomla.org/docs/next/building-extensions/plugins/how-plugins-work/
-https://manual.joomla.org/docs/5.4/building-extensions/plugins/plugin-events/application/
-Event/provider signatures also checked against the installed Joomla 6.1.4 source.
+Mantenimiento
+Las rutas backup/backup_tree/backup_database/backup_site, update_extension y
+update_core requieren credenciales y permisos distintos. Vincular inventario no
+las habilita ni proporciona sus secretos. Consultar maintenance.txt.

@@ -8,10 +8,6 @@ if ($canBackup ?? false) {
     $this->app->getDocument()->getWebAssetManager()->registerAndUseScript('nwm.backup.runner',
         \Joomla\CMS\Uri\Uri::root() . 'administrator/components/com_nicodewebmonitor/tmpl/backup-runner.js', [], ['defer'=>true]);
 }
-if ($user->authorise('core.create', 'com_nicodewebmonitor')) {
-    $this->app->getDocument()->getWebAssetManager()->registerAndUseScript('nwm.pairing',
-        \Joomla\CMS\Uri\Uri::root() . 'administrator/components/com_nicodewebmonitor/tmpl/pairing.js', [], ['defer'=>true]);
-}
 ?>
 <style>
 .nwm-sites td { overflow-wrap: anywhere; vertical-align: top; }
@@ -26,7 +22,8 @@ if ($user->authorise('core.create', 'com_nicodewebmonitor')) {
     .nwm-sites .btn { width: 100%; }
 }
 </style>
-<h1>Nicode Web Monitor</h1>
+<h1>Nicode Web Monitor — Central</h1>
+<?php require __DIR__.'/onboarding.php'; ?>
 <?php if ($user->authorise('core.admin','com_nicodewebmonitor')): ?>
 <p><a href="index.php?option=com_config&amp;view=component&amp;component=com_nicodewebmonitor">Permissions and email notification settings</a></p>
 <?php endif; ?>
@@ -64,9 +61,9 @@ if ($user->authorise('core.create', 'com_nicodewebmonitor')) {
 <?php endif; ?></section>
 <?php endif; ?>
 <div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites - connector observations</caption>
-<thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Pinned IP</th><th scope="col">Identity</th><th scope="col">Check history (UTC)</th><th scope="col">Actions</th></tr></thead><tbody>
+<thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Conexión</th><th scope="col">Check history (UTC)</th><th scope="col">Actions</th></tr></thead><tbody>
 <?php foreach ($sites as $site): ?>
-<tr><td data-label="Site"><?= $escape($site['label']) ?></td><td data-label="URL"><?= $escape($site['base_url']) ?></td><td data-label="Pinned IP"><?= $escape($site['address']) ?></td><td data-label="Identity"><?= $escape($site['site_id']) ?></td><td data-label="Check history (UTC)">
+<tr><td data-label="Site"><?= $escape($site['label']) ?></td><td data-label="URL"><?= $escape($site['base_url']) ?></td><td data-label="Conexión"><details><summary>Detalles técnicos</summary><p><?= ($site['connection_type']??'https')==='local' ? 'Este mismo Joomla · Inventario local' : 'HTTPS · IP: '.$escape($site['address']) ?></p><p>ID: <?= $escape($site['site_id']) ?></p></details></td><td data-label="Check history (UTC)">
 <p><?= $escape($stateLabels[$site['check_state'] ?? 'never_checked'] ?? 'Unknown') ?></p>
 <?php if (!empty($site['notification'])): $notice=$site['notification']; ?>
 <p>Email: <?= $escape($notice['delivery']) ?>. Last evaluation (UTC): <?= $escape(gmdate('Y-m-d H:i:s',(int)$notice['evaluated_at'])) ?>. Accepted means accepted by the mail server, not confirmed delivery.</p>
@@ -94,6 +91,7 @@ if ($user->authorise('core.create', 'com_nicodewebmonitor')) {
 <form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="remove"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-danger" type="submit">Remove <?= $escape($site['label']) ?></button></form>
 <?php endif; ?></td></tr>
 <?php endforeach; ?></tbody></table></div>
+<details class="mt-4"><summary>Copias y actualizaciones (avanzado)</summary>
 <?php if ($canBackup ?? false): ?>
 <section aria-label="Remote backups">
 <h2>Remote backups</h2>
@@ -221,23 +219,4 @@ if ($user->authorise('core.create', 'com_nicodewebmonitor')) {
 </article>
 <?php endforeach; ?></section>
 <?php endif; ?>
-<?php if ($user->authorise('core.create', 'com_nicodewebmonitor')): ?>
-<h2>Enroll a site</h2>
-<ol>
-<li>Install the System - Nicode Web Monitor connector on the remote Joomla. Open its plugin settings.</li>
-<li>For a new connector, generate an identity below. Copy the UUID and credential digest into the remote plugin, save and enable it. Save the original credential in your password manager before submitting: it is not returned after submission. For an existing connector, enter its UUID and original credential instead; do not replace an identity already used by another central.</li>
-<li>Enter the remote site's canonical HTTPS URL and public IP from your hosting settings. Subdirectory installations include the subdirectory. HTTPS certificates must be valid.</li>
-<li>Select Verify and enroll. The central checks the credential and UUID over HTTPS before saving the site and its first inventory. A failed check saves nothing.</li>
-</ol>
-<p>Removing a site does not revoke its remote credential. To revoke access, disable the remote connector or clear its digest. Backups and updates are configured separately.</p>
-<form id="nwm-pairing" method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
-<button type="button" id="nwm-generate" class="btn btn-secondary">Generate new connector identity</button>
-<p id="nwm-pairing-status" role="status">Generation requires HTTPS on this central. Alternatively use the PHP generator documented in README.</p>
-<label for="nwm-digest">Credential SHA-256 digest for the remote plugin (not the credential)</label>
-<input id="nwm-digest" class="form-control" readonly autocomplete="off">
-<?php foreach (['label'=>'Site name', 'base_url'=>'HTTPS base URL', 'address'=>'Public IP', 'site_id'=>'Connector UUID', 'credential'=>'Read-only credential'] as $field=>$title): ?>
-<div class="mb-3"><label for="nwm-<?= $field ?>"><?= $title ?></label><input class="form-control" id="nwm-<?= $field ?>" name="<?= $field ?>" type="<?= $field === 'credential' ? 'password' : 'text' ?>" maxlength="<?= $field === 'base_url' ? 2048 : 120 ?>" required autocomplete="<?= $field === 'credential' ? 'new-password' : 'off' ?>"></div>
-<?php endforeach; ?>
-<input type="hidden" name="task" value="pair"><?= HTMLHelper::_('form.token') ?><button type="submit" class="btn btn-primary">Verify and enroll</button>
-</form>
-<?php endif; ?>
+</details>

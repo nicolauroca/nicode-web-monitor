@@ -1,62 +1,60 @@
-Automatic inventory monitoring (development, 13 October 2026)
+Nicode Web Monitor 1.1.1-dev.1 — comprobaciones automáticas y correo
 
-Install central component 0.10.0-dev and task plugin 0.2.0-dev, then enable
-Task - Nicode Web Monitor in a disposable Joomla 6 installation first.
-Create one Nicode: check enrolled sites task in System > Scheduled Tasks.
-The task creator must remain an enabled component administrator (core.admin).
-Choose an enabled monitoring user with core.manage and nwm.monitor on the
-component. A reader without nwm.monitor cannot run batches. Only trusted
-administrators should have access to edit scheduler tasks or their run-as users.
-Installation does not create or enable a recurring task.
+Preparación
+El paquete central instala el plugin de tareas. Como administrador del componente,
+Preparar comprobaciones automáticas, o generar un código de vinculación, habilita
+ese plugin y crea una tarea nativa nicode.monitor si no hay ninguna.
+La tarea se crea mediante la tabla nativa de Joomla, incluidos sus permisos/asset.
+Frecuencia inicial: cinco minutos, hasta cinco sitios por ejecución, presupuesto
+de red de veinte segundos. Se seleccionan primero los sitios nunca comprobados
+o con comprobación más antigua. Cada consulta tiene como máximo tres segundos.
+Si hay muchos sitios, ajustar frecuencia/límite para que se recorra todo el registro.
+Base de datos, SMTP y overhead quedan fuera del presupuesto de red; no es un SLA.
+Un fallo se registra y no impide seleccionar otros sitios en futuras ejecuciones.
 
-Choose the desired interval and use one native Joomla scheduler trigger.
-Joomla's lazy scheduler depends on site traffic; it does not guarantee timely
-execution. Official trigger guidance:
-https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler
+Propietario y usuario
+La cuenta que prepara la tarea debe seguir habilitada y tener core.admin.
+La cuenta ejecutora debe seguir habilitada y tener core.manage y nwm.monitor.
+Se utiliza inicialmente el administrador que activa la programación.
+El asistente no crea cuentas ni concede permisos nuevos. Si ya existe una tarea,
+no sustituye propietario, parámetros, cadencia ni una pausa decidida por el operador.
+Si hay varias tareas Nicode, el panel lo advierte. Un bloqueo de base de datos
+evita solapamiento de lotes Nicode, incluso con diferentes definiciones nativas.
 
-Each run selects oldest or never-checked sites first, at most 5 by default
-(configurable 1-10). A failure is still a recorded check, so other sites progress.
-The default network budget is 20 seconds (1-30); each HTTPS read gets at most
-3 seconds and no more than the remaining budget. Database operations and PHP
-overhead are outside that network budget: it is not a hard wall-clock SLA.
-Large registries need enough batches within the desired freshness interval.
-The existing panel considers observations stale after 24 hours.
+Estados del panel
+Pendiente: aún no hay tarea. Preparada/esperando: todavía no consta ejecución.
+Pausada: tarea o plugin desactivados. Permisos: falta usuario/propietario válido.
+Verificada recientemente: última ejecución nativa correcta en los últimos quince
+minutos. Fallida: ejecución reciente con error. Retrasada: no consta ejecución
+en quince minutos o el reloj es incoherente. Ese umbral corresponde a la cadencia
+inicial; si se cambia, interpretar también la fecha prevista que muestra el panel.
+Conectar o inspeccionar manualmente un sitio no cambia estos estados a activo.
+Última ejecución y próxima ejecución prevista se presentan en UTC.
 
-A database advisory lock prevents concurrent automatic batches across task
-definitions on the same installation, even when native task locks differ.
-Manual inspections remain possible. Requires MySQL/MariaDB, as does this
-development component's schema. Lock contention, persistence errors and failed
-reads produce a failed native task result. A partial inventory remains a partial
-panel alert; a task can complete successfully while finding partial inventory.
-Optional email state notifications run after the inventory batch when configured
-in the component. They require explicit TLS SMTP and use a separate bounded
-oldest-evaluation-first pass of five sites. See pairing-and-notifications.txt.
-Updates and backups are never performed by this task.
+Ejecutar en el hosting
+Joomla puede disparar tareas por visitas. Sin visitas no hay puntualidad garantizada.
+Para ejecución regular, configurar UN cron en el hosting central cada minuto:
+php /ruta/real/al/joomla/cli/joomla.php scheduler:run --all
+El panel muestra la ruta concreta de esa instalación; elegir el ejecutable PHP
+compatible del hosting. Desactivar el disparador por visitas si se elige cron.
+Como alternativa, Joomla ofrece Web Cron en las opciones del programador; su URL
+contiene un secreto y debe mantenerse privada. No se crean cron ni servicios de
+hosting desde una extensión: el asistente prepara la tarea, muestra el paso externo
+y comprueba su ejecución. No hace falta cron en los Joomla supervisados.
+Guía oficial: https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler
 
-The plugin records aggregate counts only in task output; credentials and remote
-inventory are excluded. Check history and alerts use the existing bounded store.
-Disable the task/plugin or revoke the monitoring user's permission to stop batches.
+Correo opcional
+Configurar Joomla Mail con SMTP y TLS/SSL explícito y certificado válido. En las
+opciones del componente, habilitar avisos y un destinatario autorizado. Guardar
+no envía correo. El mismo lote Nicode evalúa hasta cinco estados de notificación.
+La primera observación saludable establece una base silenciosa; cambios posteriores,
+fallos, parcialidad, antigüedad y recuperación pueden notificar. No es un servicio
+de disponibilidad pública ni reconstruye cambios entre ejecuciones.
+Cada intento se reserva duraderamente antes de contactar SMTP. accepted significa
+aceptación SMTP, no entrega al buzón. Los estados not_accepted/uncertain requieren
+revisión y autorización explícita de otro intento; no hay reenvío automático del
+mismo estado. El destinatario no se guarda en el ledger, solo su digest.
 
-Verified: native ZIP installation/upgrade, task form and native execution event,
-failed-credential history, oldest-first progress, permission denial, competing
-database connection exclusion, safe empty batch. Tests leave no recurring task.
-Verified additionally on 13 October: native CLI due-queue selection, a second
-natural one-minute recurrence, persisted execution/failure counters, and no early
-repeat. Live loopback TLS batch tests cover mixed success/revocation/partial,
-recovery and a one-second network budget against a delayed connector fixture.
-The batch fixture uses a constructor-only client factory for private loopback
-and a local CA. Default enrollment and runtime private-IP rejection stay intact.
-Not yet verified: lazy/webcron triggers, deployed OS cron, real remote hosting,
-other database/platform combinations. TLS connectors in this batch test are
-simulated; earlier real two-Joomla connector tests are separate evidence.
-
-Reproduce: php tests/monitor.php /path/to/disposable/joomla --allow-disposable-writes
-Use an empty disposable registry; fixture rows and plugin enabled state are restored.
-
-Additional disposable tests:
-php tests/scheduler.php JOOMLA_ROOT --allow-disposable-writes
-python tests/monitor_tls.py --php PHP --site JOOMLA_ROOT --certificate CERT --private-key KEY
-The scheduler test takes about 70 seconds. It temporarily disables existing tasks,
-restores their states and the plugin state, and removes its own task/site records.
-Do not run it against a live installation or concurrently with another trigger.
-The TLS test checks certificate dates before writes and removes all fixture sites.
+Retirada
+Desactivar la tarea o revocar el permiso ejecutor detiene los lotes. Desinstalar
+el central pausa las tareas nicode.monitor; la extensión Connector es independiente.

@@ -2,10 +2,12 @@
 Requires an installed central component and a disposable administrator account.
 No inventory requests leave the machine. Do not log input credentials.
 """
-import argparse, sys, json, re, secrets, uuid, urllib.request, urllib.parse, urllib.error, http.cookiejar
+import argparse, sys, json, re, secrets, uuid, urllib.request, urllib.parse, urllib.error, http.cookiejar, subprocess
 from pathlib import Path
 parser=argparse.ArgumentParser(description='Disposable loopback Joomla admin form checks. Pass admin_user/admin_password JSON on stdin; never use a real site.')
 parser.add_argument('--base-url',required=True)
+parser.add_argument('--site',type=Path,required=True,help='Disposable Joomla root, used only to seed fixture inventory')
+parser.add_argument('--php',required=True)
 parser.add_argument('--browser-output',type=Path)
 parser.add_argument('--allow-disposable-writes',action='store_true',required=True)
 args=parser.parse_args()
@@ -30,7 +32,7 @@ c=json.load(sys.stdin)
 status,html=request(data={'option':'com_login','task':'login','username':c['admin_user'],'passwd':c['admin_password'],csrf(html):'1'})
 url=base+'?option=com_nicodewebmonitor'
 status,html=request(url)
-check(status==200 and 'Enroll a site' in html,'authenticated component dispatch')
+check(status==200 and 'Añadir sitio' in html,'authenticated component dispatch')
 formtoken=csrf(html)
 label='Disposable HTTP '+secrets.token_hex(6)
 credential=secrets.token_hex(32)
@@ -45,8 +47,11 @@ status,_=request(url,{'task':'inspect','id':'1'})
 check(status==403,'inventory without CSRF rejected')
 status,html=request(url,{'task':'inspect','id':'-1',formtoken:'1'})
 check(status==200 and 'site_not_found' in html,'inventory result rendered through real dispatcher')
-status,html=request(url,{**data,formtoken:'1'})
-check(status==200 and label in html,'real enrollment form accepted')
+seed=subprocess.run([args.php,str(Path(__file__).with_name('onboarding_fixture.php')),str(args.site.resolve()),'--allow-disposable-writes'],
+    input=json.dumps({'action':'seed_inventory','label':label,'site_id':data['site_id'],'credential':credential}),text=True,capture_output=True)
+check(seed.returncode==0 and '"ok":true' in seed.stdout,'inventory fixture seeded through local service')
+status,html=request(url)
+check(status==200 and label in html,'fixture site visible')
 check(credential not in html,'credential not echoed in HTML')
 row=re.search(r'<tr><td\b[^>]*>'+re.escape(label)+r'</td>.*?</tr>',html,re.S).group(0)
 rowid=re.search(r'name="id" value="(\d+)"',row).group(1)
@@ -85,6 +90,7 @@ if args.browser_output:
         for width in [1440,390,320]:
             page.set_viewport_size({'width':width,'height':1000})
             page.goto(url);page.wait_for_load_state('networkidle')
+            page.get_by_text('Copias y actualizaciones (avanzado)',exact=True).click()
             section=page.get_by_role('region',name='Remote backups')
             section.locator('summary').filter(has_text=label).click()
             card=page.locator('.nwm-backup').filter(has_text=operation)

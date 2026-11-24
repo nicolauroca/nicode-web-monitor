@@ -16,7 +16,7 @@ final class SiteRegistry
     public function all(): array
     {
         $this->permit('core.manage');
-        $sites = $this->db->setQuery('SELECT id, site_id, label, base_url, address FROM #__nwm_sites ORDER BY id')->loadAssocList();
+        $sites = $this->db->setQuery('SELECT id, site_id, label, base_url, address, connection_type FROM #__nwm_sites ORDER BY id')->loadAssocList();
         $history = new CheckHistory($this->db);
         foreach ($sites as &$site) {
             $retained = $history->recent((int)$site['id'], 100);
@@ -98,6 +98,25 @@ final class SiteRegistry
         }
         return ['id'=>$id, 'status'=>$result['inventory']['status']];
     }
+
+    /** Called only by the installed connector's authenticated local pairing path. */
+    public function pairLocal(string $label,string $url,string $siteId,#[\SensitiveParameter] string $token): array
+    {
+        $this->permit('core.create');
+        if (trim($label)==='' || strlen($label)>120 || preg_match('/[\x00-\x1f\x7f]/',$label)
+            || (new InventoryClient())->endpoint($url)===null) throw new \InvalidArgumentException('Invalid enrollment');
+        $result=(new LocalInventory($this->db))->fetch($siteId,$token);
+        if (!($result['ok']??false)) throw new \RuntimeException('verification_failed');
+        $row=(object)['site_id'=>$siteId,'label'=>trim($label),'base_url'=>rtrim($url,'/'),'address'=>'',
+            'connection_type'=>'local','credential'=>$this->vault->seal($siteId,$token)];
+        $this->db->transactionStart(true);
+        try {
+            $this->db->insertObject('#__nwm_sites',$row,'id');
+            (new CheckHistory($this->db))->record((int)$row->id,$result);
+            $this->db->transactionCommit(true);
+        } catch (\Throwable $e) { $this->db->transactionRollback(true); throw $e; }
+        return ['id'=>(int)$row->id,'status'=>$result['inventory']['status']];
+    }
     public function remove(int $id): void
     {
         $this->permit('core.delete');
@@ -133,7 +152,9 @@ final class SiteRegistry
         } catch (\Throwable) {
             $result = ['ok'=>false, 'error'=>'credential_unavailable'];
         }
-        $result ??= ($client ?? new InventoryClient())->fetch($row['base_url'], $row['address'], $row['site_id'], $token);
+        $result ??= ($row['connection_type']??'https')==='local'
+            ? (new LocalInventory($this->db))->fetch($row['site_id'],$token)
+            : ($client ?? new InventoryClient())->fetch($row['base_url'], $row['address'], $row['site_id'], $token);
         try {
             (new CheckHistory($this->db))->record($id, $result);
             $result['history_saved'] = true;

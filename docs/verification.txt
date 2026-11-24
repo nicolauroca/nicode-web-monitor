@@ -1,0 +1,46 @@
+Nicode Web Monitor 1.1.1-dev.1 — verificación vigente
+
+Fecha: 25 de noviembre de 2026 (Europe/Madrid).
+Entrega de DESARROLLO, publicada como prerelease; no definitiva ni beta final.
+Entorno aislado: Joomla 6.1.4 oficial, PHP 8.5.8 Windows y MariaDB 10.4.28 local,
+con cURL, Sodium y mysqli. No se utilizaron credenciales ni datos de sitios reales.
+
+Resultados de esta revisión
+- Instalación nativa de los paquetes Central y Conector en el mismo Joomla.
+- self_monitoring.php: 13 comprobaciones. Vinculación sin DNS ni HTTP propio,
+  inventario manual y periódico en proceso, identidad, credencial, revocación,
+  recibos ligados al modo de transporte y diagnóstico de versiones mezcladas.
+- onboarding_http.py: 25 comprobaciones en modo local con DNS bloqueado y otras
+  25 en modo HTTPS remoto. Chrome real, login nativo, código, inventario, guardado
+  del plugin avanzado sin perder acceso, revocación y eliminación independiente.
+  Vistas de 1440/390 px sin desbordamiento; CSS/JS correctos y sin errores JavaScript.
+- connection_transport.py: 8 comprobaciones TLS. Éxito y diagnósticos de HTTP
+  401/403/404/5xx, redirección, contenido HTML y JSON inválido.
+- Regresión nativa: plug_and_play 27, registry 36, pairing 17, history 24,
+  monitor 21, notifications 20, maintenance_history 16, backup_coordinator 44.
+- scheduler.php: 10 comprobaciones de cola CLI, recurrencia natural en proceso
+  nuevo, contadores persistidos y ausencia de ejecuciones anticipadas.
+- lifecycle_native.php: 10 comprobaciones del ciclo de instalación/reinstalación y
+  retirada independiente de paquetes, datos conservados y pausa de tareas.
+- Sin Joomla: public_address 25, transport 16, alerts 16, inventory_view 8.
+- Siete ZIP idénticos entre fuentes LF/CRLF, con binarios preservados; sintaxis
+  PHP/XML y Python verificadas y enlaces locales de documentación comprobados.
+
+Diagnóstico público del fallo comunicado
+Una consulta GET sin credenciales a la ruta connection.claim del sitio facilitado
+por el propietario devolvió HTTP 401 y el error de inventario unauthorized. La ruta
+vigente rechaza ese GET con 405, antes de comprobar un código. La respuesta es
+compatible con un motor anterior interceptando la vinculación. No permite concluir
+qué versiones están instaladas sin consultar su administración. No se enviaron
+códigos, credenciales ni mutaciones al sitio real.
+La corrección local elimina además la dependencia de acceso HTTP al propio hosting.
+
+Límites
+La prueba local bloquea DNS a propósito. La prueba remota cambia SOLO copias
+instaladas del laboratorio para usar loopback/CA local y las restaura al terminar.
+Los ZIP mantienen verificación TLS, destinos públicos y pinning para sitios remotos.
+No se ha configurado cron del hosting ni entregado correo a un buzón externo.
+No se atribuye una nueva captura/restauración completa ni actualización nativa
+core/extensiones a estas pruebas de conexión. MySQL 8 y otros hostings/runtime
+requieren validación adicional. Las capturas y entornos de ensayo quedan en .local,
+ignorados por Git. Los checksums exactos se publican junto a los ZIP de la prerelease.

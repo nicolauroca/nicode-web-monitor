@@ -1,98 +1,87 @@
-Nicode Web Monitor — instalación desde cero, candidato 1.0.0-rc1 (1 noviembre 2026)
-Package: Nicode.joomla.webmonitor
+Nicode Web Monitor 1.1.1-dev.1 — instalación y conexión
 
-Qué vas a montar
-Un Joomla central contiene el panel; cada Joomla supervisado tiene su conector.
-El desarrollo está preparado para validación de instalación y uso por el propietario.
-Es un candidato de entrega; la aceptación en tus instalaciones sigue pendiente.
-No necesitas contratar servicios. Necesitas poder instalar extensiones en ambos
-Joomla y ejecutar PHP localmente para preparar mantenimiento en el supervisado.
+Requisitos
+Joomla 6, PHP y base de datos compatibles con esa instalación. PHP necesita cURL,
+Sodium y las extensiones nativas de Joomla. Ambos sitios deben servir HTTPS con
+certificados válidos y ser accesibles mediante nombres de dominio públicos.
+El servidor debe transmitir Authorization a PHP y establecer HTTPS de forma fiable.
+Las cabeceras Forwarded y X-Forwarded-Proto no habilitan confianza automáticamente.
+El requisito de destino público se aplica a los sitios remotos. Para monitorizar
+este mismo Joomla, el inventario se obtiene localmente y no necesita acceso a su
+propia dirección pública ni resolver DNS.
+Python 3 se utiliza solo al reconstruir los paquetes desde el repositorio.
 
-1. Preparar los paquetes
-Si descargaste el ZIP de entrega, extráelo y usa los ZIP de packages/ directamente.
-Para reconstruir desde código, clona el repositorio público. Desde su raíz
-ejecuta python tools/build.py. Python solo prepara los ZIP; no se instala en Joomla.
-El directorio dist contendrá cuatro paquetes independientes:
- - com_nicodewebmonitor-1.0.0-rc1.zip: panel del Joomla central.
- - plg_system_nicodewebmonitor-1.0.0-rc1.zip: conector del Joomla supervisado.
- - plg_console_nicodewebmonitor-1.0.0-rc1.zip: inventario local por CLI, opcional.
- - plg_task_nicodewebmonitor-1.0.0-rc1.zip: comprobaciones programadas, opcional.
-Instala cada ZIP con Sistema > Instalar > Extensiones en su Joomla correspondiente.
-No hay un ZIP de paquete que los instale todos. No se crean tareas al instalarlos.
-La base comprobada es Joomla 6.1.4, PHP 8.3.36/8.4.26 y MariaDB 11.8.9 en Windows.
-MySQL 8.4.13 tiene comprobación de esquema y servicios con el driver de Joomla,
-no una instalación Joomla completa. Tu entorno se valida durante tus pruebas.
+1. Obtener los instaladores
+Desde la raíz del repositorio: python tools/build.py
+Los dos archivos para usuarios son:
+ - dist/pkg_nicodemonitor-1.1.1-dev.1.zip: panel central y plugin de tareas.
+ - dist/pkg_nicodeconnector-1.1.1-dev.1.zip: componente de conexión y motor system.
+El build también genera ZIP individuales para pruebas y un plugin CLI opcional;
+no instalarlos en el recorrido normal. Descargar los dos pkg_ de la prerelease
+1.1.1-dev.1, no «Source code» ni los ZIP de una release anterior.
 
-2. Conectar el primer sitio
-En el panel central, Enroll a site guía la generación de UUID y credencial privada.
-Guarda la credencial original en tu gestor de contraseñas antes de enviar. Copia
-el UUID y el digest SHA-256 al plugin System - Nicode Web Monitor del supervisado.
-Guarda y habilita ese plugin. El generador PHP de README.md es la alternativa
-si el navegador no permite Web Crypto. Usa HTTPS válido en ambos Joomla.
-En Componentes > Nicode Web Monitor del central, registra nombre, URL canónica,
-IP pública fijada, UUID y credencial de inventario; pulsa Verify and enroll.
-Se comprueba la identidad antes de guardar el sitio y su primera observación.
-La credencial se introduce en el campo privado del panel; no en comandos ni URLs.
-Consulta docs/site-registry.txt y docs/central-client.txt para los campos y permisos.
-El formulario público rechaza IP privadas; los ensayos locales usan un adaptador
-exclusivo de pruebas. No desactives esa protección para usar esta guía en producción.
+2. Instalar
+En el Joomla central, Sistema > Instalar > Extensiones: subir el paquete central.
+En cada Joomla supervisado: subir el paquete Connector mediante el mismo instalador.
+Abrir los componentes desde el menú Componentes. No hay que buscar, habilitar ni
+rellenar parámetros de plugins para conectar el inventario.
 
-3. Interpretar resultados
-El alta guiada verifica el conector, no la disponibilidad pública. Una comprobación
-correcta muestra inventario y fecha; un dato desconocido o antiguo no es un estado
-sano. Los avisos internos y el historial se describen en check-alerts.txt y
-check-history.txt. Para automatizar las consultas usa automatic-monitoring.txt:
-instalar el plugin de tareas no activa por sí solo el disparador del hosting.
-Para correo, configura SMTP con TLS/SSL en Joomla y activa destinatario y avisos
-en la configuración del componente. La misma tarea evalúa cambios de estado.
-Consulta pairing-and-notifications.txt: aceptado por SMTP no significa entregado;
-los resultados inciertos no se reintentan sin una acción expresa.
+3. Vincular
+En Componentes > Nicode Web Monitor del central, en Añadir sitio, escribir un nombre
+y pulsar Generar código de vinculación. Como administrador, esta acción también
+prepara la tarea de comprobaciones si aún no existe. El código caduca a los diez
+minutos y generar otro invalida el anterior de ese administrador.
+En Componentes > Nicode Web Monitor — Conector del supervisado, introducir la dirección HTTPS
+mostrada por el central y pegar el código. Pulsar Conectar.
+La dirección e identidad del supervisado, las credenciales y la resolución de IP
+son automáticas. El central verifica el primer inventario antes de guardar el alta.
+Inventario parcial sigue siendo parcial: consultar los detalles del panel.
+Las copias y actualizaciones no se habilitan con la vinculación.
 
-4. Activar mantenimiento de forma deliberada
-Inventario, copias, actualizaciones de extensiones y core tienen credenciales y
-permisos separados. Prepara directorios privados fuera de todas las raíces web;
-el maintenance_storage compartido evita mantenimiento simultáneo entre proveedores.
-Para copias sigue central-backups.txt y resumable-site.txt: primero arma la ventana
-local, después inicia y avanza desde el panel. El lote necesita la pestaña abierta,
-permite pausar y se detiene ante incertidumbre. No renueva la ventana remota.
-Para extensiones sigue extension-update-http.txt: revisa el ZIP, verifica una copia
-recuperable, detén escritores, pon el sitio offline y prepara la operación con
-tools/prepare_extension_update.php. Introduce ese ID en el panel y confirma.
-Para Joomla core sigue core-dispatch.txt, incluida la ejecución del runner remoto
-y su verificación en proceso nuevo. La cola central sola no instala el core.
-Una respuesta perdida requiere consultar estado y efectos; no crear otro ID a ciegas.
-Una copia capturada no acredita que hayas probado su restauración.
+Si no llega la respuesta, repetir exactamente el mismo código y dirección antes
+de su caducidad permite recuperar el recibo sin dar de alta otro sitio. Para usar
+un código nuevo, cancelar primero el intento pendiente en el conector. Cancelar
+revoca su acceso de inventario, incluso si el central llegó a guardar el alta.
+El código es un secreto temporal: no enviarlo en URLs, capturas públicas ni Git.
 
-5. Actualizar o retirar Web Monitor
-Construye los nuevos ZIP e instálalos encima de la versión previa en cada Joomla.
-El instalador aplica las migraciones SQL; no borres tablas para actualizar.
-Se ha comprobado 0.5.0-dev -> 0.8.0-dev y reinstalación de 0.8.0-dev con registros
-conservados. Conserva configuración y base de datos juntas: las credenciales
-cifradas del central dependen del secret de Joomla.
-Para retirar el sistema, detén antes sus tareas y runners, revoca las credenciales
-remotas y desinstala cada extensión desde Joomla. Las ocho tablas nwm_ se conservan
-deliberadamente, igual que los directorios privados de recibos/copias: desinstalar
-no equivale a borrar datos ni a revocar tokens en otros sitios. Reinstalar el
-componente recupera los registros conservados. La limpieza definitiva de esos
-datos exige una decisión y una copia propias; este producto no la automatiza.
+4. Monitorizar el propio central
+Instalar TAMBIÉN el paquete Connector en ese Joomla y usar un código del mismo
+panel con la dirección de ese central. Las dos extensiones tienen identidades,
+menús y propietarios de paquete distintos. También es posible que un central
+sea supervisado por otro central. No hay exclusión entre ambas funciones.
+Si la dirección del central coincide exactamente con la dirección canónica de
+este Joomla y el componente Central está instalado, la vinculación y las consultas
+manuales/automáticas usan inventario local. No hay peticiones HTTP al propio sitio.
+La credencial, identidad, caducidad del código y revocación siguen comprobándose.
+La administración sigue requiriendo HTTPS. Los sitios remotos conservan su política
+de destinos públicos y TLS; un formulario remoto no puede elegir el modo local.
 
-Reproducción del ciclo nativo
-En un Joomla desechable sin Web Monitor ni tablas nwm_, crea un directorio de
-evidencias fuera de la raíz web y prepara un ZIP del componente histórico 0.5.0-dev
-(commit 5bc13895738ab67465bead7091749c841d5da16f). Conserva su hash.
-Ejecuta desde el repositorio:
-php tests/lifecycle_native.php JOOMLA_ROOT OUTPUT_DIR OLD_COMPONENT_ZIP --allow-disposable-writes
-El ensayo instala, actualiza y desinstala extensiones reales; crea un registro
-sintético y conserva sus tablas al terminar. Cada operación de instalador usa un
-proceso nuevo, como peticiones Joomla independientes. No ejecutarlo en un sitio real.
-Consulta lifecycle.json y docs/verification-2026-10-29-types-lifecycle.txt.
+5. Verificar la ejecución automática
+La sección Comprobaciones automáticas distingue tarea preparada, primera ejecución
+pendiente, pausa, retrasos, fallos y ejecución reciente comprobada. Seguir
+automatic-monitoring.txt para el cron central. No hace falta cron en cada conector.
+Una conexión correcta o una consulta manual no prueban que exista ejecución periódica.
 
-Plantillas (verificación 29 octubre, noche)
-Para actualizar una plantilla de sitio o administrador sigue la preparación y el
-panel descritos en extension-update-http.txt. Su ZIP debe incluir templateDetails.xml
-en la raíz y un nombre/elemento canónico en minúsculas. La actualización conserva
-ID y estilos existentes en las pruebas; verifica tu copia y detén los escritores
-antes de prepararla. No actives la plantilla de prueba como predeterminada.
-Las librerías y paquetes compuestos siguen bloqueados; no son funciones aceptadas.
+6. Desconectar o retirar
+En Nicode Web Monitor — Conector, marcar la revocación y pulsar Desconectar. El central perderá
+el acceso de inventario en su próxima petición. Eliminar el registro del panel es
+una acción distinta; no revoca por sí misma un secreto que conserva el conector.
+Desinstalar cada paquete desde Joomla, sin desinstalar sus piezas por separado.
+Retirar Connector no elimina el componente central ni sus tareas; retirar Central
+pausa las tareas Nicode, invalida códigos y no desinstala Connector.
+Las tablas y los directorios privados de mantenimiento se conservan. La revocación
+de inventario no revoca credenciales de mantenimiento configuradas por separado.
 
-Actualizaci?n 31oct: 0.8.0-dev -> 0.9.0-dev comprobada por instalador nativo. Historial de mantenimiento desde 0.9; ver maintenance-history.txt. No reconstruye transiciones previas.
+Desarrollo sin compatibilidad anterior
+Se recomienda una instalación de ensayo limpia. No se promete migración del alta
+manual de anteriores versiones, ni conversión de tareas o credenciales existentes.
+Reinstalar un paquete actual no es una limpieza de las tablas conservadas. Antes
+de reutilizar un laboratorio viejo, decidir explícitamente qué datos conservar.
+
+Si aparece NWM: package_incomplete o la ruta de vinculación pide bearer (HTTP 401)
+Instalar los dos paquetes completos de ESTA prerelease en el Joomla que tenga ambos
+roles. No basta actualizar solo el componente dejando el motor system antiguo.
+Cancelar cualquier intento pendiente en Conector, generar un código nuevo en
+Central y conectar de nuevo. No deshabilitar TLS ni introducir secretos a mano.
+Los errores ahora distinguen versiones mezcladas, autenticación inesperada,
+firewall HTTP 403, ruta ausente HTTP 404, respuesta HTML/JSON y errores de servidor.

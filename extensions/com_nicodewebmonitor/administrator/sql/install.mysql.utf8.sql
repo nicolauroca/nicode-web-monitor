@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `#__nwm_sites` (
  `label` varchar(120) NOT NULL,
  `base_url` varchar(2048) NOT NULL,
  `address` varchar(45) NOT NULL,
+ `connection_type` varchar(8) NOT NULL DEFAULT 'https',
  `credential` text NOT NULL,
  PRIMARY KEY (`id`), UNIQUE KEY `site_identity` (`site_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -76,3 +77,10 @@ CREATE TABLE IF NOT EXISTS `#__nwm_notifications` (
  `attempted_at` bigint NOT NULL DEFAULT 0,
  PRIMARY KEY (`site`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `#__nwm_pairing` (
+ `code_hash` char(64) NOT NULL, `label` varchar(120) NOT NULL,
+ `created_by` int unsigned NOT NULL, `expires_at` bigint NOT NULL,
+ `request_hash` char(64) DEFAULT NULL, `site` int unsigned DEFAULT NULL,
+ PRIMARY KEY (`code_hash`), KEY `expiration` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

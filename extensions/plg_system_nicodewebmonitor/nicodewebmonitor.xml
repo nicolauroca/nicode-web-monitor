@@ -4,8 +4,8 @@
   <author>Nicolau Roca</author>
   <creationDate>2026-10</creationDate>
   <license>GNU General Public License version 2 or later</license>
-  <version>1.0.0-rc1</version>
-  <description>HTTPS inventory, backups and locally prepared plugin updates. Maintenance requires separate credentials and private storage. Development only.</description>
+  <version>1.1.1-dev.1</version>
+  <description>Motor interno de Nicode Web Monitor — Conector. Configura la vinculación desde Componentes → Nicode Web Monitor — Conector.</description>
   <namespace path="src">Nicode\Plugin\System\NicodeWebMonitor</namespace>
   <scriptfile>script.php</scriptfile>
   <files>
@@ -14,13 +14,15 @@
     <folder plugin="nicodewebmonitor">services</folder>
     <folder>src</folder>
   </files>
-  <config><fields name="params"><fieldset name="basic">
-    <field name="site_id" type="text" label="Site UUID" description="Unique UUID v4 for this installation. Keep it when rotating credentials; change it on clones." filter="string" />
-    <field name="token_hash" type="text" label="Credential SHA-256 digest" description="64 lowercase hex characters. Never paste the bearer credential here. Empty revokes access immediately." filter="string" />
+  <config><fields name="params"><fieldset name="connection" label="Conexión">
+    <field name="connection_help" type="note" label="Nicode Web Monitor — Conector" description="Configura la vinculación en Componentes → Nicode Web Monitor — Conector. La identidad y las credenciales se generan automáticamente." />
+    <field name="site_id" type="hidden" filter="string" />
+    <field name="token_hash" type="hidden" filter="string" />
+  </fieldset><fieldset name="advanced" label="Mantenimiento experimental (avanzado)">
     <field name="backup_token_hash" type="text" label="Backup credential SHA-256 digest" description="Separate from inventory. Empty disables backups. Never paste the credential itself." filter="string" />
-    <field name="backup_storage" type="text" label="Private backup directory" description="Absolute directory outside every web root, restricted to the service account. Pre-create operations and snapshots subdirectories. See backup-http.txt before enabling." filter="string" />
+    <field name="backup_storage" type="text" label="Private backup directory" description="Absolute directory outside every web root, restricted to the service account. Pre-create operations and snapshots subdirectories. See docs/maintenance.txt before enabling." filter="string" />
     <field name="update_token_hash" type="text" label="Update credential SHA-256 digest" description="Must differ from inventory and backup. Empty disables updates." filter="string" />
-    <field name="update_storage" type="text" label="Private update directory" description="Locally vetted packages and operation permits. Outside all web roots. See extension-update-http.txt." filter="string" />
+    <field name="update_storage" type="text" label="Private update directory" description="Locally vetted packages and operation permits. Outside all web roots. See docs/maintenance.txt." filter="string" />
     <field name="maintenance_storage" type="text" label="Shared private maintenance directory" description="Required for backups and updates. One directory per installation shared by HTTP and CLI; never clear an unresolved owner without inspecting effects." filter="string" />
     <field name="core_token_hash" type="text" label="Core update credential SHA-256 digest" description="Must differ from inventory, backups and extension updates. HTTP queues a prepared operation; an explicit local CLI performs it. Empty disables core requests." filter="string" />
   </fieldset></fields></config>

@@ -1,0 +1,43 @@
+Nicode Web Monitor 1.1.1-dev.1 — capturas y recuperación local
+
+Una captura completa no demuestra que una instalación Joomla pueda restaurarse.
+Las primitivas locales de tools permiten ensayar recuperación en destinos aislados;
+no hay API remota de restauración ni rollback automático del mantenimiento.
+
+Archivos
+FileSnapshot trata capturas simples; ResumableTree y TreeManifest recorren árboles
+por pasos y retienen manifiestos y hashes. TreeRestore restaura hacia un directorio
+nuevo, separado de origen y almacenamiento. Rechaza rutas ambiguas, escapes,
+enlaces y destinos existentes incompatibles. El manifiesto final se contrasta con
+los bytes capturados y con el árbol restaurado. No restaurar encima del sitio vivo.
+
+Base de datos
+DatabaseSnapshot y ResumableDatabase capturan esquema/filas con validación y límites.
+La recuperación exige una base vacía diferente de origen. Las credenciales de
+administración llegan por stdin a fixtures, no por argumentos. No se debe interpretar
+que una tabla omitida o una columna no soportada contiene datos vacíos válidos.
+La cuenta necesita los permisos reales para crear el esquema compatible.
+
+Captura conjunta
+ResumableSite coordina archivos, base de datos y comparación final. El digest
+conjunto liga ambos manifiestos. El resultado usa almacenamiento por chunks,
+no un ZIP descargable. El mantenimiento exige escritores detenidos continuamente.
+Los checkpoints y recibos son privados y forman parte del contexto de recuperación;
+no editar ni limpiar un checkpoint incierto para continuar como si nada hubiera pasado.
+
+Aceptación de una restauración
+Verificar archivos y SQL, ajustar configuración de rutas/conexión en el clon y
+arrancar Joomla CLI, frontend y administrador en aislamiento. Revisar extensiones,
+funciones y datos propios de la instalación. El clon debe recibir otra identidad
+y credenciales de conexión antes de exponerse o monitorizarse como un sitio nuevo.
+Una comprobación de versión o de hashes no sustituye estas pruebas funcionales.
+
+Fuentes y pruebas
+tools/TreeRestore.php, TreeManifest.php, DatabaseSnapshot.php, ResumableSite.php.
+tests/tree_restore.php y tests/site_recovery.php cubren destinos nuevos y corrupción.
+tests/tree_database_recovery.php cubre recuperación conjunta y el fixture de
+arranque real es tests/site_http_restore.php. Consultar
+la cabecera y argumentos de cada fixture antes de ejecutarlo. Algunas pruebas
+requieren esquemas y servidores aislados adicionales, no el Joomla del usuario.
+El estado de verificación de esta revisión se limita a verification.txt; los
+ensayos históricos de recuperación no son validación del instalador actual.

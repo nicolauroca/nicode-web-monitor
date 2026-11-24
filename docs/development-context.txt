@@ -1,0 +1,66 @@
+Nicode Web Monitor — contexto de desarrollo vigente
+
+Objetivo acordado
+Convertir inventario y conexión multisite en instalar → conectar → ver resultados,
+para usuarios algo técnicos que no deberían conocer UUID, hashes, IPs o parámetros
+de ejecución. Dos paquetes y dos pantallas de componente. Los plugins son piezas
+internas. El Joomla central también puede supervisarse a sí mismo, o ser supervisado
+por otro central. No introducir modos de instalación mutuamente excluyentes.
+
+Política pre-beta
+No se exige compatibilidad con versiones anteriores de desarrollo. Evitar capas
+de migración o conservación de formularios antiguos por ese motivo. El esquema
+de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
+updates conservados sirven a fixtures antiguos; no constituyen una promesa de
+migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
+La versión actual es 1.1.1-dev.1 y la verificación vigente está en verification.txt.
+
+Decisiones implementadas
+Paquetes Central/Connector sin piezas compartidas entre propietarios. Código de
+256 bits, diez minutos, hash en base de datos, un código activo por administrador.
+Credencial e identidad generadas localmente. Confirmación mediante inventario antes
+del alta. Recuperación del recibo ante respuesta perdida, ligada a petición exacta.
+Estado pendiente cifrado y revocación local desde el componente. Sin configuración
+manual de hashes de inventario. Mantenimiento agrupado bajo opciones avanzadas.
+Para el propio Joomla central se usa inventario local en proceso, con identidad,
+credencial y revocación comprobadas. No depender de DNS ni peticiones HTTPS a sí
+mismo. El transporte local solo se selecciona dentro del código instalado, nunca
+desde un payload HTTP. Las piezas con versiones distintas se rechazan expresamente.
+Todos los nombres visibles pertenecen a Nicode Web Monitor: Central y Conector.
+Tarea nativa creada idempotentemente desde una acción administrativa, respetando
+pausas y personalizaciones. El estado del scheduler procede de ejecuciones reales.
+
+Fuentes y límites que hay que preservar
+tools/build.py genera ZIP reproducibles y copias con namespaces propios; no editar
+dist. El cliente conserva validación TLS, restricción de destinos públicos, pinning,
+redirecciones desactivadas, límites y comprobación de identidad. No introducir
+toggles inseguros para facilitar localhost o un proxy. Las excepciones del fixture
+de navegador solo alteran las copias instaladas en un Joomla desechable y se restauran.
+Inventario, copias, extensiones y core tienen credenciales/ACL independientes.
+El maintenance gate y los diarios impiden reejecutar efectos inciertos a ciegas.
+No sacrificar esas propiedades al simplificar futuras pantallas de mantenimiento.
+
+Documentación
+docs/README.md es el índice único. Actualizar guías, contexto y verificación en
+la misma revisión que el código. Los informes y manuales superados están en Git,
+no en docs. No añadir validaciones históricas como evidencia de esta versión.
+
+Trabajo pendiente antes de beta final
+Validación del propietario en sus hostings, certificados y configuraciones proxy;
+diagnóstico y recuperación guiada de cambios de IP; correo en un buzón externo;
+cron real del hosting; matrices PHP/base de datos/plataforma; localización completa
+de la UI anterior; asistentes de mantenimiento que conserven las precondiciones
+reales; pruebas funcionales y de recuperación tras actualizaciones. Definir la
+política de actualizaciones y compatibilidad al fijar la beta final.
+La vinculación sencilla no significa copias, actualizaciones, disponibilidad pública
+o seguridad automática. Mostrar claramente el alcance de cada capacidad.
+
+Publicación
+Publicar las entregas como prerelease de desarrollo, con prerelease=true y sin
+promoverlas a latest estable. Subir los dos ZIP pkg_ y SHA256SUMS, enlazar desde
+README y actualizar docs en el mismo commit. El usuario ha autorizado publicar
+esta revisión en GitHub; no confundir una release con una versión definitiva.
+
+No guardar credenciales, inventarios, instalaciones, dumps ni capturas de sitios
+reales en Git. dist y .local son generados e ignorados. No publicar paquetes ni
+enviar cambios a GitHub como efecto implícito de una prueba local.

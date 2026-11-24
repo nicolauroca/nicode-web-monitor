@@ -1,5 +1,6 @@
 """Package: Nicode.joomla.webmonitor. Packaging equivalence across LF and CRLF checkouts."""
 import argparse
+import io
 import hashlib
 import json
 from pathlib import Path
@@ -33,8 +34,11 @@ with tempfile.TemporaryDirectory(prefix='nwm-build-') as tmp:
             assert len(z.namelist())==len(set(z.namelist()))
             for name in z.namelist():
                 if name.endswith('.png'):assert z.read(name)==binary
+                elif name.endswith('.zip'):
+                    with zipfile.ZipFile(io.BytesIO(z.read(name))) as child:
+                        assert child.testzip() is None
                 else:assert b'\r\n' not in z.read(name),name
-    assert len(hashes)==4
-a.output.write_text(json.dumps({'equivalent_packages':4,'binary_preserved':True,'fixture_hashes':hashes,
+    assert len(hashes)==7
+a.output.write_text(json.dumps({'equivalent_packages':7,'binary_preserved':True,'fixture_hashes':hashes,
     'note':'Component fixture contains a synthetic binary; these are not release artifact hashes.'},indent=2))
-print('4 packages identical across LF/CRLF; binary bytes preserved.')
+print('7 packages identical across LF/CRLF; binary bytes preserved.')

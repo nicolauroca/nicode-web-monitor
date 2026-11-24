@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="package" method="upgrade">
+ <name>Nicode Web Monitor — Central</name><packagename>nicodemonitor</packagename>
+ <author>Nicolau Roca</author><version>1.1.1-dev.1</version><license>GPL-2.0-or-later</license>
+ <description>Instalación completada. Abre Componentes → Nicode Web Monitor para añadir sitios y preparar las comprobaciones automáticas.</description>
+ <blockChildUninstall>true</blockChildUninstall>
+ <files folder="packages">
+  <file type="component" id="com_nicodewebmonitor">com_nicodewebmonitor.zip</file>
+  <file type="plugin" id="nicodewebmonitor" group="task">plg_task_nicodewebmonitor.zip</file>
+ </files>
+</extension>

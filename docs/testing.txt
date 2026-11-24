@@ -1,0 +1,79 @@
+Nicode Web Monitor 1.1.1-dev.1 — pruebas
+
+Reglas
+Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
+Los fixtures con --allow-disposable-writes instalan extensiones, modifican usuarios,
+parámetros, tareas o datos. No ejecutarlos en sitios reales. Leer sus argumentos
+antes de utilizarlos; no todos los scripts comparten interfaz. Credenciales por
+stdin y artefactos en .local, fuera de Git. No ejecutar fixtures mutantes a la vez
+contra el mismo Joomla. Mantener PHP/CLI/cURL/Sodium compatibles con el sitio.
+
+Empaquetado y sintaxis
+python tools/build.py
+python tests/build_reproducible.py --output .local/build-check.json
+El segundo comando compara los siete ZIP entre fuentes LF/CRLF, incluidos dos
+paquetes nativos con ZIP hijos y conservación de binarios. Los usuarios solo
+necesitan los dos pkg_. Comprobar todos los PHP con php -l antes de entregar.
+
+Pruebas rápidas sin Joomla
+php tests/public_address.php
+php tests/transport.php
+php tests/alerts.php
+php tests/inventory_view.php
+Verifican destinos públicos/URLs adversarias, autenticación antes de colección,
+alertas y representación segura de inventario no confiable.
+
+Vinculación y programación con Joomla real
+Instalar ambos paquetes en el mismo Joomla desechable. Con registro de sitios y
+tareas Nicode inicialmente vacíos:
+php tests/plug_and_play.php JOOMLA_ROOT --allow-disposable-writes
+Incluye emisión/caducidad, permisos, cancelación, token cifrado/hash, verificación
+fallida, alta propia, recibo repetido y respuesta perdida. La red de esta prueba
+es una dependencia controlada: no acredita transporte en hosting real.
+php tests/self_monitoring.php JOOMLA_ROOT --allow-disposable-writes
+Vincula el propio Joomla con DNS deliberadamente inaccesible, verifica colección
+manual/automática local, revocación, identidad, recibos ligados al modo de transporte
+y diagnóstico de motor/componente de versiones distintas.
+php tests/scheduler.php JOOMLA_ROOT --allow-disposable-writes
+Ejecuta cola CLI y recurrencia natural de un minuto en procesos nuevos; tarda
+aproximadamente setenta segundos y restaura tareas previas. No crea cron del SO.
+php tests/lifecycle_native.php JOOMLA_ROOT PRIVATE_OUTPUT --allow-disposable-writes
+Comprueba reinstalación actual y retirada independiente de los dos paquetes,
+conservación de datos y pausa de tareas. No necesita un ZIP histórico.
+
+Navegador y HTTPS reales, un Joomla con ambas funciones
+Requiere Python Playwright, Chrome/Chromium, php-cgi y certificado local de prueba
+con SAN localhost, confiado por el cliente PHP del fixture. JSON por stdin:
+{"admin_user":"CUENTA_DESECHABLE","admin_password":"SECRETO_DESECHABLE"}
+python tests/onboarding_http.py --site JOOMLA_ROOT --php PHP_EXECUTABLE --certificate LOCAL_CERT --private-key LOCAL_KEY --output PRIVATE_OUTPUT --browser CHROME_EXECUTABLE --allow-disposable-writes
+El fixture usa TLS local y peticiones CGI nuevas; inicia sesión, genera el código,
+conecta el central consigo mismo con DNS bloqueado, verifica inventario, vistas de escritorio/móvil,
+revocación y eliminación independiente. Incluye métodos, JSON y tamaño de body
+inválidos sobre el endpoint público. Cambia temporalmente SOLO las copias instaladas
+en el Joomla desechable para bloquear DNS o preparar el destino/CA de pruebas;
+restaura esos archivos en finally. Añadir --remote-transport para probar el recorrido
+HTTPS remoto con destino loopback y CA de pruebas. Sin esa opción, el DNS del
+fixture lanza una excepción si se intenta usar: prueba el transporte local real.
+Los ZIP conservan la política de red de producción.
+No es un ensayo de DNS público ni de certificado de hosting. Revisar visualmente
+las capturas PNG generadas; no publicar capturas con códigos reales.
+python tests/connection_transport.py --php PHP_EXECUTABLE --certificate LOCAL_CERT --private-key LOCAL_KEY
+Comprueba por TLS los diagnósticos 401/403/404/5xx, redirección y respuestas inválidas.
+
+Regresión del central
+php tests/registry.php JOOMLA_ROOT --allow-disposable-writes
+php tests/pairing.php JOOMLA_ROOT --allow-disposable-writes
+php tests/history.php JOOMLA_ROOT --allow-disposable-writes
+php tests/monitor.php JOOMLA_ROOT --allow-disposable-writes
+php tests/notifications.php JOOMLA_ROOT --allow-disposable-writes
+pairing.php prueba el servicio interno de verificación, no el antiguo formulario.
+El alta manual por tareas add/pair ya no es una API administrativa de usuario.
+
+Mantenimiento y recuperación
+Hay fixtures específicos para proveedores, cliente TLS, preparación/instalación
+nativa, permisos, respuestas perdidas, paquetes compuestos y restauración. Consultar
+las cabeceras de tests/backup_*, tests/update_http.py, tests/core_*, tests/package_*,
+tests/resumable_*, tests/site_* y tests/tree_*. Requieren almacenamiento y, a veces,
+otras bases de datos o instalaciones Joomla totalmente desechables. No ejecutar
+todos indiscriminadamente contra un mismo entorno. No atribuirlos como ejecutados
+en esta revisión si no figuran en verification.txt.

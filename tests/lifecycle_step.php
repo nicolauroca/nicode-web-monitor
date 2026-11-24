@@ -11,7 +11,7 @@ if($d['action']==='install'){
  try{$ok=$i->install($p['extractdir']);}finally{Joomla\Filesystem\Folder::delete($p['extractdir']);}
 }elseif($d['action']==='uninstall'){
  $row=$db->setQuery('SELECT element FROM #__extensions WHERE extension_id='.(int)$d['id'])->loadResult();
- if(!in_array($row,['nicodewebmonitor','com_nicodewebmonitor'],true))throw new RuntimeException('Not a product extension');
+ if(!in_array($row,['nicodewebmonitor','com_nicodewebmonitor','com_nicodeconnector','pkg_nicodemonitor','pkg_nicodeconnector'],true))throw new RuntimeException('Not a product extension');
  $ok=$i->uninstall($d['type'],(int)$d['id']);
 }else throw new RuntimeException('Unknown step');
 if(!$ok)throw new RuntimeException('Native installer rejected step');echo '{"ok":true}';

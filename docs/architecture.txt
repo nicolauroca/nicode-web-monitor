@@ -1,0 +1,86 @@
+Nicode Web Monitor 1.1.1-dev.1 — arquitectura
+
+Producto e instalación
+Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.
+Sitio: pkg_nicodeconnector contiene com_nicodeconnector + plg_system_nicodewebmonitor.
+Los paquetes no comparten piezas, por lo que pueden instalarse y retirarse de forma
+independiente. blockChildUninstall evita dejar instalaciones incompletas.
+Los nombres visibles son Nicode Web Monitor — Central y Nicode Web Monitor — Conector.
+La identidad interna com_nicodeconnector no depende del texto traducido del menú.
+El plugin de consola es una herramienta opcional para inventario local por CLI.
+
+Componentes
+com_nicodewebmonitor administra sitios, comprobaciones, alertas, correo y operaciones
+experimentales. Sus formularios mutan por POST con CSRF y permisos explícitos.
+Su aplicación frontend atiende exclusivamente connection.claim para vinculación.
+com_nicodeconnector proporciona la pantalla local Conectar/Estado/Desconectar.
+No depende del componente central. Puede instalarse en el mismo Joomla que él.
+El motor system sirve inventario y las rutas de mantenimiento antes de renderizar
+el frontend. Deja pasar connection.claim al componente central, incluso cuando
+ambas funciones comparten instalación.
+
+Código compartido
+tools/connection contiene PublicAddress y JsonClient. El build los copia con
+namespaces propios a ambos componentes. El conector recibe una copia namespaced
+de CredentialVault; no necesita arrancar el central para cifrar un intento pendiente.
+El inventario tiene una única fuente, en el plugin CLI, copiada al motor system.
+Las primitivas de mantenimiento tienen su fuente en tools y se empaquetan con
+namespace del plugin. No editar copias generadas en dist o en un Joomla instalado.
+
+Vinculación
+PairingService emite códigos secretos de 256 bits, guarda solo SHA-256 y permite
+un código activo por administrador, durante diez minutos. Valida los permisos del
+emisor también al consumirlo. Un bloqueo de fila serializa reclamaciones.
+Connection persiste identidad y token pendiente cifrado antes de abrir la red.
+Activa únicamente el hash de inventario del motor system. El central resuelve un
+destino público, fija esa IP, comprueba HTTPS, credencial e identidad, y guarda
+el sitio junto con su primer resultado. El código queda ligado a esa petición.
+Cuando Central y Conector pertenecen al mismo Joomla y la URL coincide, Connection
+invoca claimLocal directamente y LocalInventory verifica identidad, hash y motor
+habilitado antes de recoger datos en proceso. No utiliza DNS ni cURL. La tabla
+nwm_sites indica connection_type=local y address vacío; el modo remoto usa https.
+Las consultas manuales y periódicas respetan ese modo. La ruta HTTP solo ejecuta
+claim remoto: no acepta un selector de transporte en JSON. El recibo queda ligado
+también al modo local/https, para impedir su sustitución.
+Una respuesta perdida se recupera repitiendo la misma petición dentro del plazo,
+sin alta ni comprobación duplicada. Otra identidad/URL/credencial se rechaza.
+Al confirmar, el conector borra el secreto pendiente y conserva solo su hash.
+La revocación local vacía el hash; no depende de que el central esté disponible.
+
+Datos
+El central cifra credenciales con XChaCha20-Poly1305 y una clave derivada del secret
+de Joomla. El dato asociado liga cada secreto a sitio y, para mantenimiento, propósito.
+Conservar configuración y base de datos conjuntamente: perder/cambiar el secret
+impide descifrar credenciales guardadas. No se conserva el inventario completo:
+se guardan resúmenes de comprobaciones, como máximo 100 por sitio; la UI muestra 10.
+Las alertas se calculan sobre ese historial. Un dato desconocido no se convierte
+en saludable. La antigüedad de referencia para inventario es 24 horas.
+Tablas: nwm_sites, nwm_checks, nwm_pairing, nwm_notifications,
+nwm_backup_credentials, nwm_backup_operations, nwm_update_credentials,
+nwm_update_operations, nwm_core_update_credentials, nwm_core_update_operations,
+nwm_maintenance_events. Joomla aplica su prefijo real a todos los nombres.
+
+Permisos
+core.manage permite acceder al central; core.create emite códigos y registra sitios;
+core.delete elimina registros. nwm.monitor ejecuta lotes automáticos.
+core.admin prepara la programación y configura credenciales de mantenimiento,
+permisos y correo. nwm.backup, nwm.update y nwm.coreupdate son independientes.
+El conector exige core.manage para entrar y core.admin para conectar o revocar.
+Una cuenta bloqueada no puede utilizarse para delegar comprobaciones.
+
+Versiones y diagnóstico
+La conexión rechaza un componente y motor de versiones distintas con un mensaje
+que pide los paquetes completos. El modo local exige también la misma versión de
+Central. Los fallos de transporte devuelven códigos estables y mensajes específicos,
+sin mostrar cuerpos remotos, tokens ni excepciones internas. La UI muestra la
+versión de desarrollo y que no es definitiva.
+
+Alcance
+Se observa inventario de Joomla, PHP, base de datos y extensiones, incluyendo
+desactivadas. Hosting no detectable figura como no disponible. Estos resultados
+no equivalen a supervisar disponibilidad pública, detectar malware o comprobar
+que las copias sean recuperables. El mantenimiento sigue siendo experimental y
+separado de la instalación sencilla de inventario.
+Para sitios remotos se observa el PHP web. El inventario local conserva el contexto
+real del proceso: local_web desde administrador y local_cli desde tareas CLI;
+el PHP de consola puede diferir del servidor web.

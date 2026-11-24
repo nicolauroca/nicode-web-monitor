@@ -1,0 +1,119 @@
+Nicode Web Monitor 1.1.1-dev.1 — mantenimiento experimental
+
+Alcance y acceso
+La conexión sencilla habilita inventario. Copias, actualizaciones de extensiones
+y core siguen siendo operaciones experimentales y deliberadas. El panel las agrupa
+en Copias y actualizaciones (avanzado). No son mantenimiento desatendido.
+La nueva conexión local del propio central solo proporciona inventario. No configura
+un transporte de mantenimiento remoto para ese registro; usar las herramientas
+locales correspondientes y sus precondiciones para ensayos de mantenimiento.
+En Nicode Web Monitor — Conector, el apartado avanzado lleva al plugin system para preparar
+estas capacidades. Este formulario técnico no forma parte de conectar inventario.
+
+Credenciales y almacenamiento
+Cada función tiene un token aleatorio independiente de 32 bytes, codificado en
+64 hex minúsculos. En el plugin se guarda únicamente SHA-256 de ese texto:
+backup_token_hash, update_token_hash o core_token_hash. No usar la credencial de
+inventario ni repetir secretos entre capacidades. Guardar el original de forma
+privada e introducirlo solo en el campo password correspondiente del panel central.
+El central lo cifra, ligado al sitio y propósito. Vaciar un hash revoca ejecución
+y consultas de estado de esa capacidad. Desconectar inventario no modifica estos
+hashes de mantenimiento: revocarlos expresamente al retirar una conexión avanzada.
+
+Directorios absolutos, privados, fuera de TODAS las raíces web y restringidos al
+usuario de servicio: backup_storage para capturas, update_storage para paquetes
+y recibos, maintenance_storage para la exclusión compartida HTTP/CLI. Debe existir
+un maintenance_storage por instalación, usado por todos los proveedores. No cambiar
+ni borrar ese directorio mientras quede una operación sin resolver.
+No es seguro elegir automáticamente un directorio fuera del webroot de Joomla sin
+conocer las demás raíces públicas y restricciones del hosting.
+
+Precondiciones comunes
+Verificar un punto de recuperación de archivos y base de datos. Poner Joomla offline
+y detener TODOS los escritores: administradores, cron, colas, procesos externos y
+SQL. Offline no detiene esos escritores. Mantener la ventana durante la operación.
+Los permisos y confirmaciones del panel no prueban estas precondiciones externas.
+El gate compartido excluye operaciones y retiene un propietario duradero ante
+capturas parciales, cola core o efectos inciertos. No se apropia del bloqueo por
+timeout ni se libera borrando archivos. Investigar efectos y recuperación local.
+
+Copias conjuntas
+Permisos: core.manage + nwm.backup; configurar el secreto requiere core.admin.
+El panel crea un ID de operación sin abrir la red. En backup_storage preparar los
+subdirectorios privados site-operations, sites, site-trees, site-databases y
+site-verify; los proveedores independientes también usan operations/snapshots,
+trees y databases cuando se utilizan sus rutas respectivas.
+Crear localmente backup_storage/armed.json con operation: ID exacto,
+writers_stopped:true y expires_at: timestamp entero no más de 900 segundos futuro.
+Usar sesiones filesystem y desactivar session_metadata; mantener sesiones, logs
+y temporales fuera del árbol capturado. El conector rechaza sesiones que escriben
+en base de datos para capturas de base de datos o conjuntas.
+Tras preparar esas condiciones, avanzar desde el panel. Cada petición da un paso
+y usa la secuencia observada. El lote del navegador requiere confirmación, mantiene
+la pestaña abierta, permite pausa/reanudación y avanza como máximo 100 pasos.
+No crea trabajo en segundo plano ni renueva el permiso local de mantenimiento.
+Fases: files → database → verify → complete. La verificación final compara el
+manifiesto de archivos tras capturar la base de datos. No es una copia transaccional
+de un sitio vivo. El resultado declara restoration_verified:false.
+Una respuesta perdida requiere Query backup status. Un resultado incierto bloquea
+el avance; no crear otro ID ni repetir el paso a ciegas. Un permiso vencido solo
+puede renovarlo un operador tras confirmar que la ventana detenida continúa.
+
+Actualizaciones de extensiones
+Permisos: core.manage + nwm.update; configurar secreto también core.admin.
+Tipos admitidos: plugins, módulos de sitio/administrador, componentes, plantillas
+y librerías independientes. Las librerías pertenecientes a un paquete no se
+actualizan individualmente. No se aceptan descargas o rutas enviadas por HTTP.
+Obtener y revisar un ZIP de confianza en el servidor supervisado. El checksum
+liga bytes; no autentica al autor ni convierte scripts de instalación en seguros.
+Después de verificar recuperación y detener escritores:
+php tools/prepare_extension_update.php JOOMLA_ROOT PRIVATE_UPDATE_DIR TRUSTED_ZIP OPERATION --writers-stopped-and-recovery-verified
+La preparación valida identidad/versiones, copia los bytes y crea un permiso de
+quince minutos. No instala ni detiene escritores. El ID tiene 8-64 caracteres
+minúsculos, dígitos o guiones y no se reutiliza.
+En el panel registrar ese ID y confirmar ejecución por separado. El remoto valida
+offline, permiso, hash, identidad instalada y versiones antes de usar el instalador
+nativo. Reserva incertidumbre antes de efectos; verifica ID/versiones después.
+Un timeout requiere consultar estado y revisar efectos, nunca reenviar instalación.
+
+Paquetes compuestos de extensiones
+Inspección sin ejecutar scripts:
+php tools/inspect_package_archive.php TRUSTED_ZIP EXPECTED_SHA256
+Preparación:
+php tools/prepare_package_update.php JOOMLA_ROOT PRIVATE_UPDATE_DIR TRUSTED_ZIP OPERATION --writers-stopped-and-recovery-verified
+El proveedor usa update_extension con el mismo permiso nwm.update. Requiere padre
+actualizable y conjunto completo de hijos coincidente con el instalado; no admite
+añadir/quitar hijos ni paquetes anidados. Los manifiestos hijos deben ser inequívocos.
+El inspector acota número de entradas, hijos y bytes expandidos; no extrae scripts.
+El registro refleja padre/hijos, sustituciones de ID y efectos parciales. Un fallo
+del segundo hijo puede dejar el primero actualizado: Joomla no garantiza rollback.
+Ese resultado sigue uncertain y conserva el gate hasta revisión local.
+
+Joomla core
+Permisos: core.manage + nwm.coreupdate; configurar secreto también core.admin.
+Obtener Update_Package oficial revisado y su SHA-256. Full_Package no se acepta.
+php tools/prepare_core_update.php JOOMLA_ROOT UPDATE_ZIP SHA256 OPERATION --writers-stopped-and-recovery-verified
+En el panel registrar el ID, confirmar recuperación y después encolar. El endpoint
+HTTP update_core SOLO persiste la cola; no ejecuta instaladores ni crea procesos.
+Antes de vencer el permiso, en el servidor supervisado:
+php tools/core_update_execute.php JOOMLA_ROOT OPERATION --execute-queued
+Y en un proceso NUEVO:
+php tools/core_update_execute.php JOOMLA_ROOT OPERATION --reconcile
+Alternativa de una invocación, con hijos nuevos para ejecutar y verificar:
+php tools/core_runner.php JOOMLA_ROOT --run-queued
+El runner no prepara permisos, no encola, no renueva ventanas y no instala un plan
+no solicitado. Ante incertidumbre solo reconcilia. Necesita proc_open en CLI.
+No se configura automáticamente su cron. El cron del inventario no ejecuta core.
+verified exige observar versiones y esquema nativo desde un proceso nuevo.
+
+Diarios y contratos
+Inventario usa GET con bearer de lectura. Backup utiliza backup_site: POST JSON
+site_id/operation/action=step/confirmed=true/sequence; GET action=status reconcilia.
+Extensiones y core: POST site_id/operation/action=update/confirmed=true; GET
+action=status. Rutas bajo index.php?option=com_nicodewebmonitor&task=RUTA.
+Todos requieren HTTPS fiable, bearer separado y comprobación de identidad.
+Los recibos proyectan estado/plan/secuencia, sin rutas, secretos, archivos o SQL.
+El central reserva estado incierto ANTES de escrituras y añade observaciones
+atómicamente con cambios de estado. La UI muestra hasta 50 observaciones recientes
+por operación, con tiempo UTC, actor, secuencia y digest. No es un log externo
+inmutable ni reconstruye efectos previos a que existiera el registro.

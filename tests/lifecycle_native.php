@@ -1,42 +1,51 @@
 <?php
-/** @package Nicode.joomla.webmonitor. Native install/upgrade/removal on a clean disposable Joomla. */
-if (($argv[4]??'')!=='--allow-disposable-writes')exit(2);
-define('_JEXEC',1);define('JPATH_BASE',realpath($argv[1]));
-require JPATH_BASE.'/includes/defines.php';require JPATH_BASE.'/includes/framework.php';
-use Joomla\CMS\Factory;use Joomla\CMS\Installer\Installer;use Joomla\CMS\Installer\InstallerHelper;use Joomla\Database\DatabaseInterface;
-$c=Factory::getContainer();$c->alias('session','session.cli')->alias(\Joomla\Session\SessionInterface::class,'session.cli');
-Factory::$application=$c->get(\Joomla\CMS\Application\ConsoleApplication::class);Factory::$application->createExtensionNamespaceMap();
-$db=$c->get(DatabaseInterface::class);$output=realpath($argv[2]);$old=realpath($argv[3]);$checks=[];
-if(!$output||!$old)throw new RuntimeException('Output and baseline ZIP required');
+/** Current package lifecycle; no historical-release compatibility contract. */
+if (($argv[3]??'')!=='--allow-disposable-writes') exit(2);
+$_SERVER['HTTP_HOST']='localhost'; $_SERVER['SCRIPT_NAME']='/index.php'; $_SERVER['REQUEST_URI']='/index.php';
+define('_JEXEC',1); define('JPATH_BASE',realpath($argv[1]));
+require JPATH_BASE.'/includes/defines.php'; require JPATH_BASE.'/includes/framework.php';
+use Joomla\CMS\Factory;
+use Joomla\Database\DatabaseInterface;
+$c=Factory::getContainer();$c->alias('session','session.cli')->alias(Joomla\Session\SessionInterface::class,'session.cli');
+$app=$c->get(Joomla\CMS\Application\ConsoleApplication::class);Factory::$application=$app;$app->createExtensionNamespaceMap();
+$db=$c->get(DatabaseInterface::class);$output=realpath($argv[2]);
+if (!$output || (int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_sites')->loadResult()
+    || (int)$db->setQuery("SELECT COUNT(*) FROM #__scheduler_tasks WHERE type='nicode.monitor'")->loadResult()) throw new RuntimeException('Empty disposable installation/output required');
+$checks=[];
 function check($ok,$name){global $checks;if(!$ok)throw new RuntimeException($name);$checks[]=$name;}
-function step($data){
+function step(array $request):void{
     $p=proc_open([PHP_BINARY,__DIR__.'/lifecycle_step.php',JPATH_BASE,'--allow-disposable-writes'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
-    fwrite($pipes[0],json_encode($data));fclose($pipes[0]);$out=stream_get_contents($pipes[1]);$err=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);
-    if(proc_close($p)!==0)throw new RuntimeException('Native step failed: '.$err.' '.$out);
-    check(json_decode($out,true)['ok']===true,'native '.$data['action']);
+    fwrite($pipes[0],json_encode($request,JSON_THROW_ON_ERROR));fclose($pipes[0]);$out=stream_get_contents($pipes[1]);$err=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);
+    if(proc_close($p)!==0 || !str_contains($out,'"ok":true'))throw new RuntimeException('Native lifecycle step failed: '.substr($out.$err,0,300));
 }
-function install($zip){step(['action'=>'install','zip'=>$zip]);}
-function ids(){global $db;return $db->setQuery("SELECT extension_id,type,element,folder FROM #__extensions WHERE element IN ('com_nicodewebmonitor','nicodewebmonitor') ORDER BY extension_id")->loadAssocList();}
-function tables(){global $db;return array_values(array_filter($db->getTableList(),fn($t)=>str_starts_with($t,$db->getPrefix().'nwm_')));}
-function uninstallAll(){global $db;foreach(array_reverse(ids()) as $r){step(['action'=>'uninstall','type'=>$r['type'],'id'=>(int)$r['extension_id']]);}check(ids()===[],'all extension registrations removed');foreach(['administrator/components/com_nicodewebmonitor','plugins/system/nicodewebmonitor','plugins/console/nicodewebmonitor','plugins/task/nicodewebmonitor'] as $p)check(!is_dir(JPATH_BASE.'/'.$p),'files removed '.$p);}
-check(ids()===[] && tables()===[],'clean product baseline');
-$dist=__DIR__.'/../dist';$component=$dist.'/com_nicodewebmonitor-1.0.0-rc1.zip';
-foreach([$component,$dist.'/plg_system_nicodewebmonitor-1.0.0-rc1.zip',$dist.'/plg_console_nicodewebmonitor-1.0.0-rc1.zip',$dist.'/plg_task_nicodewebmonitor-1.0.0-rc1.zip'] as $zip)install($zip);
-check(count(ids())===4,'all four extensions registered');check(count(tables())===10,'fresh install creates all ten tables');
-$freshTables=tables();uninstallAll();check(tables()===$freshTables,'uninstall retains data tables as documented');
-// Only the ten empty tables created by this test, in an explicitly disposable target.
-foreach($freshTables as $t){check((int)$db->setQuery('SELECT COUNT(*) FROM '.$db->quoteName($t))->loadResult()===0,'fresh table empty');$db->setQuery('DROP TABLE '.$db->quoteName($t))->execute();}
-install($old);$prior=ids();check(count($prior)===1,'old component baseline installed');
-$db->setQuery("INSERT INTO #__nwm_sites (site_id,label,base_url,address,credential) VALUES ('12345678-1234-4123-8123-123456789012','Lifecycle QA','https://example.invalid','192.0.2.1','synthetic-not-a-secret')")->execute();
-$row=$db->setQuery('SELECT * FROM #__nwm_sites')->loadAssocList();
-install($component);check(ids()===$prior,'component identity survives upgrade');
-check($db->setQuery('SELECT * FROM #__nwm_sites')->loadAssocList()===$row,'upgrade preserves registration bytes');
-check(count(tables())===10,'upgrade creates new maintenance tables');
-check($db->setQuery('SELECT version_id FROM #__schemas WHERE extension_id='.(int)$prior[0]['extension_id'])->loadResult()==='0.9.0','native schema version advanced');
-install($component);check($db->setQuery('SELECT * FROM #__nwm_sites')->loadAssocList()===$row,'same version reinstall preserves data');
-uninstallAll();check($db->setQuery('SELECT * FROM #__nwm_sites')->loadAssocList()===$row,'uninstall preserves registration');
-install($component);check($db->setQuery('SELECT * FROM #__nwm_sites')->loadAssocList()===$row,'reinstall reconnects retained data');
-check(is_file(JPATH_BASE.'/administrator/components/com_nicodewebmonitor/tmpl/backup-runner.js'),'new browser asset installed');
-uninstallAll();
-file_put_contents($output.'/lifecycle.json',json_encode(['passed'=>count($checks),'checks'=>$checks,'retained_tables'=>count(tables()),'production'=>false],JSON_PRETTY_PRINT));
-echo json_encode(['passed'=>count($checks),'fresh_install'=>true,'upgrade'=>true,'uninstall'=>true,'retention'=>true])."\n";
+function installPackage(string $name):void { step(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_'.$name.'-1.1.1-dev.1.zip')]); }
+function removePackage(string $name):void{
+    global $db;$id=(int)$db->setQuery("SELECT extension_id FROM #__extensions WHERE type='package' AND element=".$db->quote('pkg_'.$name))->loadResult();
+    if(!$id)throw new RuntimeException('Missing package');step(['action'=>'uninstall','type'=>'package','id'=>$id]);
+}
+installPackage('nicodemonitor');installPackage('nicodeconnector');
+$owners=$db->setQuery("SELECT element,package_id FROM #__extensions WHERE type='component' AND element IN ('com_nicodewebmonitor','com_nicodeconnector')")->loadAssocList('element');
+check(count($owners)===2 && $owners['com_nicodewebmonitor']['package_id']!==$owners['com_nicodeconnector']['package_id'],'two components have independent package owners');
+check((int)$db->setQuery("SELECT COUNT(*) FROM #__extensions WHERE type='component' AND element LIKE 'com_nicode%'")->loadResult()===2,'display names do not create a third component identity');
+$pluginId=(int)$db->setQuery("SELECT extension_id FROM #__extensions WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->loadResult();
+$hash=hash('sha256',bin2hex(random_bytes(32)));
+$db->setQuery('UPDATE #__extensions SET enabled=1,params='.$db->quote(json_encode(['site_id'=>'c3c6d3e1-f65b-4000-8000-123456789abc','token_hash'=>$hash])).' WHERE extension_id='.$pluginId)->execute();
+installPackage('nicodeconnector');
+check(str_contains($db->setQuery('SELECT params FROM #__extensions WHERE extension_id='.$pluginId)->loadResult(),$hash),'current-package reinstall preserves connector configuration');
+$site=(object)['site_id'=>'c3c6d3e1-f65b-4000-8000-123456789abc','label'=>'Lifecycle retained','base_url'=>'https://example.org','address'=>'93.184.216.34','credential'=>'fixture-unusable'];$db->insertObject('#__nwm_sites',$site,'id');
+$task=(object)['title'=>'Disposable lifecycle','type'=>'nicode.monitor','state'=>1,'created'=>gmdate('Y-m-d H:i:s'),'created_by'=>0,'params'=>'{}','execution_rules'=>'{}','cron_rules'=>'{}'];$db->insertObject('#__scheduler_tasks',$task,'id');
+removePackage('nicodemonitor');
+check((int)$db->setQuery('SELECT state FROM #__scheduler_tasks WHERE id='.(int)$task->id)->loadResult()===0,'central uninstall pauses monitoring tasks');
+check((int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_sites WHERE id='.(int)$site->id)->loadResult()===1,'central uninstall retains registry data');
+check((int)$db->setQuery("SELECT COUNT(*) FROM #__extensions WHERE type='component' AND element='com_nicodeconnector'")->loadResult()===1,'central uninstall leaves connector installed');
+check(str_contains($db->setQuery('SELECT params FROM #__extensions WHERE extension_id='.$pluginId)->loadResult(),$hash),'central uninstall preserves connector access for another central');
+installPackage('nicodemonitor');
+check((int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_sites WHERE id='.(int)$site->id)->loadResult()===1,'central reinstall recovers retained registry');
+removePackage('nicodeconnector');
+check((int)$db->setQuery("SELECT COUNT(*) FROM #__extensions WHERE element='com_nicodewebmonitor' AND type='component'")->loadResult()===1,'connector uninstall leaves central installed');
+check((int)$db->setQuery("SELECT COUNT(*) FROM #__extensions WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->loadResult()===0,'connector uninstall removes its endpoint engine');
+installPackage('nicodeconnector');
+$db->setQuery('DELETE FROM #__nwm_sites WHERE id='.(int)$site->id)->execute();
+$db->setQuery('DELETE FROM #__scheduler_tasks WHERE id='.(int)$task->id)->execute();
+file_put_contents($output.'/lifecycle.json',json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT));
+echo json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT),"\n";

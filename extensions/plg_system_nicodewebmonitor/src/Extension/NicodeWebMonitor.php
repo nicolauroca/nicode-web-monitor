@@ -33,6 +33,8 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
             return;
         }
         $task = $app->getInput()->get->getString('task', '');
+        // Central and connector may share the same Joomla.
+        if ($task === 'connection.claim') return;
         if ($task === 'update_core') {
             $endpoint = new \Nicode\Plugin\System\NicodeWebMonitor\Transport\UpdateEndpoint(
                 (string)$this->params->get('site_id',''), (string)$this->params->get('core_token_hash',''),

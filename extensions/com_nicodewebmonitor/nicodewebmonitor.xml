@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension type="component" method="upgrade">
  <name>com_nicodewebmonitor</name><author>Nicolau Roca</author>
- <version>1.0.0-rc1</version><description>Nicode Web Monitor â€” development site registry</description>
+ <version>1.1.1-dev.1</version><description>Panel central de monitorización para sitios Joomla.</description>
  <license>GPL-2.0-or-later</license>
  <namespace path="src">Nicode\Component\NicodeWebMonitor</namespace>
  <scriptfile>script.php</scriptfile>
+ <files folder="site"><folder>src</folder></files>
  <install><sql><file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file></sql></install>
  <update><schemas><schemapath type="mysql">sql/updates/mysql</schemapath></schemas></update>
- <administration><menu>Nicode Web Monitor</menu><files folder="administrator">
+ <administration><menu>Nicode Web Monitor — Central</menu><files folder="administrator">
  <folder>services</folder><folder>src</folder><folder>tmpl</folder><folder>sql</folder>
  <filename>access.xml</filename><filename>config.xml</filename>
- </files></administration>
+ </files><languages folder="administrator/language">
+ <language tag="en-GB">en-GB/com_nicodewebmonitor.sys.ini</language>
+ <language tag="es-ES">es-ES/com_nicodewebmonitor.sys.ini</language>
+ </languages></administration>
 </extension>

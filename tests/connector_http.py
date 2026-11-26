@@ -122,7 +122,7 @@ try:
     status,headers,body,raw=request(token)
     check(status==200 and body['site_id']==site_id,'https_authenticated_identity')
     inventory=body['inventory']
-    check(inventory['status']=='complete' and len(inventory['sections']['extensions']['data'])>0,'real_joomla_inventory')
+    check(inventory['status']=='complete' and len(inventory['sections']['extensions']['data']['items'])>0,'real_joomla_inventory')
     check(inventory['execution_context']=='remote_https' and inventory['sections']['runtime']['data']['sapi']=='cgi-fcgi','web_runtime_not_cli')
     check(inventory['capabilities']=={'remote_inventory':True,'remote_updates':False,'remote_backups':False},'read_only_capabilities')
     check('no-store' in headers['Cache-Control'] and 'application/json' in headers['Content-Type'],'no_cache_json_headers')
@@ -142,7 +142,7 @@ try:
             return json.loads(p.stdout)
         observed = central(token)
         check(observed['ok'] and observed['joomla'] == inventory['sections']['joomla']['data']['version']
-              and observed['extensions'] == len(inventory['sections']['extensions']['data']), 'central_real_inventory')
+              and observed['extensions'] == len(inventory['sections']['extensions']['data']['items']), 'central_real_inventory')
         if args.registry_site:
             check(observed['rendered'] and observed['details_rendered'], 'registry_real_inventory_details_rendered')
         check(central(token, str(uuid.uuid4()))['error']=='identity_mismatch', 'central_wrong_identity')

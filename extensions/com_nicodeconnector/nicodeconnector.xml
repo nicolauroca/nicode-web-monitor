@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension type="component" method="upgrade">
- <name>com_nicodeconnector</name><author>Nicolau Roca</author><version>1.1.1-dev.4</version>
+ <name>com_nicodeconnector</name><author>Nicolau Roca</author><version>1.1.1-dev.5</version>
  <description>Conecta este Joomla a un panel Nicode Web Monitor.</description><license>GPL-2.0-or-later</license>
  <namespace path="src">Nicode\Component\NicodeConnector</namespace><scriptfile>script.php</scriptfile>
  <administration><menu>Nicode Web Monitor — Conector</menu><files folder="administrator">

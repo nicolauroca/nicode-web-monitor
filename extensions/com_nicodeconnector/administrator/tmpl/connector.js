@@ -69,4 +69,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (status) status.hidden = true;
         });
     });
+    const sharingForm = root.querySelector('.nwm-sharing-form');
+    if (sharingForm) {
+        const boxes = [...sharingForm.querySelectorAll('input[type=checkbox]')];
+        const status = sharingForm.querySelector('[data-nwm-sharing-status]');
+        const changed = () => {
+            boxes.forEach(box => { box.closest('.nwm-sharing-category').querySelector('[data-sharing-state]').textContent = box.checked ? 'Permitido al guardar' : 'No compartido al guardar'; });
+            status.textContent = 'Hay cambios sin guardar.';
+        };
+        sharingForm.querySelector('[data-nwm-sharing-presets]').hidden = false;
+        boxes.forEach(box => box.addEventListener('change',changed));
+        sharingForm.querySelectorAll('[data-nwm-sharing-profile]').forEach(button => button.addEventListener('click', () => {
+            boxes.forEach(box => { box.checked = button.dataset.nwmSharingProfile === 'all' || (button.dataset.nwmSharingProfile === 'essential' && box.dataset.essential === '1'); });
+            changed();
+        }));
+    }
+    function openSharing() {
+        if (location.hash === '#nwm-sharing') root.querySelector('.nwm-sharing-options').open = true;
+    }
+    window.addEventListener('hashchange',openSharing);
+    openSharing();
 });

@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.4 — comprobaciones automáticas y correo
+Nicode Web Monitor 1.1.1-dev.5 — comprobaciones automáticas y correo
 
 Preparación
 El paquete central instala el plugin de tareas. Como administrador del componente,
@@ -11,6 +11,11 @@ o con comprobación más antigua. Cada consulta tiene como máximo tres segundos
 Si hay muchos sitios, ajustar frecuencia/límite para que se recorra todo el registro.
 Base de datos, SMTP y overhead quedan fuera del presupuesto de red; no es un SLA.
 Un fallo se registra y no impide seleccionar otros sitios en futuras ejecuciones.
+Cada consulta respeta los permisos por categoría del Conector. Denegado no implica
+fallo; puede cambiar la cobertura sin corregir el problema que hubiera en esa
+categoría. Los avisos son de observaciones de inventario, no de salud pública.
+La última observación se sustituye en nwm_inventory; un error al guardarla se
+comunica como fallo de la tarea. El detalle guardado no dispara otra consulta.
 
 Propietario y usuario
 La cuenta que prepara la tarea debe seguir habilitada y tener core.admin.

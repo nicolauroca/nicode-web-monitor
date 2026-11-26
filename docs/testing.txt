@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.4 — pruebas
+Nicode Web Monitor 1.1.1-dev.5 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -20,8 +20,18 @@ php tests/public_address.php
 php tests/transport.php
 php tests/alerts.php
 php tests/inventory_view.php
+php tests/inventory.php JOOMLA_ROOT
+php tests/inventory_permissions.php JOOMLA_ROOT --allow-disposable-writes
 Verifican destinos públicos/URLs adversarias, autenticación antes de colección,
 alertas y representación segura de inventario no confiable.
+
+Inventario ampliado
+inventory.php comprueba versiones, pertenencia a paquetes, campos permitidos y
+fallos de colección sin texto de excepciones. inventory_permissions.php requiere
+ambos paquetes y un registro vacío en Joomla desechable. Verifica las trece
+categorías, política restrictiva, ACL, denegación individual, reemplazo de caché,
+fallo de almacenamiento y eliminación de observaciones tardías. Restaura los
+parámetros originales. No usar sus escrituras ni tablas temporales en sitios reales.
 
 Vinculación y programación con Joomla real
 Instalar ambos paquetes en el mismo Joomla desechable. Con registro de sitios y
@@ -62,6 +72,9 @@ fixture lanza una excepción si se intenta usar: prueba el transporte local real
 Los ZIP conservan la política de red de producción.
 Añadir --design-states para capturas y comprobaciones de pendiente, acceso
 desactivado, direcciones largas, tema oscuro y anchos de 1440/390/320 px.
+Añadir --inventory-sharing para comprobar formularios de permisos con y sin JS,
+política del endpoint HTTPS, ausencia de override por query y el detalle guardado.
+El token del fixture se utiliza solo en memoria, nunca en capturas ni informes.
 Añadir --central-design para los estados del panel Central, búsqueda/filtros,
 historial por teclado, tema oscuro y anchos de 1440/390/320 px. Usa observaciones
 sintéticas; desactiva temporalmente la ejecución por visitas para no consultar

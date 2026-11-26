@@ -1,4 +1,5 @@
 """Real Joomla batches to simulated loopback TLS endpoints; no public network."""
+from inventory_fixture import inventory_fixture
 import argparse, datetime, http.server, json, secrets, ssl, subprocess, threading, time, uuid
 from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__)
@@ -16,7 +17,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         url=urlsplit(self.path); mode=url.path.strip('/').split('/')[0]
         identity=url.path.strip('/').split('/')[1]
         if mode=='slow': time.sleep(2)
-        inv={'schema_version':1,'collected_at':datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),'status':'partial' if mode=='partial' else 'complete','execution_context':'remote_https','capabilities':{'remote_inventory':True,'remote_updates':False,'remote_backups':False},'sections':{key:{'status':'available','data':{}} for key in ['joomla','runtime','database','extensions','hosting']}}
+        inv=inventory_fixture('partial' if mode=='partial' else 'complete')
         if mode=='partial': inv['sections']['database']={'status':'error','data':None}
         body=json.dumps({'protocol_version':1,'site_id':identity,'inventory':inv}).encode()
         try:

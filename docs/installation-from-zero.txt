@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.4 — instalación y conexión
+Nicode Web Monitor 1.1.1-dev.5 — instalación y conexión
 
 Requisitos
 Joomla 6, PHP y base de datos compatibles con esa instalación. PHP necesita cURL,
@@ -14,11 +14,11 @@ Python 3 se utiliza solo al reconstruir los paquetes desde el repositorio.
 1. Obtener los instaladores
 Desde la raíz del repositorio: python tools/build.py
 Los dos archivos para usuarios son:
- - dist/pkg_nicodemonitor-1.1.1-dev.4.zip: panel central y plugin de tareas.
- - dist/pkg_nicodeconnector-1.1.1-dev.4.zip: componente de conexión y motor system.
+ - dist/pkg_nicodemonitor-1.1.1-dev.5.zip: panel central y plugin de tareas.
+ - dist/pkg_nicodeconnector-1.1.1-dev.5.zip: componente de conexión y motor system.
 El build también genera ZIP individuales para pruebas y un plugin CLI opcional;
 no instalarlos en el recorrido normal. Descargar los dos pkg_ de la prerelease
-1.1.1-dev.4, no «Source code» ni los ZIP de una release anterior.
+1.1.1-dev.5, no «Source code» ni los ZIP de una release anterior.
 
 2. Instalar
 En el Joomla central, Sistema > Instalar > Extensiones: subir el paquete central.
@@ -26,7 +26,11 @@ En cada Joomla supervisado: subir el paquete Connector mediante el mismo instala
 Abrir los componentes desde el menú Componentes. No hay que buscar, habilitar ni
 rellenar parámetros de plugins para conectar el inventario.
 
-3. Vincular
+3. Elegir lo que se comparte y vincular
+En el Conector, Información que compartes permite revisar permisos antes de
+vincular: las cuatro categorías esenciales están permitidas y las nueve nuevas
+están desactivadas. Guardar la selección; se puede cambiar en cualquier momento.
+
 En Componentes > Nicode Web Monitor — Central, abrir Añadir sitio y escribir un nombre
 y pulsar Generar código de vinculación. Como administrador, esta acción también
 prepara la tarea de comprobaciones si aún no existe. El código caduca a los diez
@@ -36,7 +40,10 @@ mostrada por el central y pegar el código. Pulsar Conectar.
 La dirección e identidad del supervisado, las credenciales y la resolución de IP
 son automáticas. El central verifica el primer inventario antes de guardar el alta.
 Inventario parcial sigue siendo parcial: consultar los detalles del panel.
-Las copias y actualizaciones no se habilitan con la vinculación.
+Las copias y actualizaciones no se habilitan con la vinculación. El Central conserva
+una observación fechada por sitio; Actualizar inventario consulta el sitio y
+Detalle guardado abre lo último recibido. Ver inventory-and-sharing.txt para
+campos, límites y efectos de denegar categorías.
 
 Si no llega la respuesta, repetir exactamente el mismo código y dirección antes
 de su caducidad permite recuperar el recibo sin dar de alta otro sitio. Para usar
@@ -79,7 +86,7 @@ Reinstalar un paquete actual no es una limpieza de las tablas conservadas. Antes
 de reutilizar un laboratorio viejo, decidir explícitamente qué datos conservar.
 
 Si Central muestra 1054 Unknown column connection_type
-Instalar los dos ZIP completos de 1.1.1-dev.4 encima de los existentes, sin
+Instalar los dos ZIP completos de 1.1.1-dev.5 encima de los existentes, sin
 desinstalar, borrar tablas ni ejecutar SQL manualmente. El instalador Central
 comprueba las columnas reales y añade connection_type si falta, conservando sitios,
 credenciales e historial, incluso si Joomla ya marcaba el esquema como actualizado.

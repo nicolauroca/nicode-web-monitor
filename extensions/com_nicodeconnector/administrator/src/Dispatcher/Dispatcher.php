@@ -20,7 +20,11 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         if ($task!=='display') {
             if ($this->input->getMethod()!=='POST' || !Session::checkToken('post') || !$user->authorise('core.admin','com_nicodeconnector') || $user->guest || $user->block) throw new \RuntimeException('Access denied',403);
             try {
-                if ($task==='connect') {
+                if ($task==='saveSharing') {
+                    $connection->saveSharing($user,$this->input->post->get('sharing',[],'array'));
+                    $this->app->enqueueMessage('Permisos de consulta guardados. Se aplican desde la próxima consulta del central.');
+                    $this->app->redirect('index.php?option=com_nicodeconnector&sharing=1#nwm-sharing');return;
+                } elseif ($task==='connect') {
                     if (!in_array(strtolower((string)($_SERVER['HTTPS']??'')),['on','1'],true)) throw new \RuntimeException('https_required');
                     $connection->connect($this->input->post->getString('central_url'),$this->input->post->getString('code'),rtrim(Uri::root(),'/'));
                     $this->app->enqueueMessage('Conectado. El panel central ha verificado este sitio y guardado su primer inventario.');
@@ -53,6 +57,8 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             $this->app->redirect('index.php?option=com_nicodeconnector'); return;
         }
         $state=$connection->state();
+        $sharing=$connection->sharing();
+        $sharingCategories=\Nicode\Component\NicodeConnector\Administrator\Service\InventorySchema::categories();
         $this->app->setHeader('Cache-Control','no-store, private',true);
         require JPATH_ADMINISTRATOR.'/components/com_nicodeconnector/tmpl/connection.php';
     }

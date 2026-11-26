@@ -50,6 +50,6 @@ try {
     rejects(fn()=>$connection->connect('https://self.example.invalid',$code,'https://self.example.invalid'),'package_incomplete','mixed installed versions have a specific diagnostic');
     echo json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT),"\n";
 } finally {
-    $db->setQuery('DELETE FROM #__nwm_pairing')->execute();$db->setQuery('DELETE FROM #__nwm_checks')->execute();$db->setQuery('DELETE FROM #__nwm_sites')->execute();
+    $db->setQuery('DELETE FROM #__nwm_pairing')->execute();$db->setQuery('DELETE FROM #__nwm_inventory')->execute();$db->setQuery('DELETE FROM #__nwm_checks')->execute();$db->setQuery('DELETE FROM #__nwm_sites')->execute();
     foreach($snapshot as $r)$db->setQuery('UPDATE #__extensions SET params='.$db->quote($r['params']).',enabled='.(int)$r['enabled'].',manifest_cache='.$db->quote($r['manifest_cache']).' WHERE extension_id='.(int)$r['extension_id'])->execute();
 }

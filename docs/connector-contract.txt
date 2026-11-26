@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.4 — protocolo de conexión
+Nicode Web Monitor 1.1.1-dev.5 — protocolo de conexión
 
 Seguridad de transporte
 HTTPS obligatorio según el entorno fiable de PHP. No se confía automáticamente
@@ -57,11 +57,19 @@ Inventario (protocolo 1)
 GET /index.php?option=com_nicodewebmonitor&task=inventory
 Authorization: Bearer <credential>. El motor almacena SHA-256 del texto hexadecimal,
 no de sus bytes decodificados, y compara con hash_equals. Vaciar el hash revoca.
-JSON 200: protocol_version=1, site_id, inventory. inventory incluye schema_version=1,
+JSON 200: protocol_version=1, site_id, inventory. inventory incluye schema_version=2,
 collected_at UTC, status complete/partial, execution_context=remote_https,
-capabilities booleanas y sections: joomla/runtime/database/extensions/hosting.
-Cada sección tiene status available/unavailable/error y data objeto/array o null.
-Versiones desconocidas permanecen explícitas. No se envían usuarios ni contraseñas.
+capabilities booleanas y las trece secciones definidas en inventory-and-sharing.txt.
+Cada sección tiene status available/denied/unavailable/error. Solo available lleva
+data; las otras llevan null. Listados: items, total y truncated (máximo 1.000 filas).
+Denegar no implica status partial; error de colección sí. Una denegación con datos
+es inválida. InventorySchema filtra campos antes de guardar la última observación.
+Los permisos proceden de com_nicodeconnector, se evalúan antes de cada lector y
+no pueden ser sustituidos por parámetros de la petición. Identidad y metadatos de
+protocolo permanecen incluso si se deniegan todas las categorías.
+Versiones desconocidas permanecen explícitas. Usuarios/contenido se comparten
+solo en cifras agregadas con consentimiento. No se envían identidades, correos,
+contraseñas, parámetros de extensiones, rutas locales ni claves de descarga.
 Autenticación precede a la colección. 200 no afirma que el sitio esté saludable.
 401 unauthorized, 403 https_required, 503 connector_unavailable o collection_failed,
 405 method_not_allowed, 404 operation_not_found. Respuestas privadas y no cacheables.

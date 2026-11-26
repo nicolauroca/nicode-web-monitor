@@ -1,57 +1,68 @@
-Nicode Web Monitor 1.1.1-dev.4 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.5 — verificación vigente
 
 Fecha: 26 de noviembre de 2026 (Europe/Madrid).
 Entrega de DESARROLLO; prerelease, no definitiva ni beta final.
-Entorno aislado: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28,
-Chrome y Edge/Chromium. Sin credenciales, inventarios ni instalaciones reales.
+Laboratorio desechable: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28,
+Chrome y Edge/Chromium. Sin instalaciones, credenciales ni inventarios del usuario.
 
 Alcance
-Rediseño de vistas y recursos CSS/JS del Central; textos del ejecutor de copias.
-Los controladores, servicios, transportes, credenciales, esquema e instalador
-conservan su código. Los dos paquetes actualizan versión para mantener la
-comprobación existente de versiones iguales. Detalles en central-ui.txt.
+Inventario schema_version=2 con trece categorías, permisos locales en el Conector,
+misma política para HTTPS y automonitorización y una última observación normalizada
+por sitio en Central. Nuevos campos, formularios, servicio de almacenamiento y DDL
+actual. Los transportes TLS/pinning y el aislamiento del mantenimiento permanecen.
+Detalle de datos, límites y conservación: inventory-and-sharing.txt.
 
 Verificación ejecutada
-- Navegador local con DNS bloqueado: 112 comprobaciones. Alta con código temporal,
-  copia con portapapeles simulado, vinculación del central consigo mismo, inventario,
-  búsqueda de extensiones, guardado de parámetros del motor, revocación y eliminación.
-- Navegador remoto HTTPS: 112 comprobaciones del mismo recorrido con transporte
-  HTTPS y CA local. No sustituye la prueba de certificados y DNS del hosting.
-- JavaScript desactivado: 80 comprobaciones. POST nativos, vinculación, revocación,
-  eliminación y acceso por teclado al historial de las observaciones sintéticas.
-- Estados de Central: inventario reciente, parcial, fallido, antiguo y sin comprobar;
-  recuperación y alertas; búsqueda/filtros combinados y estado sin coincidencias;
-  accesos al alta, foco y tema oscuro. Anchos 1440/390/320 px, URLs largas,
-  acciones visibles sin desbordamiento. Capturas revisadas visualmente.
-- inventory_view.php: 8 comprobaciones de escape, datos malformados, valores no
-  disponibles, relaciones de paquetes y ausencia de inventario obsoleto tras fallo.
-- self_monitoring.php: 13; schema_repair.php: 14; history.php: 24;
-  maintenance_history.php: 16; registry.php: 36. Identidades, credenciales,
-  automonitorización, esquema real, retención y observaciones persistidas.
-- lifecycle_native.php: 10. Reinstalación conservando configuración, propietarios
-  independientes, conservación de datos y pausa de tareas al retirar Central.
-- backup_roles_http.py: 27. Lector/operador reales, visibilidad y ACL del servidor,
-  CSRF, confirmación, secuencia, diario incierto y reconciliación sin reintento ciego.
-- backup_admin_http.py: 45. Formularios reales, credencial independiente, CSRF,
-  confirmación y mantenimiento en navegador a 1440/390/320 px, con carga
-  explícitamente comprobada de los estilos nativos y del Central sobre CGI/TLS.
-- backup_runner_browser.py: 27 con respuestas sintéticas. Límite de 100 pasos,
-  pausa, continuación explícita y bloqueo ante pérdida o recibo inválido.
-- Comparación de los 13 formularios de mantenimiento: mismos campos de entrada,
-  tareas y confirmaciones que antes del rediseño. Solo cambia la presentación.
-- Sintaxis: 48 PHP de extensiones, 11 XML, 27 Python y 3 JavaScript;
+- inventory_permissions.php: 68 comprobaciones con lectores y base de datos reales.
+  Cuatro categorías esenciales por defecto; las nueve nuevas denegadas. ACL de
+  lector/invitado/cuenta bloqueada, política malformada restrictiva, ausencia de
+  identidades/secretos/rutas, denegación individual de trece categorías y reemplazo
+  de datos anteriores. Vinculación propia con todo denegado; política y conexión
+  conservadas al reinstalar el paquete actual. Fallo de escritura mediante tabla
+  temporal con restricción, aviso explícito y tarea automática fallida. Eliminación
+  de caché y rechazo de observaciones tardías tras borrar el registro; versiones
+  malformadas de actualizaciones no pueden reenviar URLs privadas.
+- inventory.php: 22 comprobaciones de versiones reales, extensiones desactivadas,
+  pertenencia a paquetes, allowlist, valores desconocidos y error de lectura sin
+  exposición de consultas ni excepciones.
+- inventory_view.php: 8 comprobaciones de escape y datos remotos malformados,
+  versiones/paquetes y ausencia de inventario anterior tras fallo.
+- Navegador local: 136 comprobaciones de vinculación con DNS bloqueado, política
+  de consulta, guardado nativo, perfiles, endpoint autenticado, inventario ampliado,
+  sustitución de campos denegados, detalle privado no cacheable y revocación.
+- Navegador remoto HTTPS: 135 comprobaciones del mismo recorrido con la conexión
+  HTTPS y CA de prueba. Formularios reales y denegación efectiva en el endpoint.
+- Recorrido adicional HTTPS: 67 comprobaciones, incluido el inventario con las
+  trece categorías abiertas a 1440/390/320 px y capturas de PHP/actualizaciones.
+- Sin JavaScript: 101 comprobaciones de POST nativos, casillas individuales,
+  inventario, historial por teclado, vinculación y revocación.
+- Vistas en 1440/390/320 px, direcciones largas, búsquedas, filtros, estados,
+  categorías y tema oscuro. Capturas revisadas visualmente, estilos nativos
+  y del componente cargados. Portapapeles simulado, sin modificar el del usuario.
+- Regresión nativa: registry.php 36; history.php 24; monitor.php 21;
+  notifications.php 20; maintenance_history.php 16; backup_coordinator.php 44;
+  self_monitoring.php 13; schema_repair.php 14; lifecycle_native.php 10.
+  Incluye revocación, programación, datos conservados y dos propietarios de paquete.
+- Vinculación con transporte simulado: plug_and_play.php 27 y pairing.php 17,
+  actualizados al contrato actual; no se atribuyen como ensayos de hosting real.
+- Cliente TLS client_http.py: 39; registro registry_tls.py: 4; lotes monitor_tls.py:
+  10. Cuerpo/cabeceras/tiempo limitados, certificado, identidad, esquema, errores,
+  URLs adversarias, pinning y ausencia de reintentos. Destinos solo loopback.
+- Formularios y roles de mantenimiento en CGI/TLS: backup_roles_http.py 27 y
+  backup_admin_http.py 45, con estilos cargados y confirmaciones en tres anchos.
+- Sintaxis de 122 PHP (extensiones y tests), 11 XML, 29 Python y 3 JavaScript;
   enlaces de documentación y git diff --check.
-- Siete ZIP idénticos entre fuentes LF/CRLF, incluidos hijos y binarios.
+- Siete ZIP reproducibles entre fuentes LF/CRLF, incluidos ZIP hijos y binarios.
 
 Límites
-El modo remoto del fixture altera solo las copias instaladas con loopback y CA de
-pruebas y las restaura en finally. El modo local bloquea DNS. Las observaciones de
-UI son sintéticas y se limpian; el fixture desactiva temporalmente el disparador
-por visitas para que no consulte esos destinos. El servidor CGI/TLS puede producir
-fallos transitorios de recursos nativos: se comprueba su disponibilidad y no se
-ignoran respuestas 404. El portapapeles real del usuario no se modifica.
-No es una auditoría WCAG ni una matriz de todas las plantillas/navegadores. No se
-atribuyen nuevos ensayos de captura/restauración completa, actualizaciones nativas
-de extensiones/core, cron del hosting o SMTP externo. Faltan las pruebas del
-propietario en su alojamiento. Artefactos y capturas quedan en .local, fuera de Git.
-Los checksums acompañan los dos paquetes de esta prerelease.
+La CA y el pinning loopback se habilitan exclusivamente en copias instaladas en
+el laboratorio, restauradas en finally. La automonitorización bloquea DNS para
+probar que no depende de HTTP propio. Se desactiva el disparador por visitas al
+preparar estados sintéticos. Las respuestas simuladas solo validan contrato y
+transporte, no la salud de un Joomla remoto. Los fixtures, tokens temporales y
+capturas permanecen fuera de Git. Ninguna prueba usa un hosting del propietario.
+No es auditoría WCAG, de seguridad o una matriz de todos los PHP/motores/plantillas.
+No se atribuyen nuevos ensayos de SMTP externo, cron del hosting, cuotas del
+proveedor, captura/restauración completa ni instalación remota de actualizaciones.
+Las actualizaciones leídas son caché y las cifras de disco, sistema de archivos.
+Falta la validación del propietario en sus alojamientos antes de fijar una beta.

@@ -3,17 +3,17 @@
 Monitorización de inventario y mantenimiento experimental de varios Joomla desde
 un Joomla central. Software libre, GPL-2.0-or-later; desarrollo público.
 
-**1.1.1-dev.4: desarrollo previo a beta.** La validación en los hostings del propietario
+**1.1.1-dev.5: desarrollo previo a beta.** La validación en los hostings del propietario
 está pendiente. No se promete compatibilidad con versiones anteriores de desarrollo.
 
 ## Instalar y conectar
 
-Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.4).
+Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.5).
 Los archivos automáticos «Source code» de GitHub no son instaladores Joomla.
 Para construir desde el repositorio: `python tools/build.py`.
 
-1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.4.zip` en el Joomla central.
-2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.4.zip` en cada Joomla supervisado.
+1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.5.zip` en el Joomla central.
+2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.5.zip` en cada Joomla supervisado.
 3. En **Componentes → Nicode Web Monitor — Central**, pulsa **Añadir sitio**, indica su nombre y genera un código.
 4. En **Componentes → Nicode Web Monitor — Conector** del supervisado, introduce la dirección del
    central, pega el código y pulsa **Conectar**.
@@ -41,16 +41,32 @@ El panel distingue conexión, tarea preparada y ejecución automática reciente.
 Para intervalos regulares sin visitas, configura un cron en el hosting central;
 el asistente muestra la ruta concreta. Python solo se usa para construir los ZIP.
 
-## Alcance
+## Información y permisos por sitio
 
-Inventario de Joomla, PHP web, base de datos y extensiones, resúmenes de comprobación,
-historial, alertas internas y correo SMTP opcional. Los datos parciales o antiguos
-se muestran explícitamente. Inventario no equivale a comprobar disponibilidad
-pública, ausencia de malware o recuperación de una copia.
+Central puede consultar **13 categorías**: Joomla, PHP, base de datos, extensiones,
+actualizaciones detectadas, configuración general, señales de seguridad, usuarios
+agregados, contenido agregado, idiomas, plantillas, tareas y almacenamiento.
 
-Copias conjuntas y actualizaciones preparadas de extensiones/paquetes/core quedan
-en la sección Mantenimiento, con credenciales, permisos, almacenamiento privado y
-confirmaciones independientes. No se activan al conectar el inventario.
+En **Conector → Información que compartes**, cada Joomla permite o deniega cada
+categoría. Las cuatro esenciales están permitidas de entrada; las nueve nuevas
+requieren consentimiento. Los perfiles Esencial/Todo/Nada necesitan guardar.
+La denegación se cumple antes de leer los datos, también al monitorizar el propio
+central. Usuarios y contenido solo en cifras: sin nombres, correos, contraseñas,
+textos de artículos, parámetros, rutas ni claves de descarga.
+
+Central conserva el último inventario recibido, su fecha y cobertura. **Actualizar
+inventario** consulta el sitio; **Detalle guardado** abre la observación sin red.
+Una nueva recepción sustituye la anterior, incluidas las categorías denegadas.
+Denegar no borra lo que un central haya recibido previamente. Consulta el
+[alcance de los campos y su conservación](docs/inventory-and-sharing.txt).
+
+Los datos parciales, antiguos, no disponibles y no compartidos se distinguen.
+Las actualizaciones proceden de la caché de Joomla; el almacenamiento corresponde
+al sistema de archivos visible para PHP, no a la cuota del hosting. Inventario no
+acredita disponibilidad pública, ausencia de malware o recuperación de una copia.
+
+Copias y actualizaciones preparadas de extensiones/paquetes/core permanecen en
+Mantenimiento con credenciales, permisos y confirmaciones independientes.
 
 ## Documentación y pruebas
 

@@ -16,6 +16,7 @@ use Nicode\Component\NicodeConnector\Administrator\Service\CredentialVault as Co
 $c=Factory::getContainer(); $c->alias('session','session.cli')->alias(Joomla\Session\SessionInterface::class,'session.cli');
 $app=$c->get(Joomla\CMS\Application\ConsoleApplication::class); Factory::$application=$app;
 $app->createExtensionNamespaceMap(); $app->bootComponent('com_nicodewebmonitor'); $app->bootComponent('com_nicodeconnector');
+require __DIR__.'/inventory_fixture.php';
 $db=$c->get(DatabaseInterface::class); $checks=[];
 function check($ok,$name){global $checks;if(!$ok)throw new RuntimeException($name);$checks[]=$name;}
 function rejects($fn,$name){try{$fn();}catch(Throwable){check(true,$name);return;}throw new RuntimeException($name);}
@@ -26,7 +27,7 @@ $extensions=$db->setQuery("SELECT extension_id,params,enabled FROM #__extensions
 $clientOK=true; $calls=0;
 $factory=function($timeout)use(&$clientOK,&$calls){return new class($clientOK,$calls){
     public function __construct(private bool &$ok,private int &$calls){}
-    public function fetch(...$args):array{$this->calls++;return $this->ok ? ['ok'=>true,'inventory'=>['status'=>'complete','collected_at'=>gmdate('Y-m-d\TH:i:s\Z')]] : ['ok'=>false,'error'=>'identity_mismatch'];}
+    public function fetch(...$args):array{$this->calls++;return $this->ok ? ['ok'=>true,'inventory'=>nwmInventoryFixture('complete')] : ['ok'=>false,'error'=>'identity_mismatch'];}
 };};
 $pairing=new PairingService($db,new CredentialVault($app->get('secret')),fn($url)=>'93.184.216.34',$factory);
 $payload=null;
@@ -82,7 +83,7 @@ try {
     echo json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT),"\n";
 } finally {
     $db->setQuery('DELETE FROM #__nwm_pairing')->execute();
-    $db->setQuery('DELETE FROM #__nwm_checks')->execute(); $db->setQuery('DELETE FROM #__nwm_sites')->execute();
+    $db->setQuery('DELETE FROM #__nwm_inventory')->execute();$db->setQuery('DELETE FROM #__nwm_checks')->execute(); $db->setQuery('DELETE FROM #__nwm_sites')->execute();
     $ids=$db->setQuery("SELECT id FROM #__scheduler_tasks WHERE type='nicode.monitor'")->loadColumn();
     foreach($ids as $id){$db->setQuery('DELETE FROM #__assets WHERE name='.$db->quote('com_scheduler.task.'.$id))->execute();}
     $db->setQuery("DELETE FROM #__scheduler_tasks WHERE type='nicode.monitor'")->execute();

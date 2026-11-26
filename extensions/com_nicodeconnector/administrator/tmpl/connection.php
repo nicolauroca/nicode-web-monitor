@@ -39,7 +39,7 @@ $icons=[
     'chevron'=>'<path d="m9 5 7 7-7 7"/>',
 ];
 $icon=static fn($name)=>'<svg class="nwm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'.$icons[$name].'</svg>';
-$uiVersion='1.1.1-dev.4';
+$uiVersion='1.1.1-dev.5';
 $assets=$this->app->getDocument()->getWebAssetManager();
 $assetRoot=Uri::root().'administrator/components/com_nicodeconnector/tmpl/';
 $assets->registerAndUseStyle('nwm.connector',$assetRoot.'connector.css',['version'=>$uiVersion]);
@@ -100,6 +100,7 @@ $assets->registerAndUseScript('nwm.connector',$assetRoot.'connector.js',['versio
             </section>
         <?php endif; ?>
 
+        <?php require __DIR__.'/sharing.php'; ?>
         <?php if ($canAdmin && ($connected || $pending)): ?>
             <details class="nwm-panel nwm-management"<?= $pending || $disabled ? ' open' : '' ?>>
                 <summary><?= $icon('settings') ?><span>Gestionar conexión</span><?= $icon('chevron') ?></summary>
@@ -121,7 +122,7 @@ $assets->registerAndUseScript('nwm.connector',$assetRoot.'connector.js',['versio
             <?php else: ?><li><span>1</span><div><strong>Añade el sitio</strong><p>Abre Nicode Web Monitor — Central y elige «Añadir sitio».</p></div></li><li><span>2</span><div><strong>Genera un código</strong><p>Ponle un nombre al sitio y copia su código de vinculación.</p></div></li><li><span>3</span><div><strong>Conecta aquí</strong><p>Completa los dos campos. El central comprobará el primer inventario.</p></div></li><?php endif; ?></ol>
             <?php if ($hasCentral): ?><a class="nwm-link" href="index.php?option=com_nicodewebmonitor">Abrir Central en este Joomla<?= $icon('arrow') ?></a><?php endif; ?></section>
             <?php endif; ?>
-            <section class="nwm-panel nwm-scope"><div class="nwm-side-title"><?= $icon('grid') ?><h2>Qué comparte este sitio</h2></div><p>Información para conocer las versiones y extensiones de tu Joomla.</p><ul class="nwm-feature-list"><li><?= $icon('check') ?><span>Versión de Joomla</span></li><li><?= $icon('check') ?><span>PHP y base de datos</span></li><li><?= $icon('check') ?><span>Extensiones y sus versiones</span></li></ul><p class="nwm-scope-note">Las copias y actualizaciones se activan por separado.</p></section>
+            <section class="nwm-panel nwm-scope"><div class="nwm-side-title"><?= $icon('grid') ?><h2>Qué comparte este sitio</h2></div><p><?= count(array_filter($sharing)) ?> de <?= count($sharingCategories) ?> categorías permitidas.</p><ul class="nwm-feature-list"><?php foreach($sharingCategories as $key=>$category): if(!$sharing[$key])continue; ?><li><?= $icon('check') ?><span><?= $escape($category[0]) ?></span></li><?php endforeach; ?></ul><a class="nwm-link" href="#nwm-sharing">Revisar permisos de consulta<?= $icon('arrow') ?></a><p class="nwm-scope-note">Usuarios y contenido solo en cifras agregadas. Sin contraseñas, correos ni textos de artículos.</p></section>
             <?php if ($connected): ?><section class="nwm-next-step"><span><?= $icon($disabled?'link':'clock') ?></span><div><h2><?= $disabled ? 'Restablece la vinculación' : 'Comprueba la programación' ?></h2><p><?= $disabled ? 'Después de conectar de nuevo, comprueba que el central puede leer el inventario.' : 'La vinculación está verificada. Revisa en el central que las comprobaciones automáticas se estén ejecutando.' ?></p></div></section><?php endif; ?>
         </aside>
     </div>

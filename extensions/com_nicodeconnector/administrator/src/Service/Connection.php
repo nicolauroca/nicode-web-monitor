@@ -3,6 +3,7 @@
 namespace Nicode\Component\NicodeConnector\Administrator\Service;
 use Joomla\Registry\Registry;
 use Joomla\Database\DatabaseInterface;
+use Joomla\CMS\User\User;
 use Nicode\Component\NicodeConnector\Administrator\Connection\PublicAddress;
 use Nicode\Component\NicodeConnector\Administrator\Connection\JsonClient;
 
@@ -18,6 +19,30 @@ final class Connection
         $enabled=(int)$this->db->setQuery("SELECT enabled FROM #__extensions WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->loadResult();
         return ['state'=>$params->get('connection_state','disconnected'),'central'=>$params->get('central_url',''),
             'connected_at'=>$params->get('connected_at',''),'connection_type'=>$params->get('connection_type','https'),'enabled'=>(bool)$enabled && $plugin->get('token_hash','')!==''];
+    }
+
+    public function sharing(): array
+    {
+        $params=$this->params('component','com_nicodeconnector');
+        if(!array_key_exists('inventory_sharing',$params->toArray()))return InventorySchema::policy();
+        $saved=$params->get('inventory_sharing');
+        if(is_object($saved))$saved=(array)$saved;
+        return InventorySchema::policy(is_array($saved)?$saved:[]);
+    }
+
+    /** Only a local component administrator may change this site's disclosure. */
+    public function saveSharing(User $user,array $selected): void
+    {
+        if($user->guest||$user->block||!$user->authorise('core.manage','com_nicodeconnector')||!$user->authorise('core.admin','com_nicodeconnector'))throw new \RuntimeException('Access denied',403);
+        if(array_diff(array_keys($selected),array_keys(InventorySchema::categories())))throw new \InvalidArgumentException('Invalid sharing category');
+        foreach($selected as $value)if(!in_array($value,[true,false,1,0,'1','0'],true))throw new \InvalidArgumentException('Invalid sharing value');
+        $lock=$this->db->quote('nwm-connector:'.substr(hash('sha256',$this->db->getPrefix().JPATH_ROOT),0,40));
+        if(!(int)$this->db->setQuery('SELECT GET_LOCK('.$lock.',0)')->loadResult())throw new \RuntimeException('connection_busy');
+        try{
+            $params=$this->params('component','com_nicodeconnector');
+            $params->set('inventory_sharing',InventorySchema::policy($selected));
+            $this->save('component','com_nicodeconnector',$params);
+        }finally{$this->db->setQuery('SELECT RELEASE_LOCK('.$lock.')')->loadResult();}
     }
 
     /** Persist a recoverable pending attempt before any network action. */
@@ -84,7 +109,11 @@ final class Connection
             $this->db->transactionStart();
             try {
                 $this->save('plugin','nicodewebmonitor',$plugin);
-                $this->save('component','com_nicodeconnector',new Registry());
+                // Revoking a connection never expands this site's disclosure policy.
+                $params=$this->params('component','com_nicodeconnector');
+                $retained=new Registry();
+                if(array_key_exists('inventory_sharing',$params->toArray()))$retained->set('inventory_sharing',$this->sharing());
+                $this->save('component','com_nicodeconnector',$retained);
                 $this->db->transactionCommit();
             } catch (\Throwable $e) { $this->db->transactionRollback(); throw $e; }
         } finally { $this->db->setQuery('SELECT RELEASE_LOCK('.$lock.')')->loadResult(); }

@@ -30,7 +30,7 @@ def exercise_dashboard(page, central, output, check, javascript=True):
             card.locator('.nwm-site-details > summary').press('Enter')
             card.get_by_text(labels[1],exact=True).wait_for(state='visible')
             check(card.locator('.nwm-site-details').get_attribute('open') is not None and labels[1] in card.inner_text(), f'{width}: {state} keyboard history and alert')
-            action = card.get_by_role('button', name='Ver inventario de NWM browser fixture ' + state, exact=True)
+            action = card.get_by_role('button', name='Actualizar inventario de NWM browser fixture ' + state, exact=True)
             action.scroll_into_view_if_needed(); bounds = action.bounding_box()
             check(bounds is not None and bounds['x'] >= 0 and bounds['x'] + bounds['width'] <= width + 1, f'{width}: {state} action remains on screen')
             if state == 'recovered':

@@ -111,10 +111,10 @@ final class InventoryClient
             if (($data['site_id'] ?? null) !== $siteId) {
                 return $failure('identity_mismatch');
             }
-            if (!$this->validInventory($data['inventory'] ?? null)) {
+            try { $inventory=InventorySchema::normalise($data['inventory']??null); } catch (\Throwable) {
                 return $failure('invalid_inventory');
             }
-            return ['ok' => true, 'received_at' => gmdate('Y-m-d\TH:i:s\Z'), 'inventory' => $data['inventory']];
+            return ['ok' => true, 'received_at' => gmdate('Y-m-d\TH:i:s\Z'), 'inventory' => $inventory];
         } catch (\Throwable) {
             // Do not disclose remote bodies, URLs, headers, credentials or exception text.
             return $failure('transport_failed');
@@ -145,36 +145,4 @@ final class InventoryClient
         return rtrim($base, '/') . '/index.php?option=com_nicodewebmonitor&task=inventory';
     }
 
-    private function validInventory(mixed $data): bool
-    {
-        if (!is_array($data) || ($data['schema_version'] ?? null) !== 1
-            || !in_array($data['status'] ?? null, ['complete', 'partial'], true)
-            || ($data['execution_context'] ?? null) !== 'remote_https'
-            || !is_string($data['collected_at'] ?? null)) {
-            return false;
-        }
-        $time = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s\Z', $data['collected_at'], new \DateTimeZone('UTC'));
-        if (!$time || $time->format('Y-m-d\TH:i:s\Z') !== $data['collected_at']) {
-            return false;
-        }
-        foreach (['remote_inventory', 'remote_updates', 'remote_backups'] as $capability) {
-            if (!is_bool($data['capabilities'][$capability] ?? null)) {
-                return false;
-            }
-        }
-        if (!$data['capabilities']['remote_inventory']) {
-            return false;
-        }
-        foreach (['joomla', 'runtime', 'database', 'extensions', 'hosting'] as $section) {
-            $value = $data['sections'][$section] ?? null;
-            if (!is_array($value) || !array_key_exists('data', $value)
-                || !in_array($value['status'] ?? null, ['available', 'unavailable', 'error'], true)
-                || ($value['status'] === 'available' && !is_array($value['data']))
-                || ($value['status'] !== 'available' && $value['data'] !== null)
-                || ($value['status'] === 'error' && $data['status'] !== 'partial')) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

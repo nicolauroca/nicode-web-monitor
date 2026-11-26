@@ -25,6 +25,7 @@ for name in ['site','php','certificate','private-key','output']:
 p.add_argument('--browser',help='Chrome/Chromium executable path')
 p.add_argument('--remote-transport',action='store_true',help='Exercise remote HTTPS with test-only loopback/CA overrides instead of the local shortcut')
 p.add_argument('--design-states',action='store_true',help='Also inspect pending, disabled, dark and long-address presentations with disposable UI fixture states')
+p.add_argument('--inventory-sharing',action='store_true',help='Exercise native disclosure controls and local/remote policy enforcement')
 p.add_argument('--maintenance-tests',action='store_true',help='Also run native maintenance form/role suites against this TLS CGI server')
 p.add_argument('--central-design',action='store_true',help='Exercise Central states, search, keyboard, mobile and dark theme with disposable observations')
 p.add_argument('--without-js',action='store_true',help='Verify native connection/disconnection with browser JavaScript disabled')
@@ -224,7 +225,7 @@ try:
             page.wait_for_load_state('networkidle')
             check(not page.locator('#jform_params_site_id').is_visible() and not page.locator('#jform_params_token_hash').is_visible(),'plugin keeps inventory identity fields out of the user interface')
             page.locator('#toolbar-apply button').click(); page.wait_for_load_state('networkidle')
-            page.goto(central); page.get_by_role('button',name='Ver inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+            page.goto(central); page.get_by_role('button',name='Actualizar inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
             check(page.get_by_role('heading',name='Software y entorno',exact=True).count()==1,'saving advanced plugin settings preserves inventory connection')
             page.locator('#nwm-extension-search').fill('nwm-no-such-extension')
             check(page.locator('[data-nwm-extension]:visible').count()==0 and page.locator('[data-nwm-no-extensions]').is_visible(),'extension search shows an explicit empty result')
@@ -236,6 +237,9 @@ try:
                 check(page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'{width}: inventory fits the viewport with an explicit scrollable table')
             page.set_viewport_size({'width':1440,'height':1000})
             page.locator('.nwm-inventory').screenshot(path=str(a.output/'inventory-desktop.png'))
+        if a.inventory_sharing:
+            from browser_inventory_sharing import exercise_sharing
+            exercise_sharing(page,context,base,central,connector,a.output,check,fixture,not a.without_js)
         if a.central_design:
             from browser_dashboard import exercise_dashboard
             def dashboard_fixture(action):
@@ -261,7 +265,7 @@ try:
         page.locator('.nwm-management > summary').press('Enter')
         page.locator('input[name=confirmed]').check(); page.get_by_role('button',name='Desconectar',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_role('heading',name='Conectar este sitio',exact=True).count()==1,'browser disconnect revokes local access')
-        page.goto(central); page.get_by_role('button',name='Ver inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+        page.goto(central); page.get_by_role('button',name='Actualizar inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_text('connector_unavailable',exact=False).count()>0,'central sees revocation on next inventory check')
         page.locator('.nwm-site-details > summary').click()
         page.locator('.nwm-remove > summary').click()

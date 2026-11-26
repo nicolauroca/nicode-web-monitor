@@ -30,7 +30,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
     {
         $app = $event->getApplication();
         if ($app instanceof Application) {
-            $app->addCommand(new InventoryCommand(new Collector($this->database, (new Version())->getShortVersion())));
+            $app->addCommand(new InventoryCommand(Collector::forSite($this->database, (new Version())->getShortVersion())));
         }
     }
 }

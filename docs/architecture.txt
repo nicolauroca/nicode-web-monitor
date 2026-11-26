@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.4 — arquitectura
+Nicode Web Monitor 1.1.1-dev.5 — arquitectura
 
 Producto e instalación
 Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.
@@ -27,6 +27,9 @@ tools/connection contiene PublicAddress y JsonClient. El build los copia con
 namespaces propios a ambos componentes. El conector recibe una copia namespaced
 de CredentialVault; no necesita arrancar el central para cifrar un intento pendiente.
 El inventario tiene una única fuente, en el plugin CLI, copiada al motor system.
+InventorySchema se copia también a ambos componentes con namespace independiente;
+define catálogo, tipos y campos admitidos. Collector::forSite lee la política de
+com_nicodeconnector antes de invocar los lectores. Central no puede cambiarla.
 Las primitivas de mantenimiento tienen su fuente en tools y se empaquetan con
 namespace del plugin. No editar copias generadas en dist o en un Joomla instalado.
 
@@ -54,11 +57,14 @@ Datos
 El central cifra credenciales con XChaCha20-Poly1305 y una clave derivada del secret
 de Joomla. El dato asociado liga cada secreto a sitio y, para mantenimiento, propósito.
 Conservar configuración y base de datos conjuntamente: perder/cambiar el secret
-impide descifrar credenciales guardadas. No se conserva el inventario completo:
-se guardan resúmenes de comprobaciones, como máximo 100 por sitio; la UI muestra 10.
+impide descifrar credenciales guardadas. nwm_inventory conserva una única observación
+normalizada y limitada por sitio, con resumen pequeño para el listado. No mantiene
+un histórico de payloads; cada recepción sustituye completamente la anterior,
+incluidas las denegaciones. Se guardan además resúmenes de comprobaciones,
+como máximo 100 por sitio; la UI muestra 10.
 Las alertas se calculan sobre ese historial. Un dato desconocido no se convierte
 en saludable. La antigüedad de referencia para inventario es 24 horas.
-Tablas: nwm_sites, nwm_checks, nwm_pairing, nwm_notifications,
+Tablas: nwm_sites, nwm_inventory, nwm_checks, nwm_pairing, nwm_notifications,
 nwm_backup_credentials, nwm_backup_operations, nwm_update_credentials,
 nwm_update_operations, nwm_core_update_credentials, nwm_core_update_operations,
 nwm_maintenance_events. Joomla aplica su prefijo real a todos los nombres.
@@ -68,7 +74,8 @@ core.manage permite acceder al central; core.create emite códigos y registra si
 core.delete elimina registros. nwm.monitor ejecuta lotes automáticos.
 core.admin prepara la programación y configura credenciales de mantenimiento,
 permisos y correo. nwm.backup, nwm.update y nwm.coreupdate son independientes.
-El conector exige core.manage para entrar y core.admin para conectar o revocar.
+El conector exige core.manage para entrar y core.admin para conectar, revocar o
+configurar qué categorías comparte. Esa política local persiste al desconectar.
 Una cuenta bloqueada no puede utilizarse para delegar comprobaciones.
 
 Versiones y diagnóstico
@@ -79,8 +86,10 @@ sin mostrar cuerpos remotos, tokens ni excepciones internas. La UI muestra la
 versión de desarrollo y que no es definitiva.
 
 Alcance
-Se observa inventario de Joomla, PHP, base de datos y extensiones, incluyendo
-desactivadas. Hosting no detectable figura como no disponible. Estos resultados
+Trece categorías de inventario con consentimiento por sitio, descritas en
+inventory-and-sharing.txt. Solo las cuatro esenciales están permitidas de entrada.
+Usuarios y contenido se agregan; no se comparten identidades o textos.
+El almacenamiento observado es del sistema de archivos, sin cuota del hosting. Estos resultados
 no equivalen a supervisar disponibilidad pública, detectar malware o comprobar
 que las copias sean recuperables. El mantenimiento sigue siendo experimental y
 separado de la instalación sencilla de inventario.

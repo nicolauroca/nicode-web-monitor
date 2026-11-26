@@ -1,0 +1,120 @@
+Nicode Web Monitor 1.1.1-dev.5 — inventario y permisos de consulta
+
+Decisión del sitio supervisado
+En el Conector, Información que compartes > Elegir categorías de información.
+Marcar o desmarcar categorías y pulsar Guardar permisos de consulta. Los perfiles
+Esencial, Todo y Nada solo seleccionan casillas: no guardan por sí mismos. También
+se puede configurar sin JavaScript. core.manage permite leer; core.admin y una
+cuenta habilitada permiten guardar, mediante POST y token CSRF nativo de Joomla.
+El Central no puede concederse acceso ni sustituir esta política con parámetros.
+
+De entrada solo se permiten Joomla, PHP, base de datos y extensiones. Las nueve
+categorías nuevas requieren consentimiento local explícito. Una política guardada
+deniega las claves ausentes. Un valor de política malformado no amplía permisos.
+Los permisos son independientes por categoría, no una garantía de anonimato o
+de impedir inferencias: Extensiones puede incluir versiones del núcleo aunque
+Joomla esté denegado, Plantillas/Idiomas describen software aunque Extensiones
+esté denegado y Seguridad contiene la cifra MFA aunque Usuarios esté denegado.
+Revisar todas las categorías relacionadas para limitar esos datos.
+La política pertenece a com_nicodeconnector, se conserva al desconectar/reconectar
+y no modifica credenciales de inventario ni mantenimiento. El motor system, la
+automonitorización en el propio Joomla y el CLI actual usan la misma política.
+La denegación se aplica antes del lector: no basta con ocultar campos en Central.
+
+Categorías y límites
+1. Joomla: versión instalada.
+2. PHP y entorno: versión, SAPI, sistema operativo, módulos PHP, límites de memoria,
+   ejecución, subida, POST, variables de entrada y estado de OPcache. Memoria usada
+   y pico miden la memoria asignada por PHP en el proceso que recoge el inventario;
+   no son el total de memoria del sistema operativo, consumo global del sitio ni
+   un histórico. PHP CLI y PHP web pueden diferir.
+3. Base de datos: controlador, motor y versión. En MySQL/MariaDB, número y tamaño
+   agregado de tablas con el prefijo de Joomla. Las estadísticas del motor pueden
+   ser aproximadas. No devuelve nombres de tablas, filas, servidor ni credenciales.
+4. Extensiones: identidad, tipo, cliente, grupo, pertenencia a paquete, activación
+   y versión conocida; incluye desactivadas. Sin parámetros ni manifiestos completos.
+5. Actualizaciones detectadas: caché de #__updates, versión ofrecida y versión local,
+   número de proveedores habilitados y fechas máxima/mínima de consulta registrada.
+   No contacta proveedores, refresca cachés ni descarga paquetes. Una fecha ausente
+   o antigua impide interpretar cero entradas como actualizado. Una oferta no
+   garantiza compatibilidad. No comparte URLs, extra_query o claves de descarga.
+6. Configuración general: nombre, offline, zona horaria, editor, caché, SEO, robots,
+   gzip, gestor y duración de sesiones. Sin SMTP, secretos o rutas locales.
+7. Señales de seguridad: HTTPS obligatorio y observado, depuración de Joomla e
+   idioma, errores PHP visibles, nivel de errores y número de usuarios con registros
+   MFA. No es una auditoría ni garantiza protección. En CLI, HTTPS observado es
+   desconocido. La existencia de registros MFA no prueba el uso en cada acceso.
+8. Usuarios en cifras: totales, habilitados, bloqueados, pendientes de activación
+   y altas en 30 días. Sin nombres, correos, hashes, grupos o actividad individual.
+9. Contenido en cifras: artículos por estado, categorías de com_content y elementos
+   del menú del sitio. Sin títulos, textos, autores o documentos.
+10. Idiomas: instalados, de contenido y predeterminados del sitio/administración.
+11. Plantillas: estilos, plantilla, cliente y home (0 sin predeterminar, 1 general
+    o código de idioma). Sin parámetros de estilos.
+12. Tareas: título, tipo, estado, última/próxima ejecución, último código de salida,
+    contadores de ejecución/fallo y número de bloqueos. Sin parámetros ni notas.
+    Habilitada no equivale a ejecutada. Los títulos pueden contener información
+    interna elegida por el administrador: compartir solo si se acepta ese alcance.
+13. Almacenamiento: espacio libre/total del sistema de archivos visible para PHP.
+    Puede incluir otros sitios. No es cuota del hosting ni tamaño de Joomla; no
+    recorre árboles, lee archivos, registros ni copias.
+
+Cada listado tiene un máximo de 1.000 filas y comunica total y truncamiento. No se
+afirma ausencia de datos fuera de ese límite. Los módulos/idiomas de PHP tienen
+un límite separado de 300 entradas. Un fallo en una categoría no impide consultar
+las demás. No se inventan CPU, cuota, estado de antivirus, caducidad de certificado,
+entrega de correo ni estado de restauración a partir de estos datos.
+
+Estados y protocolo
+El sobre HTTP sigue en protocol_version=1; el inventario actual usa schema_version=2.
+No hay adaptación al esquema de anteriores versiones de desarrollo. Las trece
+secciones son obligatorias: joomla, runtime, database, extensions, updates,
+configuration, security, users, content, languages, templates, scheduler, storage.
+available lleva data con campos permitidos; denied, unavailable y error llevan
+data=null. denied significa sharing_disabled. error significa collection_failed,
+sin texto de excepciones. Listados: data.items, total y truncated; los campos
+simples quedan junto a ellos. Unknown se representa como null, no como cero/false.
+status=partial refleja errores de colección; denegar categorías no es un fallo.
+Incluso al denegar todo se puede autenticar la identidad y devolver metadatos
+(protocolo, fecha, contexto, capacidades y categorías denegadas) para conservar
+la vinculación. Esto no autoriza datos de ninguna categoría ni mantenimiento.
+InventorySchema es la única fuente de catálogo, tipos y allowlists; el build lo
+copia con namespaces propios a los dos componentes y los motores. El cliente
+rechaza denegaciones con datos, fechas inválidas y secciones ausentes, y descarta
+campos no permitidos antes de conservar un inventario. TLS, pinning y límites de
+respuesta (2 MiB) permanecen; inventario no modifica extensiones ni configuración.
+
+Última observación en Central
+Cada sitio muestra versiones permitidas, entradas de actualizaciones en caché y
+cobertura, con fecha de recepción. Actualizar inventario hace la consulta real.
+Detalle guardado abre la última observación sin contactar el sitio; lo dice en la
+pantalla y advierte si la comprobación más reciente requiere revisión. Los campos
+denegados se muestran como No compartido; un error no se convierte en ausencia.
+La tabla #__nwm_inventory conserva una sola observación normalizada por sitio,
+limitada a 2 MiB, y un resumen pequeño para el listado. Cada nueva recepción la
+sustituye íntegramente, incluidas denegaciones: no mezcla versiones anteriores
+de categorías ni mantiene un archivo histórico de payloads. El historial de
+comprobaciones sigue limitado a 100 resúmenes por sitio, diez visibles.
+Eliminar el registro elimina también esta observación. Un resultado tardío no
+puede recrearla después de eliminar el sitio. La consulta del detalle exige los
+mismos permisos de lectura que el resto del componente y no sirve una ruta pública.
+Un error al guardar se muestra explícitamente y la tarea automática lo comunica
+como fallo; no se presenta una persistencia fallida como éxito del programador.
+
+Denegar tiene efecto desde la siguiente colección. No puede borrar lo que un
+central o su administrador ya haya recibido, exportado o guardado antes, ni una
+respuesta que ya estaba en curso. Central actualiza su copia al recibir otra
+observación; mientras tanto la copia conserva su fecha anterior. Desconectar
+revoca consultas futuras y la política local se conserva. Para retirar los datos
+guardados, eliminar el registro en Central. Las copias/restauraciones de base de
+datos quedan sujetas a la política de conservación del operador del Central.
+
+Desarrollo y pruebas
+El instalador asegura la tabla de observaciones usando el DDL actual de referencia,
+también cuando se instala sobre tablas conservadas. No depende de marcadores de
+esquema ni introduce capas de compatibilidad con entregas de desarrollo anteriores.
+inventory_permissions.php comprueba lectores reales, ACL, denegación de cada
+categoría, sustitución de datos y fallos de almacenamiento. onboarding_http.py
+--inventory-sharing verifica formularios y política del endpoint HTTP; puede
+combinarse con --remote-transport, --central-design y --without-js. Los datos de
+los fixtures son desechables. Los resultados ejecutados están en verification.txt.

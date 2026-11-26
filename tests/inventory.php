@@ -5,6 +5,7 @@ define('_JEXEC', 1);
 define('JPATH_BASE', realpath($argv[1] ?? '') ?: throw new RuntimeException('Pass the Joomla root path.'));
 require JPATH_BASE . '/includes/defines.php';
 require JPATH_BASE . '/includes/framework.php';
+require __DIR__ . '/../extensions/plg_console_nicodewebmonitor/src/Inventory/InventorySchema.php';
 require __DIR__ . '/../extensions/plg_console_nicodewebmonitor/src/Inventory/ExtensionRecord.php';
 require __DIR__ . '/../extensions/plg_console_nicodewebmonitor/src/Inventory/Collector.php';
 
@@ -28,14 +29,14 @@ check($result['sections']['joomla']['data']['version'] === $version, 'real_jooml
 check($result['sections']['runtime']['data']['php_version'] === PHP_VERSION, 'real_php_version');
 check($result['sections']['database']['data']['version'] === $db->getVersion(), 'real_database_version');
 $expected = (int) $db->setQuery('SELECT COUNT(*) FROM ' . $db->quoteName('#__extensions'))->loadResult();
-check(count($result['sections']['extensions']['data']) === $expected, 'all_installed_extensions_including_disabled');
+check(count($result['sections']['extensions']['data']['items']) === $expected, 'all_installed_extensions_including_disabled');
 $packageIds = $db->setQuery('SELECT extension_id,package_id FROM #__extensions')->loadAssocList();
-$byId = array_column($result['sections']['extensions']['data'], null, 'id');
+$byId = array_column($result['sections']['extensions']['data']['items'], null, 'id');
 foreach ($packageIds as $p) {
     if ($byId[(int)$p['extension_id']]['package_id'] !== (int)$p['package_id']) { throw new RuntimeException('Package ownership lost'); }
 }
 check(true, 'every_package_relation_matches_live_database');
-check($result['sections']['hosting']['status'] === 'unavailable', 'hosting_not_fabricated');
+check($result['sections']['storage']['status'] === 'denied', 'new_storage_category_requires_local_consent');
 check($result['capabilities'] === ['remote_inventory' => false, 'remote_updates' => false, 'remote_backups' => false], 'no_remote_capabilities_claimed');
 check((bool) preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $result['collected_at']), 'utc_timestamp');
 $row = ['extension_id'=>1, 'name'=>'Example', 'type'=>'plugin', 'element'=>'example', 'folder'=>'system', 'client_id'=>0, 'enabled'=>0,

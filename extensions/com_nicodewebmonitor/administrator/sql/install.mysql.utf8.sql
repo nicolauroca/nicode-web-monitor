@@ -9,6 +9,14 @@ CREATE TABLE IF NOT EXISTS `#__nwm_sites` (
  PRIMARY KEY (`id`), UNIQUE KEY `site_identity` (`site_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `#__nwm_inventory` (
+ `site` int unsigned NOT NULL,
+ `received_at` bigint NOT NULL,
+ `summary` text NOT NULL,
+ `inventory` mediumtext NOT NULL,
+ PRIMARY KEY (`site`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `#__nwm_checks` (
  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
  `site` int unsigned NOT NULL,

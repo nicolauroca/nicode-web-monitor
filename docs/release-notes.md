@@ -1,29 +1,42 @@
-# Nicode Web Monitor 1.1.1-dev.4 — Desarrollo
+# Nicode Web Monitor 1.1.1-dev.5 — Desarrollo
 
 **Prerelease de desarrollo. No es una versión definitiva, estable ni una beta final.**
 
-Esta entrega rediseña **Nicode Web Monitor — Central** con la misma identidad
-visual del Conector. Conserva los servicios, conexión, permisos y transportes.
+Amplía el inventario y permite que cada Joomla decida qué comparte desde su Conector.
 
-- Resumen con cifras reales de sitios, inventario reciente, revisión y pendientes.
-- Búsqueda por nombre/URL y filtros combinables con estados claros y contador.
-- Tarjetas de sitios, última comprobación, conexión e historial desplegable.
-- Inventario con software, cobertura y extensiones buscables en una tabla accesible.
-- Alta guiada en tres pasos, dirección detectada y código temporal con mostrar/copiar.
-- Programación y mantenimiento en secciones propias; confirmaciones conservadas.
-- Textos del panel en español, diseño móvil, tema oscuro y navegación por teclado.
-- Formularios nativos funcionales sin JavaScript; sin recursos de terceros.
+- Trece categorías: Joomla, PHP, base de datos, extensiones, actualizaciones en caché,
+  configuración, seguridad, usuarios agregados, contenido agregado, idiomas,
+  plantillas, tareas y almacenamiento.
+- Un permiso por categoría en el Conector, con perfiles Esencial/Todo/Nada y guardado
+  explícito. Solo las cuatro esenciales están permitidas de entrada.
+- La denegación se aplica antes de recoger datos y funciona tanto por HTTPS como
+  al monitorizar el propio Central. Desconectar conserva la política local.
+- Central distingue compartido, no compartido, no disponible y error. Las categorías
+  denegadas no generan por sí mismas una alerta de inventario parcial.
+- Última observación guardada por sitio, versiones y cobertura en las tarjetas y
+  detalle fechado sin peticiones de red. Cada recepción sustituye el dato anterior.
+- Sin identidades de usuarios, correos, contraseñas, textos, parámetros de extensiones,
+  URLs de actualización, rutas locales ni claves de descarga.
+- Formularios nativos, uso sin JavaScript, tema oscuro y pantallas móviles.
 
 ## Instalar
 
-En el Central: **pkg_nicodemonitor-1.1.1-dev.4.zip**.
-En cada sitio: **pkg_nicodeconnector-1.1.1-dev.4.zip**.
-Si el Central también se supervisa, instalar ambos en ese mismo Joomla.
-Actualizar los dos ZIP completos para mantener coherentes las versiones de las
-piezas. No desinstalar ni borrar tablas. «Source code» no es un instalador Joomla.
+En Central: **pkg_nicodemonitor-1.1.1-dev.5.zip**.
+En cada sitio: **pkg_nicodeconnector-1.1.1-dev.5.zip**.
+Si Central también se supervisa, instalar ambos en ese Joomla. Actualizar los dos
+paquetes completos, sin desinstalar ni borrar tablas. «Source code» no es instalable.
 
-El Conector mantiene su interfaz. Se conserva la reparación de esquema del
-instalador, la automonitorización local y la independencia de los dos paquetes.
-Los detalles y pruebas están en docs/central-ui.txt y docs/verification.txt.
-La validación del propietario en su hosting sigue pendiente. Publicar una release
-no implica aceptación para producción.
+El inventario actual usa **schema_version=2** y no incorpora compatibilidad con
+esquemas de anteriores versiones de desarrollo. El instalador asegura la tabla
+actual de observaciones y conserva la reparación de connection_type. Copias y
+actualizaciones mantienen sus permisos, credenciales y preparación independientes.
+
+Denegar afecta a futuras consultas; no borra datos que Central ya haya recibido.
+Una nueva recepción reemplaza su última observación; eliminar el registro elimina
+esa copia de la base de datos del componente. Las copias externas tienen su propia
+conservación. Actualizaciones en caché no garantizan que el sitio esté actualizado;
+espacio del sistema de archivos no equivale a cuota del alojamiento.
+
+Campos, límites y privacidad: docs/inventory-and-sharing.txt.
+Pruebas ejecutadas y límites: docs/verification.txt. Pendiente la validación del
+propietario en sus alojamientos; publicar una release no la convierte en producción.

@@ -1,8 +1,8 @@
-Nicode Web Monitor 1.1.1-dev.4 — interfaz del Central
+Nicode Web Monitor 1.1.1-dev.5 — interfaz del Central
 
 Alcance
-Rediseño de las vistas y recursos locales del componente Central. No cambia el
-dispatcher, servicios, transportes, credenciales, ACL, esquema ni instalador.
+Rediseño de las vistas y recursos locales del componente Central. Los transportes, credenciales y ACL de mantenimiento conservan su aislamiento.
+El inventario ampliado y su almacenamiento se documentan en inventory-and-sharing.txt.
 registry.php compone las vistas ui, monitoring, inventory, onboarding y maintenance.
 central.css comparte la identidad visual del Conector. central.js es una mejora
 progresiva de presentación; backup-runner.js conserva su ejecución y reconciliación,
@@ -19,7 +19,9 @@ Jerarquía del panel
 - Programación: estado y fechas reales de la tarea. Preparar no acredita ejecución.
   La configuración del hosting y los enlaces del programador quedan desplegables.
 - Sitios en tarjetas: nombre, URL, estado, última comprobación y transporte. La
-  consulta manual es un POST nativo. Historial, alertas, avisos de correo y detalles
+  consulta manual Actualizar inventario es un POST nativo. El resumen muestra
+  versiones/cobertura de la última recepción; Detalle guardado abre esa observación
+  sin red y con fecha explícita. Historial, alertas, avisos de correo y detalles
   técnicos se despliegan por sitio. Eliminar registro exige marcar una confirmación
   en el navegador; la autorización sigue en el servidor y no revoca el Conector.
 - Alta en tres pasos, abierta cuando no hay sitios o se acaba de generar un código.
@@ -32,7 +34,10 @@ Jerarquía del panel
 
 Inventario
 Tras la consulta se muestra el resultado con ancla y foco, fecha de recogida y
-recepción UTC, software/entorno, cobertura por sección y extensiones. Un fallo no
+recepción UTC, software/entorno, cobertura y las trece categorías. Una navegación
+local permite saltar a cada sección. No compartido distingue una decisión del
+sitio de un dato no disponible. El detalle guardado avisa de su fecha y de que no
+consulta la web; tras un fallo se advierte del estado de la última comprobación. Un fallo no
 muestra un inventario anterior como si fuera actual. Los valores no disponibles
 quedan explícitos, incluso ante valores remotos malformados. Todo dato no confiable
 se escapa como texto. La tabla tiene desplazamiento horizontal explícito y foco

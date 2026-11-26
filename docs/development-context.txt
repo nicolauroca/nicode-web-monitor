@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.4 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.5 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
@@ -44,6 +44,15 @@ siguen funcionando sin JavaScript. No sustituirlos por llamadas AJAX al rediseñ
 La UI del Central prioriza cifras reales, sitios con búsqueda/filtros e inventario
 legible. Alta guiada, programación y mantenimiento tienen secciones propias.
 central-ui.txt documenta estructura, accesibilidad, confirmaciones y pruebas.
+El inventario usa schema_version=2, trece categorías y la política local de
+com_nicodeconnector. InventorySchema es la única fuente de catálogo/allowlists.
+Esencial permite cuatro categorías; las nuevas requieren consentimiento. Denied
+no es un fallo y siempre lleva data=null; el lector no se ejecuta. No introducir
+un override remoto de permisos ni borrar la política al desconectar.
+nwm_inventory conserva una observación por sitio, saneada y limitada, y un resumen
+para tarjetas. No mezclar datos antiguos de categorías revocadas en recepciones
+nuevas. El detalle guardado siempre se identifica como observación fechada, sin
+petición de red. Consultar inventory-and-sharing.txt para contrato y conservación.
 No convertir los estados de inventario en uptime ni disponibilidad pública.
 Tarea nativa creada idempotentemente desde una acción administrativa, respetando
 pausas y personalizaciones. El estado del scheduler procede de ejecuciones reales.

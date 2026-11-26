@@ -20,6 +20,11 @@ if ($input['action']==='begin') {
     $db->setQuery('UPDATE #__extensions SET params='.$db->quote($schedulerParams->toString())." WHERE type='component' AND element='com_scheduler'")->execute();
     $systemId=(int)$db->setQuery("SELECT extension_id FROM #__extensions WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->loadResult();
     echo json_encode(['rows'=>$rows,'system_id'=>$systemId],JSON_THROW_ON_ERROR);
+} elseif ($input['action']==='fixture_credential') {
+    $rows=$db->setQuery('SELECT id,site_id,credential FROM #__nwm_sites')->loadAssocList();
+    if(count($rows)!==1)throw new RuntimeException('Single disposable enrollment required');
+    $row=$rows[0];$vault=new Nicode\Component\NicodeWebMonitor\Administrator\Service\CredentialVault($app->get('secret'));
+    echo json_encode(['id'=>(int)$row['id'],'token'=>$vault->open($row['site_id'],$row['credential'])],JSON_THROW_ON_ERROR);
 } elseif ($input['action']==='ui_snapshot') {
     echo json_encode(['rows'=>$db->setQuery("SELECT extension_id,params,enabled FROM #__extensions WHERE (type='component' AND element='com_nicodeconnector') OR (type='plugin' AND folder='system' AND element='nicodewebmonitor')")->loadAssocList()],JSON_THROW_ON_ERROR);
 } elseif ($input['action']==='ui_restore') {
@@ -38,7 +43,7 @@ if ($input['action']==='begin') {
     $registry->add($input['label'],'https://example.org','93.184.216.34',$input['site_id'],$input['credential']);
     echo '{"ok":true}';
 } elseif ($input['action']==='cleanup') {
-    $db->setQuery('DELETE FROM #__nwm_checks')->execute(); $db->setQuery('DELETE FROM #__nwm_sites')->execute(); $db->setQuery('DELETE FROM #__nwm_pairing')->execute();
+    $db->setQuery('DELETE FROM #__nwm_inventory')->execute();$db->setQuery('DELETE FROM #__nwm_checks')->execute(); $db->setQuery('DELETE FROM #__nwm_sites')->execute(); $db->setQuery('DELETE FROM #__nwm_pairing')->execute();
     $scheduler=$app->bootComponent('com_scheduler');
     $ids=$db->setQuery("SELECT id FROM #__scheduler_tasks WHERE type='nicode.monitor'")->loadColumn();
     foreach ($ids as $id) { $table=$scheduler->getMVCFactory()->createTable('Task','Administrator'); if (!$table->delete((int)$id)) throw new RuntimeException('Task cleanup failed'); }

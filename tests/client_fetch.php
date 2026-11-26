@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/inventory_fixture.php';
 /** Test harness: credential only on stdin, never arguments or output. */
 require dirname(__DIR__) . '/extensions/com_nicodewebmonitor/administrator/src/Service/InventoryClient.php';
 use Nicode\Component\NicodeWebMonitor\Administrator\Service\InventoryClient;
@@ -10,6 +11,6 @@ if ($result['ok']) {
     $result = ['ok' => true, 'received_at' => $result['received_at'],
         'status' => $result['inventory']['status'],
         'joomla' => $result['inventory']['sections']['joomla']['data']['version'] ?? null,
-        'extensions' => count($result['inventory']['sections']['extensions']['data'] ?? [])];
+        'extensions' => count($result['inventory']['sections']['extensions']['data']['items'] ?? [])];
 }
 echo json_encode($result, JSON_THROW_ON_ERROR);

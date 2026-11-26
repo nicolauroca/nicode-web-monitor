@@ -20,7 +20,7 @@ final class LocalInventory
         if (!preg_match('/^[a-f0-9]{64}$/D',$token) || !hash_equals($params['token_hash'],hash('sha256',$token))) return ['ok'=>false,'error'=>'access_denied'];
         try {
             Factory::getApplication()->bootPlugin('nicodewebmonitor','system');
-            $inventory=(new \Nicode\Plugin\System\NicodeWebMonitor\Inventory\Collector($this->db,JVERSION))->collect();
+            $inventory=\Nicode\Plugin\System\NicodeWebMonitor\Inventory\Collector::forSite($this->db,JVERSION)->collect();
             $inventory['execution_context']=PHP_SAPI==='cli' ? 'local_cli' : 'local_web';
             return ['ok'=>true,'received_at'=>gmdate('Y-m-d\TH:i:s\Z'),'inventory'=>$inventory];
         } catch (\Throwable) { return ['ok'=>false,'error'=>'collection_failed']; }

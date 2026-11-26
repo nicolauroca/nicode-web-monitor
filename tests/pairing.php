@@ -13,6 +13,7 @@ use Nicode\Component\NicodeWebMonitor\Administrator\Service\CredentialVault;
 $c=Factory::getContainer(); $c->alias('session','session.cli')->alias(Joomla\Session\SessionInterface::class,'session.cli');
 $app=$c->get(Joomla\CMS\Application\ConsoleApplication::class); Factory::$application=$app;
 $app->createExtensionNamespaceMap(); $app->bootComponent('com_nicodewebmonitor');
+require __DIR__.'/inventory_fixture.php';
 $db=$c->get(DatabaseInterface::class); $checks=[];
 function check($ok,$name){global $checks;if(!$ok)throw new RuntimeException($name);$checks[]=$name;}
 function rejects($fn,$name){try{$fn();}catch(Throwable){check(true,$name);return;}check(false,$name);}
@@ -39,7 +40,7 @@ try {
     rejects(fn()=>(new SiteRegistry($db,$vault,$reader,$factory))->pair(...$args),'reader pairing denied');
     rejects(fn()=>$registry->pair('Bad','http://example.invalid','127.0.0.1',$uuid,$token),'invalid endpoint rejected');
     check($calls===1,'denied and invalid requests never connect');
-    $result=['ok'=>true,'inventory'=>['status'=>'partial','collected_at'=>gmdate('Y-m-d\TH:i:s\Z')]];
+    $result=['ok'=>true,'inventory'=>nwmInventoryFixture('partial')];
     $paired=$registry->pair(...$args);
     check($paired['status']==='partial' && $paired['id']>0,'partial inventory explicitly paired');
     $row=$db->setQuery('SELECT * FROM #__nwm_sites WHERE id='.$paired['id'])->loadAssoc();
@@ -49,7 +50,7 @@ try {
     rejects(fn()=>$registry->pair(...$args),'duplicate identity rejected atomically');
     check((int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_checks WHERE site='.$paired['id'])->loadResult()===1,'duplicate creates no extra observation');
     $args[3]='c3c6d3e1-f65b-4000-8000-'.bin2hex(random_bytes(6));
-    $result['inventory']['status']='complete';
+    $result['inventory']=nwmInventoryFixture('complete');
     check($registry->pair(...$args)['status']==='complete','complete inventory paired');
 }finally{$db->transactionRollback();}
 echo json_encode(['passed'=>count($checks),'checks'=>$checks],JSON_PRETTY_PRINT),"\n";

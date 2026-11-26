@@ -12,6 +12,10 @@ class Com_NicodewebmonitorInstallerScript
         // CREATE TABLE IF NOT EXISTS kept an older, deliberately retained table.
         // Establish the current invariant BEFORE incremental SQL is considered.
         $db=\Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+        // Establish the current latest-observation table from the single reference DDL.
+        $schema=file_get_contents(__DIR__.'/administrator/sql/install.mysql.utf8.sql');
+        if(!preg_match('/CREATE TABLE IF NOT EXISTS `#__nwm_inventory`[^;]+;/s',$schema,$match))return false;
+        $db->setQuery($match[0])->execute();
         $table=$db->replacePrefix('#__nwm_sites');
         if (in_array($table,$db->getTableList(),true)
             && !isset($db->getTableColumns($table)['connection_type'])) {

@@ -16,9 +16,10 @@ final class SiteRegistry
     public function all(): array
     {
         $this->permit('core.manage');
-        $sites = $this->db->setQuery('SELECT id, site_id, label, base_url, address, connection_type FROM #__nwm_sites ORDER BY id')->loadAssocList();
+        $sites = $this->db->setQuery('SELECT s.id,s.site_id,s.label,s.base_url,s.address,s.connection_type,i.received_at AS inventory_received_at,i.summary AS inventory_summary FROM #__nwm_sites AS s LEFT JOIN #__nwm_inventory AS i ON i.site=s.id ORDER BY s.id')->loadAssocList();
         $history = new CheckHistory($this->db);
         foreach ($sites as &$site) {
+            $site['inventory_summary']=json_decode($site['inventory_summary']??'null',true);
             $retained = $history->recent((int)$site['id'], 100);
             $site['checks'] = array_slice($retained, 0, 10);
             $site['alerts'] = CheckAlerts::summarize($retained);
@@ -49,10 +50,10 @@ final class SiteRegistry
                 $client = $this->clientFactory ? ($this->clientFactory)($timeoutMs) : new InventoryClient(timeoutMs: $timeoutMs);
                 $result = $this->inspect((int)$id, $client);
                 $summary['checked']++;
-                if (!($result['ok'] ?? false) || !($result['history_saved'] ?? false)) { $summary['failed']++; }
+                if (!($result['ok'] ?? false) || !($result['history_saved'] ?? false) || ($result['snapshot_saved']??true)===false) { $summary['failed']++; }
                 elseif (($result['inventory']['status'] ?? '') !== 'complete') { $summary['partial']++; }
                 // Persistence failure must not keep selecting the same site silently forever.
-                if (!($result['history_saved'] ?? false)) { $summary['status']='history_failed'; break; }
+                if (!($result['history_saved'] ?? false) || ($result['snapshot_saved']??true)===false) { $summary['status']='history_failed'; break; }
             }
             return $summary;
         } finally {
@@ -91,6 +92,7 @@ final class SiteRegistry
             $this->add($label, $url, $address, $siteId, $token);
             $id = (int)$this->db->insertid();
             (new CheckHistory($this->db))->record($id, $result);
+            (new InventoryStore($this->db))->save($id,$result['inventory']);
             $this->db->transactionCommit(true);
         } catch (\Throwable $e) {
             $this->db->transactionRollback(true);
@@ -113,6 +115,7 @@ final class SiteRegistry
         try {
             $this->db->insertObject('#__nwm_sites',$row,'id');
             (new CheckHistory($this->db))->record((int)$row->id,$result);
+            (new InventoryStore($this->db))->save((int)$row->id,$result['inventory']);
             $this->db->transactionCommit(true);
         } catch (\Throwable $e) { $this->db->transactionRollback(true); throw $e; }
         return ['id'=>(int)$row->id,'status'=>$result['inventory']['status']];
@@ -124,6 +127,7 @@ final class SiteRegistry
         try {
             $this->db->setQuery('SELECT id FROM #__nwm_sites WHERE id=' . $id . ' FOR UPDATE')->loadResult();
             $this->db->setQuery('DELETE FROM #__nwm_checks WHERE site=' . $id)->execute();
+            $this->db->setQuery('DELETE FROM #__nwm_inventory WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_notifications WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_backup_credentials WHERE site=' . $id)->execute();
             $this->db->setQuery('DELETE FROM #__nwm_backup_operations WHERE site=' . $id)->execute();
@@ -139,7 +143,14 @@ final class SiteRegistry
         }
     }
 
-    /** One explicit read; retain only a bounded check summary, not remote inventory. */
+    public function latest(int $id): array
+    {
+        $this->permit('core.manage');
+        if(!$this->db->setQuery('SELECT id FROM #__nwm_sites WHERE id='.$id)->loadResult())return ['ok'=>false,'error'=>'site_not_found'];
+        return (new InventoryStore($this->db))->latest($id);
+    }
+
+    /** One explicit read, a bounded history summary and the latest allowlisted inventory. */
     public function inspect(int $id, ?InventoryClient $client = null): array
     {
         $this->permit('core.manage');
@@ -160,6 +171,10 @@ final class SiteRegistry
             $result['history_saved'] = true;
         } catch (\Throwable) {
             $result['history_saved'] = false;
+        }
+        if($result['ok']??false){
+            try{(new InventoryStore($this->db))->save($id,$result['inventory']);$result['snapshot_saved']=true;}
+            catch(\Throwable){$result['snapshot_saved']=false;}
         }
         return $result;
     }

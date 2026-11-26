@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/inventory_fixture.php';
 /** Untrusted inventory must remain plain text; unavailable values stay explicit. */
 define('_JEXEC', 1);
 $user=new class { public function authorise($action, $component) { return false; } };
@@ -8,13 +9,13 @@ $inspection=['ok'=>true, 'received_at'=>'2026-10-10T14:00:01Z', 'inventory'=>[
         'joomla'=>['status'=>'available', 'data'=>['version'=>'6.1.4']],
         'runtime'=>['status'=>'available', 'data'=>['php_version'=>['bad'], 'sapi'=>'cgi-fcgi']],
         'database'=>['status'=>'error', 'data'=>null],
-        'hosting'=>['status'=>'unavailable', 'data'=>null],
-        'extensions'=>['status'=>'available', 'data'=>[
+        'storage'=>['status'=>'denied', 'data'=>null],
+        'extensions'=>['status'=>'available', 'data'=>['total'=>4,'items'=>[
             ['name'=>'<script>alert(1)</script>', 'type'=>'plugin', 'version'=>['status'=>'unknown','value'=>null], 'enabled'=>false],
             ['id'=>123, 'package_id'=>456, 'name'=>'Connector', 'type'=>'plugin', 'version'=>['status'=>'available','value'=>'0.2.0-dev'], 'enabled'=>true],
             ['id'=>456, 'package_id'=>0, 'name'=>'Package', 'type'=>'package'],
             ['name'=>[], 'type'=>[], 'version'=>'invalid'],
-        ]],
+        ]]],
     ],
 ]];
 function renderInventory(): string {
@@ -30,10 +31,10 @@ $checks=[
     'unknown_values'=>str_contains($html,'No disponible') && !str_contains($html,'Array'),
     'extension_version'=>str_contains($html,'0.2.0-dev'),
     'disabled_extension'=>str_contains($html,'<td>No</td>'),
-    'package_relation'=>str_contains($html,'<td>456</td>') && str_contains($html,'<td>123</td>') && str_contains($html,'<td>Ninguno</td>'),
+    'package_relation'=>str_contains($html,'<td>456</td>') && str_contains($html,'<td>123</td>') && str_contains($html,'<td>0</td>'),
 ];
 $inspection['inventory']['sections']['extensions']=['status'=>'error','data'=>null];
-$checks['unavailable_extensions']=str_contains(renderInventory(),'Inventario de extensiones no disponible.');
+$checks['unavailable_extensions']=str_contains(renderInventory(),'El Conector no ha podido leer esta categoría.');
 $inspection=['ok'=>false,'error'=>'access_denied'];
 $html=renderInventory();
 $checks['failure_without_stale_inventory']=str_contains($html,'access_denied') && !str_contains($html,'Extensiones instaladas');

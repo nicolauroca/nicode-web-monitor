@@ -1,4 +1,5 @@
 """Real Joomla registry to simulated HTTPS connector; not a two-Joomla test."""
+from inventory_fixture import inventory_fixture
 import argparse, http.server, json, secrets, ssl, subprocess, threading, uuid
 from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__)
@@ -10,7 +11,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self,*args): pass
     def do_GET(self):
         authorized=self.headers.get('Authorization')=='Bearer '+token
-        inventory={'schema_version':1,'collected_at':'2026-10-09T14:00:00Z','status':mode if mode in ['complete','partial'] else 'complete','execution_context':'remote_https','capabilities':{'remote_inventory':True,'remote_updates':False,'remote_backups':False},'sections':{key:{'status':'available','data':{}} for key in ['joomla','runtime','database','extensions','hosting']}}
+        inventory=inventory_fixture('partial' if mode=='partial' else 'complete')
         if mode=='partial': inventory['sections']['database']={'status':'error','data':None}
         body=json.dumps({'protocol_version':1,'site_id':str(uuid.uuid4()) if mode=='wrong_identity' else identity,'inventory':inventory}).encode()
         self.send_response(401 if mode=='revoked' or not authorized else 200)

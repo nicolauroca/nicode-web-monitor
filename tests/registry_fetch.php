@@ -42,7 +42,7 @@ try {
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     if (str_contains($html, $input['token']) || str_contains($html, $row->credential) || str_contains($html, '<script>')) { throw new RuntimeException('Unsafe output'); }
     $version=$result['inventory']['sections']['joomla']['data']['version']??null;
-    $extensions=$result['inventory']['sections']['extensions']['data']??[];
+    $extensions=$result['inventory']['sections']['extensions']['data']['items']??[];
     $details=$result['ok'] && is_string($version) && str_contains($html, htmlspecialchars($version, ENT_QUOTES, 'UTF-8')) && str_contains($html, 'Extensiones instaladas');
     foreach ($extensions as $extension) {
         $details=$details && str_contains($html, htmlspecialchars($extension['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));

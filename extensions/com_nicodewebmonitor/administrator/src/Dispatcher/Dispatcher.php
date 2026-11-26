@@ -16,6 +16,8 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             throw new \RuntimeException('Access denied', 403);
         }
         $this->checkAccess();
+        $this->app->setHeader('Cache-Control','no-store, private',true);
+        $this->app->setHeader('Referrer-Policy','no-referrer',true);
         $user = $this->app->getIdentity();
         $registry = new SiteRegistry(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $backups = new BackupCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
@@ -32,6 +34,10 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $task = $this->input->getCmd('task', 'display');
         $inspection = null;
         $inspectedId = 0;
+        if($task==='display' && $this->input->get->getInt('site')>0){
+            $inspectedId=$this->input->get->getInt('site');
+            $inspection=$registry->latest($inspectedId);
+        }
         if ($task !== 'display') {
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);

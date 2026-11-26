@@ -118,7 +118,7 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface
             [$status, $body] = $endpoint->handle(
                 $_SERVER,
                 $app->getInput()->get->getString('task', ''),
-                fn () => (new Collector($this->database, (new Version())->getShortVersion()))->collect()
+                fn () => Collector::forSite($this->database, (new Version())->getShortVersion())->collect()
             );
         }
         // Send directly and close before Joomla page rendering or page caching.

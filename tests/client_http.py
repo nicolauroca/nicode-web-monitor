@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import socket
 import ssl
 import subprocess
 import threading
@@ -18,12 +19,8 @@ parser.add_argument('--certificate', type=Path, required=True)
 parser.add_argument('--private-key', type=Path, required=True)
 args = parser.parse_args()
 identity, token = str(uuid.uuid4()), secrets.token_hex(32)
-inventory = {'schema_version':1, 'collected_at':'2026-10-06T14:00:00Z', 'status':'complete',
-             'execution_context':'remote_https',
-             'capabilities':{'remote_inventory':True,'remote_updates':False,'remote_backups':False},
-             'sections':{key:{'status':'available','data':{'version':'6.1.4'} if key=='joomla' else []}
-                         for key in ['joomla','runtime','database','extensions','hosting']}}
-inventory['sections']['hosting']={'status':'unavailable','data':None}
+from inventory_fixture import inventory_fixture
+inventory = inventory_fixture(collected_at='2026-10-06T14:00:00Z')
 valid = {'protocol_version':1,'site_id':identity,'inventory':inventory}
 mode, calls, trap_calls = 'valid', 0, 0
 
@@ -44,7 +41,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             body['inventory']['sections']['database']={'status':'error','data':None}
         elif selected == 'wrong_identity': body['site_id']=str(uuid.uuid4())
         elif selected == 'wrong_protocol': body['protocol_version']=2
-        elif selected == 'wrong_schema': body['inventory']['schema_version']=2
+        elif selected == 'wrong_schema': body['inventory']['schema_version']=99
         elif selected == 'bad_date': body['inventory']['collected_at']='2026-02-31T00:00:00Z'
         elif selected == 'missing_section': del body['inventory']['sections']['extensions']
         elif selected == 'bad_capability': body['inventory']['capabilities']['remote_inventory']='true'
@@ -135,7 +132,15 @@ try:
     run('subdirectory_installation',url=defaults['url']+'/joomla')
     server.shutdown()
     server.server_close()
-    run('connection_failure','connection_failed')
+    # A reset during TLS is deterministic; Windows may time out on a closed port.
+    reset = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    reset.bind(('127.0.0.1', 0)); reset.listen(1)
+    reset_port = reset.getsockname()[1]
+    def reset_connection():
+        connection, _ = reset.accept()
+        connection.close(); reset.close()
+    threading.Thread(target=reset_connection, daemon=True).start()
+    run('connection_failure','connection_failed',url=f'https://localhost:{reset_port}')
     print(json.dumps({'passed':len(checks),'checks':checks,'fixture':'loopback TLS, simulated protocol responses'},indent=2))
 finally:
     server.shutdown()

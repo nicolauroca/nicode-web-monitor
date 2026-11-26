@@ -23,6 +23,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $viewPage=$this->input->get->getCmd('screen','sites');
         $viewSection=$this->input->get->getCmd('section','overview');
         $viewCategory=$this->input->get->getCmd('category','');
+        $priorityFilter=$this->input->get->getCmd('health','all');
         $registry = new SiteRegistry(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $backups = new BackupCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canBackup = !$user->guest && !$user->block && $user->authorise('nwm.backup', 'com_nicodewebmonitor');
@@ -58,8 +59,15 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
             }
-            if (!in_array($task, ['issueCode', 'setupMonitoring', 'notificationRetry', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupContinue', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
+            if (!in_array($task, ['refreshReferences', 'issueCode', 'setupMonitoring', 'notificationRetry', 'remove', 'inspect', 'backupEnroll', 'backupBegin', 'backupAdvance', 'backupContinue', 'backupStatus', 'updateEnroll', 'updateBegin', 'updateExecute', 'updateStatus', 'coreUpdateEnroll', 'coreUpdateBegin', 'coreUpdateExecute', 'coreUpdateStatus'], true)) {
                 throw new \RuntimeException('Unknown task', 404);
+            }
+            if($task==='refreshReferences'){
+                $catalogService=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\ReleaseCatalog(Factory::getContainer()->get(DatabaseInterface::class));
+                $result=$catalogService->refresh($user,true);
+                $this->app->enqueueMessage($result['status']==='updated'?'Referencias oficiales actualizadas.':'No se han podido actualizar todas las referencias. Se conservan las fechas de las últimas consultas.',$result['status']==='updated'?'message':'warning');
+                $this->app->redirect('index.php?option=com_nicodewebmonitor'.($selectedSiteId>0?'&site='.$selectedSiteId.'&section=health':''),303);
+                return;
             }
             if ($task === 'issueCode' || $task === 'setupMonitoring') {
                 $selectedSiteId=0;$viewPage=$task==='issueCode'?'add':'monitoring';

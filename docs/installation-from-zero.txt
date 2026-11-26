@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.6 — instalación y conexión
+Nicode Web Monitor 1.1.1-dev.7 — instalación y conexión
 
 Requisitos
 Joomla 6, PHP y base de datos compatibles con esa instalación. PHP necesita cURL,
@@ -14,11 +14,11 @@ Python 3 se utiliza solo al reconstruir los paquetes desde el repositorio.
 1. Obtener los instaladores
 Desde la raíz del repositorio: python tools/build.py
 Los dos archivos para usuarios son:
- - dist/pkg_nicodemonitor-1.1.1-dev.6.zip: panel central y plugin de tareas.
- - dist/pkg_nicodeconnector-1.1.1-dev.6.zip: componente de conexión y motor system.
+ - dist/pkg_nicodemonitor-1.1.1-dev.7.zip: panel central y plugin de tareas.
+ - dist/pkg_nicodeconnector-1.1.1-dev.7.zip: componente de conexión y motor system.
 El build también genera ZIP individuales para pruebas y un plugin CLI opcional;
 no instalarlos en el recorrido normal. Descargar los dos pkg_ de la prerelease
-1.1.1-dev.6, no «Source code» ni los ZIP de una release anterior.
+1.1.1-dev.7, no «Source code» ni los ZIP de una release anterior.
 
 2. Instalar
 En el Joomla central, Sistema > Instalar > Extensiones: subir el paquete central.
@@ -42,7 +42,7 @@ son automáticas. El central verifica el primer inventario antes de guardar el a
 Inventario parcial sigue siendo parcial: consultar los detalles del panel.
 Las copias y actualizaciones no se habilitan con la vinculación. El Central conserva
 una observación fechada por sitio. En el directorio, pulsar Entrar abre su ficha.
-Resumen, Inventario, Historial, Conexión y Mantenimiento tienen páginas propias.
+Resumen, Diagnóstico, Inventario, Historial, Conexión y Mantenimiento tienen páginas propias.
 Inventario muestra primero las categorías; entrar en una muestra solo esos datos.
 Actualizar inventario consulta el sitio; navegar por la observación guardada no
 hace peticiones al supervisado. Migas y enlaces Volver permiten subir de nivel.
@@ -89,7 +89,7 @@ Reinstalar un paquete actual no es una limpieza de las tablas conservadas. Antes
 de reutilizar un laboratorio viejo, decidir explícitamente qué datos conservar.
 
 Si Central muestra 1054 Unknown column connection_type
-Instalar los dos ZIP completos de 1.1.1-dev.6 encima de los existentes, sin
+Instalar los dos ZIP completos de 1.1.1-dev.7 encima de los existentes, sin
 desinstalar, borrar tablas ni ejecutar SQL manualmente. El instalador Central
 comprueba las columnas reales y añade connection_type si falta, conservando sitios,
 credenciales e historial, incluso si Joomla ya marcaba el esquema como actualizado.
@@ -103,3 +103,10 @@ Cancelar cualquier intento pendiente en Conector, generar un código nuevo en
 Central y conectar de nuevo. No deshabilitar TLS ni introducir secretos a mano.
 Los errores ahora distinguen versiones mezcladas, autenticación inesperada,
 firewall HTTP 403, ruta ausente HTTP 404, respuesta HTML/JSON y errores de servidor.
+
+Interpretar el resumen
+En Diagnóstico, revisar versiones, soporte, actualizaciones distintas y señales
+compartidas. El catálogo oficial tiene fecha y se refresca con la tarea; Actualizar
+referencias fuerza su consulta con permisos de monitorización. Los campos denegados
+se habilitan únicamente desde Información que compartes del Conector si el
+propietario lo decide. site-health.txt define los criterios y sus límites.

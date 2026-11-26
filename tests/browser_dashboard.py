@@ -24,6 +24,12 @@ def exercise_dashboard(page, central, output, check, javascript=True):
             check(row.count()==1 and label in row.inner_text(),f'{width}: {state} compact status')
             if width==1440:
                 check(abs(row.bounding_box()['width']-table.bounding_box()['width'])<=2 and row.bounding_box()['height']<=105,'desktop: '+state+' occupies one compact full-width row')
+        recovered=page.locator('[data-nwm-site]').filter(has=page.get_by_role('link',name='NWM browser fixture recovered',exact=True))
+        failed=page.locator('[data-nwm-site]').filter(has=page.get_by_role('link',name='NWM browser fixture failed',exact=True))
+        partial=page.locator('[data-nwm-site]').filter(has=page.get_by_role('link',name='NWM browser fixture partial',exact=True))
+        check(recovered.locator('.nwm-version--success').count()==2 and failed.locator('.nwm-version--danger').count()==1,f'{width}: supported versions and EOL have explicit visual states')
+        check('2 extensiones' in partial.inner_text(),f'{width}: 56 cached rows become two distinct pending extensions')
+        check('125 ms' in recovered.inner_text(),f'{width}: query duration is labeled as inventory')
         if javascript:
             page.locator('[data-nwm-filter=review]').click()
             check(page.locator('[data-nwm-site]:visible').count()==3,f'{width}: review filter')
@@ -33,12 +39,19 @@ def exercise_dashboard(page, central, output, check, javascript=True):
             check(page.locator('[data-nwm-no-results]').is_visible(),f'{width}: empty search')
             page.locator('[data-nwm-clear-filters]').click()
             check(page.locator('[data-nwm-site]:visible').count()==6,f'{width}: clear filters')
+            page.locator('[data-nwm-health-filter=critical]').click()
+            check(failed.is_visible() and not recovered.is_visible(),f'{width}: priority filter focuses the affected site')
+            page.locator('[data-nwm-clear-filters]').click()
         page.evaluate('scrollTo(0,0)');page.screenshot(path=str(output/f'central-directory-{width}.png'),full_page=True)
         page.get_by_role('link',name='Entrar en NWM browser fixture recovered',exact=True).click();page.wait_for_load_state('networkidle')
         check(page.locator('[data-nwm-site],#nwm-add-site,#nwm-monitoring').count()==0,f'{width}: entering a site replaces the directory')
         check(page.get_by_role('heading',name='NWM browser fixture recovered',exact=True).is_visible(),f'{width}: selected site identified')
         check(page.get_by_text('NWM browser fixture failed',exact=True).count()==0,f'{width}: other site identities absent')
         page.screenshot(path=str(output/f'site-overview-{width}.png'),full_page=True)
+        page.locator('.nwm-site-tabs').get_by_role('link',name='Diagnóstico',exact=True).click();page.wait_for_load_state('networkidle')
+        check(page.locator('[data-health-category]').count()==7 and page.get_by_text('Respuesta de la consulta',exact=True).is_visible(),f'{width}: diagnosis explains each area and separates timing')
+        check(page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'{width}: diagnosis fits viewport')
+        page.screenshot(path=str(output/f'site-health-{width}.png'),full_page=True)
         page.locator('.nwm-site-tabs').get_by_role('link',name='Historial',exact=True).click();page.wait_for_load_state('networkidle')
         check(page.get_by_text('Sin alertas activas de inventario.',exact=True).is_visible(),f'{width}: own history and alert only')
         summary=page.get_by_text('Cambios de estado',exact=True);summary.focus();summary.press('Enter')
@@ -58,6 +71,8 @@ def exercise_dashboard(page, central, output, check, javascript=True):
     check(page.locator('#nwm-monitoring').is_visible() and page.locator('[data-nwm-site],#nwm-add-site').count()==0,'scheduler has its own page')
     page.goto(central+'&site=2147483647&section=inventory');page.wait_for_load_state('networkidle')
     check(page.get_by_role('heading',name='Sitio o sección no disponible').is_visible() and page.locator('[data-nwm-site],.nwm-inventory-category').count()==0,'deleted site does not fall back to another site or full directory')
+    page.goto(central+'&health=critical');page.wait_for_load_state('networkidle')
+    check(page.locator('[data-nwm-site]:visible').count()==1,'priority filtering also runs on the server without JavaScript')
 
 
 if __name__ == '__main__':

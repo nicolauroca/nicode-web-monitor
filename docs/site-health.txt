@@ -1,0 +1,88 @@
+Nicode Web Monitor 1.1.1-dev.7 — prioridades y diagnóstico
+
+Objetivo
+El directorio conserva una fila por sitio y permite decidir qué revisar. Inventario
+reciente describe la consulta, no que Joomla/PHP estén al día ni que la web funcione.
+Entrar > Diagnóstico explica los indicadores y enlaza a cada categoría del inventario.
+Resumen muestra hasta tres prioridades y acceso al diagnóstico completo.
+
+Semáforos de Joomla y PHP
+Verde: versión estable comparable, última de su rama/serie, soporte activo y
+observación reciente. Amarillo: versión pendiente o rama con solo soporte de
+seguridad. Rojo: fin del soporte oficial. Gris: permiso denegado, versión ausente,
+personalizada/preliminar, posterior a la referencia, catálogo caducado o dato antiguo.
+Los resultados favorables de observaciones antiguas pasan a Sin confirmar.
+PHP se compara con la última de la misma rama: PHP 8.5 actualizado y soportado
+no necesita migrar a 8.6 para aparecer verde. Joomla se compara con la última de
+su serie mayor, incluidos saltos de versión menor. Se muestran fechas de soporte
+activo y de seguridad; el último día del calendario está incluido.
+La evaluación corresponde a los proyectos oficiales. Un proveedor puede distribuir
+backports propios. Una versión pendiente no demuestra una vulnerabilidad ni permite
+calificar su actualización de crítica sin un aviso de seguridad verificado.
+
+Catálogo oficial y privacidad
+Fuentes fijas: https://www.php.net/releases/branches.php y
+https://developer.joomla.org/roadmap.html. Se incluyen hechos públicos consultados
+al preparar el paquete en src/Service/release-catalog.json. La tarea comprueba cada
+fuente diariamente; un fallo se limita a un nuevo intento automático por hora.
+Actualizar referencias es un POST nativo con CSRF, core.manage y nwm.monitor.
+El renderizado GET nunca consulta proveedores ni el Joomla supervisado.
+Se muestran fechas por fuente; a los siete días la referencia deja de dar un
+resultado favorable de versión. Un fallo parcial conserva el dato y la fecha
+anterior de esa fuente. El resto del inventario y su tarea no se marcan fallidos
+por una indisponibilidad de la fuente oficial. Los parámetros ajenos se preservan.
+Cada petición exige HTTPS verificado, DNS público validado y dirección fijada,
+sin proxy ni redirecciones. Máximo 300000 bytes y 32768 de cabeceras; 3 segundos
+por petición HTTP, más la resolución DNS. Solo se envían cabeceras genéricas:
+ninguna URL de sitios, versión instalada, credencial o inventario sale hacia estas
+fuentes. En hosting, mantener actualizado el almacén CA de PHP; un fallo TLS no
+se resuelve desactivando la verificación. tools/update_release_catalog.php actualiza
+los hechos distribuidos antes de construir una nueva entrega, sin usar Joomla.
+
+Recuento de actualizaciones
+El número principal cuenta extensiones distintas con versión ofrecida superior a
+la instalada; no duplica varias ofertas de la misma extensión ni cuenta versiones
+ya instaladas. Joomla core se indica aparte. Los registros sin versiones comparables
+se explican como pendientes de evaluar. El diagnóstico conserva el total original
+para entender diferencias como 56 entradas frente a 2 extensiones pendientes.
+La fecha se basa en la consulta más antigua de proveedores habilitados. Caché
+sin fecha, anterior a 24 horas, limitada o con versiones desconocidas no acredita
+que esté todo actualizado, aunque el recuento resulte cero. Recoger el inventario
+no refresca los proveedores de actualizaciones de Joomla.
+
+Señales compartidas
+- Configuración de seguridad: depuración Joomla/idioma, errores PHP visibles y
+  configuración de HTTPS. Un resultado favorable solo significa ausencia de esas
+  señales; no hay escaneo de malware, cabeceras públicas o base CVE en esta entrega.
+- Almacenamiento: rojo si libre <=5% o <100 MiB; amarillo si <=10% o <1 GiB.
+  Son umbrales explícitos sobre el sistema de archivos visible por PHP, no cuota
+  del alojamiento. Un tamaño desconocido queda sin evaluar.
+- Tareas: se revisan habilitadas con última ejecución fallida y bloqueadas. Un
+  bloqueo puede ser una tarea en curso. El acumulado histórico de fallos no activa
+  por sí solo una alerta. Tareas sin resultado o lista limitada impiden el verde.
+- Modo del sitio: offline se recomienda revisar. Online configurado no es uptime.
+- Consulta: ausencia, fallo, fecha dudosa u observación antigua mantienen prioridad.
+Las prioridades cuentan motivos; no son una puntuación de seguridad ni diagnóstico
+clínico de la web. Datos insuficientes puede coexistir con prioridades conocidas.
+Los filtros por prioridad funcionan mediante enlaces GET aun sin JavaScript;
+búsqueda y combinación con estado de consulta mejoran con JavaScript.
+
+Consentimiento y conservación
+Las siete áreas usan exclusivamente el resumen de las categorías ya compartidas.
+No se añaden permisos implícitos ni consultas a categorías denegadas. Una recepción
+nueva sustituye también el resumen y retira señales de categorías revocadas. Los
+cambios de permiso no pueden borrar datos recibidos antes de la siguiente consulta.
+El payload completo solo se carga al explorar Inventario; no en el directorio.
+
+Tiempo medido
+La duración en ms se mide desde Central durante la consulta de inventario recibida;
+se conserva con esa última observación, no en un historial de latencia. En remoto
+incluye HTTPS, recogida y transferencia; en automonitorización es una operación
+local, y se identifica el contexto web o CLI. No mide carga de portada, TTFB,
+Lighthouse, disponibilidad pública ni porcentaje de uptime. No se establecen
+comparaciones de velocidad entre transporte local y remoto.
+
+Próximas capacidades
+competitive-analysis.md distingue lo implementado y lo que necesita su propio
+contrato, permisos y pruebas: sonda pública/SSL, auditoría de rendimiento, avisos
+CVE, informes, agrupaciones y automatizaciones de mantenimiento.

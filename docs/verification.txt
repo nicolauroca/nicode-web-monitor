@@ -1,59 +1,66 @@
-Nicode Web Monitor 1.1.1-dev.6 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.7 — verificación vigente
 
 Fecha: 26 de noviembre de 2026 (Europe/Madrid).
 Entrega de DESARROLLO; prerelease, no definitiva ni beta final.
 Laboratorio desechable: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28 y Chrome.
-Sin instalaciones, credenciales ni inventarios del usuario.
+No se usan instalaciones, credenciales ni inventarios del propietario.
 
 Alcance
-Navegación de Central: directorio a todo el ancho, ficha de un sitio, páginas por
-sección y una categoría por página. Alta y programación independientes. Lectura
-acotada al sitio y operaciones de mantenimiento filtradas antes del límite.
-Se conserva schema_version=2, trece categorías y consentimiento local del Conector.
-Los transportes y la autorización de efectos de mantenimiento conservan su contrato.
+Prioridades del directorio, semáforos de versiones y soporte, catálogo oficial,
+recuentos de extensiones pendientes, diagnóstico de siete áreas y duración de
+consulta de inventario. Mismo schema_version=2 y consentimiento de 13 categorías.
+Se preservan navegación por sitio, TLS/pinning y permisos de mantenimiento.
 
 Verificación ejecutada
+- site_health.php: 29 comprobaciones deterministas. Ramas soportadas frente a
+  nuevas ramas, parches pendientes, solo seguridad, EOL, versiones personalizadas,
+  catálogo caducado/futuro, fin de día inclusivo, fuente malformada, deduplicación,
+  versiones ya instaladas, datos denegados/antiguos, espacio bajo y tareas sin
+  resultado. Incluye tareas permitidas con configuración denegada.
+- release_catalog.php: 12 comprobaciones con tabla temporal de conexión. ACL,
+  lectura sin red, refresco independiente, conservación de opciones y fechas,
+  fallo parcial y limitación de reintentos. El transporte se sustituye por respuestas
+  públicas sintéticas; no hay consultas externas desde este fixture.
+- Lectura real de las dos fuentes oficiales con tools/update_release_catalog.php,
+  PHP/cURL, TLS verificado y direcciones públicas fijadas. El PHP del laboratorio
+  utiliza las CA ya confiadas por Windows; sin desactivar la verificación. Catálogo
+  distribuido consultado el 26 de noviembre de 2026 a las 18:30 UTC.
 - Regresión nativa: registry.php 40; history.php 24; monitor.php 21;
   notifications.php 20; maintenance_history.php 20; backup_coordinator.php 46;
   self_monitoring.php 13; inventory_permissions.php 68; inventory.php 22;
-  inventory_view.php 8. Lectura de una ficha sin credenciales, ausencia de fallback
-  a otros sitios, ACL, escape de datos, automonitorización, revocación y reemplazo
-  de categorías denegadas. Los diarios conservan confirmaciones, estados inciertos
-  y reconciliación. Para las tres capacidades, 101 operaciones de otro sitio no
-  ocultan la del seleccionado al aplicar el límite de 100.
-- client_http.py 39: TLS, certificado, identidad, esquema, errores, URLs adversarias,
-  pinning, límites y ausencia de reintentos; servidor loopback de prueba.
-- public_address.php 25; transport.php 16; alerts.php 16: destinos, autenticación,
-  revocación, estados parciales/antiguos y transiciones sin disponibilidad inventada.
-- Sintaxis: 127 PHP, 11 XML, 30 Python y 3 JavaScript; enlaces de documentación
-  y git diff --check. Siete ZIP reproducibles entre fuentes LF/CRLF, incluidos
-  los paquetes con ZIP hijos y conservación de binarios.
+  inventory_view.php 8. Revocación, sustitución de categorías denegadas, escritura
+  fallida explícita, diarios y confirmaciones independientes conservados.
+- scheduler.php: 10 comprobaciones de cola nativa y recurrencia en procesos CLI
+  nuevos, incluyendo la tarea que ahora comprueba referencias. No crea cron del SO.
+- client_http.py: 39 casos TLS/protocolo con servidor loopback. Identidad, formato,
+  certificado, redirecciones rechazadas, límites y destinos adversarios.
+- Sintaxis de 135 PHP de extensiones/tests, herramienta CLI ejecutada, 11 XML,
+  30 Python y 3 JavaScript; enlaces de documentación y git diff --check.
+- Siete ZIP reproducibles LF/CRLF, con ZIP hijos y conservación de binarios.
 
 Navegador
-Los recorridos de onboarding_http.py usan enlaces y formularios reales. Comprueban
-alta, entrada/salida de fichas, índice sin payloads, una categoría por página,
-POST/303/GET tras actualizar, permisos de consulta, caché privada y revocación.
---central-design añade seis sitios sintéticos, filas compactas a todo el ancho,
-búsqueda/filtros, ausencia de otras identidades en la ficha, historial por teclado,
-regreso por migas y pantallas independientes de alta/programación. Capturas de
-1440/390/320 px, direcciones largas y tema oscuro revisadas visualmente.
-Recorrido HTTPS remoto: 139 comprobaciones. Formularios y roles de mantenimiento
-en CGI/TLS: backup_roles_http.py 28 y backup_admin_http.py 45, incluyendo permisos,
-CSRF, confirmación, retorno a la ficha y estilos cargados en tres anchos.
-Recorrido local sin JavaScript: 116 comprobaciones sobre los ZIP finales, con DNS
-bloqueado, vinculación propia, formularios nativos y navegación jerárquica. Incluye
-303 explícito, recarga y Atrás/Adelante entre índice y categoría sin repetir POST.
+Recorridos locales y HTTPS remoto: 166 comprobaciones cada uno, con consentimiento,
+POST/303/GET, categorías aisladas, búsqueda/filtros, semáforos, 56 ofertas de dos
+extensiones, prioridad EOL/disco, diagnóstico y control de acceso al refresco.
+Sin JavaScript: 134 comprobaciones con consentimiento y navegación nativa.
+Recorrido final sobre los ZIP finales: 97 comprobaciones sin JavaScript,
+incluida configuración denegada con tareas permitidas, filtros GET y automonitorización.
+Roles y formularios de mantenimiento CGI/TLS: 28 y 45 comprobaciones; CSRF,
+confirmaciones, contexto del sitio y estilos nativos cargados.
+Capturas revisadas de directorio, diagnóstico y categorías a 1440/390/320 px,
+direcciones largas y tema oscuro. No se observa desbordamiento de página ni
+mezcla de otros sitios. Portapapeles simulado; no se modifica el del usuario.
 
 Límites
-La CA y el pinning loopback se habilitan exclusivamente en copias instaladas en
-el laboratorio, restauradas en finally. La automonitorización bloquea DNS para
-probar que no depende de HTTP propio. Se desactiva el disparador por visitas al
-preparar estados sintéticos. Las respuestas simuladas validan contrato y transporte,
-no la salud de un Joomla remoto. El portapapeles se simula; los fixtures, tokens
-y capturas permanecen fuera de Git. Ninguna prueba usa un hosting del propietario.
-No es auditoría WCAG, de seguridad ni una matriz de todos los PHP/motores/plantillas.
-No se atribuyen nuevos ensayos de SMTP externo, cron del hosting, cuotas del
-proveedor, captura/restauración completa ni instalación remota de actualizaciones.
-La adaptación de los fixtures de efectos a las nuevas rutas no acredita su nueva
-ejecución completa. Las actualizaciones leídas son caché y las cifras de disco,
-sistema de archivos. Falta validar en los alojamientos antes de fijar una beta.
+Las CA y destinos loopback son dependencias del laboratorio y no se distribuyen.
+Los archivos instalados alterados por los fixtures se restauran en finally; datos,
+códigos y cuentas temporales se retiran. Se bloquea DNS en automonitorización
+para acreditar que el inventario local no depende de HTTP propio. Se desactiva
+la ejecución por visitas mientras existen sitios sintéticos. El catálogo público
+no contiene datos del usuario y su lectura no envía versiones instaladas.
+No se atribuyen uptime, carga de portada, TLS público, escaneo de malware, base
+CVE, Lighthouse, SMTP externo, cron del hosting ni recuperación/restauración.
+Las copias y actualizaciones conservan su estado experimental; sus ensayos completos
+de instalación/restauración no se han repetido por este cambio de diagnóstico.
+No es auditoría WCAG ni matriz de todos los PHP, motores o plantillas. Falta validar
+los paquetes en los alojamientos del propietario antes de fijar una beta.

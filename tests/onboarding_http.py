@@ -157,6 +157,8 @@ try:
         central=base+'/administrator/index.php?option=com_nicodewebmonitor'
         connector=base+'/administrator/index.php?option=com_nicodeconnector'
         page.goto(central); page.wait_for_load_state('networkidle')
+        check(context.request.get(central+'&task=refreshReferences').status==403,'official references cannot be refreshed through GET')
+        check(context.request.post(central,form={'task':'refreshReferences'}).status==403,'official reference refresh requires native CSRF')
         if page.get_by_role('link',name='Añadir sitio',exact=True).count()!=1:
             (a.output/'central-error.html').write_text(page.content(),encoding='utf-8')
             raise AssertionError('Central directory unavailable; see private central-error.html')

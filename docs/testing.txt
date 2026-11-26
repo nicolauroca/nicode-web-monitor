@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.6 — pruebas
+Nicode Web Monitor 1.1.1-dev.7 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -115,3 +115,16 @@ tests/resumable_*, tests/site_* y tests/tree_*. Requieren almacenamiento y, a ve
 otras bases de datos o instalaciones Joomla totalmente desechables. No ejecutar
 todos indiscriminadamente contra un mismo entorno. No atribuirlos como ejecutados
 en esta revisión si no figuran en verification.txt.
+
+Prioridades y referencias oficiales
+php tests/site_health.php
+php tests/release_catalog.php JOOMLA_ROOT --allow-disposable-writes
+El primero es determinista: soporte, caducidad, fin de día, versiones personalizadas,
+duplicados, permisos y datos incompletos. El segundo usa una tabla temporal local
+a su conexión para comprobar ACL, caché sin red, fallos parciales, conservación de
+fechas/opciones y limitación de reintentos. No consulta proveedores externos.
+--central-design añade versiones actuales, pendientes y EOL, 56 ofertas de dos
+extensiones, espacio crítico, filtros de prioridad y página Diagnóstico. Comprueba
+el filtro GET sin JS, ausencia de mezcla de sitios y tres anchos de pantalla.
+Para renovar los hechos públicos distribuidos: php tools/update_release_catalog.php,
+con CA de PHP válida, seguido de build.py; revisar las fuentes antes de publicar.

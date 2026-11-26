@@ -33,7 +33,7 @@ final class Collector
             catch(\Throwable){$sections[$category]=['status'=>'error','reason'=>'collection_failed','data'=>null];}
         }
         return InventorySchema::normalise([
-            'schema_version'=>InventorySchema::VERSION,'collector_version'=>'1.1.1-dev.6',
+            'schema_version'=>InventorySchema::VERSION,'collector_version'=>'1.1.1-dev.7',
             'collected_at'=>gmdate('Y-m-d\TH:i:s\Z'),'execution_context'=>'local_cli',
             'status'=>in_array('error',array_column($sections,'status'),true)?'partial':'complete',
             'sections'=>$sections,'capabilities'=>['remote_inventory'=>false,'remote_updates'=>false,'remote_backups'=>false],

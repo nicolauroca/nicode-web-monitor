@@ -18,7 +18,7 @@ function step(array $request):void{
     fwrite($pipes[0],json_encode($request,JSON_THROW_ON_ERROR));fclose($pipes[0]);$out=stream_get_contents($pipes[1]);$err=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);
     if(proc_close($p)!==0 || !str_contains($out,'"ok":true'))throw new RuntimeException('Native lifecycle step failed: '.substr($out.$err,0,300));
 }
-function installPackage(string $name):void { step(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_'.$name.'-1.1.1-dev.6.zip')]); }
+function installPackage(string $name):void { step(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_'.$name.'-1.1.1-dev.7.zip')]); }
 function removePackage(string $name):void{
     global $db;$id=(int)$db->setQuery("SELECT extension_id FROM #__extensions WHERE type='package' AND element=".$db->quote('pkg_'.$name))->loadResult();
     if(!$id)throw new RuntimeException('Missing package');step(['action'=>'uninstall','type'=>'package','id'=>$id]);

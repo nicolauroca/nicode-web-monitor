@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.6 — comprobaciones automáticas y correo
+Nicode Web Monitor 1.1.1-dev.7 — comprobaciones automáticas y correo
 
 Preparación
 El paquete central instala el plugin de tareas. Como administrador del componente,
@@ -63,3 +63,11 @@ mismo estado. El destinatario no se guarda en el ledger, solo su digest.
 Retirada
 Desactivar la tarea o revocar el permiso ejecutor detiene los lotes. Desinstalar
 el central pausa las tareas nicode.monitor; la extensión Connector es independiente.
+
+Referencias de soporte/versiones
+La tarea comprueba además las referencias oficiales PHP/Joomla una vez al día
+por fuente. Ante fallo, espera al menos una hora antes del siguiente intento
+automático. Añade hasta dos peticiones HTTP de tres segundos, más resolución DNS,
+fuera del presupuesto del lote de sitios. Sus errores conservan la última fecha
+y no invalidan la comprobación de los sitios. A los siete días el catálogo deja
+de acreditar que una versión está al día. El GET del panel no consulta proveedores.

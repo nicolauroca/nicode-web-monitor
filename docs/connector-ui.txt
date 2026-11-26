@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.6 — interfaz del Conector
+Nicode Web Monitor 1.1.1-dev.7 — interfaz del Conector
 
 Diseño vigente
 Presentación del componente Conector: connection.php, sharing.php, connector.css

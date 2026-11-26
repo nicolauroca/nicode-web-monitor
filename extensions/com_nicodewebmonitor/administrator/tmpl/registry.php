@@ -3,7 +3,12 @@
 defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 require __DIR__.'/ui.php';
-$uiVersion='1.1.1-dev.6';
+$releaseCatalog=isset($this)&&isset($this->app)?(new \Nicode\Component\NicodeWebMonitor\Administrator\Service\ReleaseCatalog(\Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class)))->read():\Nicode\Component\NicodeWebMonitor\Administrator\Service\ReleaseCatalog::seed();
+foreach($sites as &$row)$row['health']=\Nicode\Component\NicodeWebMonitor\Administrator\Service\SiteHealth::assess($row,$releaseCatalog);unset($row);
+$priorityFilters=['all'=>'Todas las prioridades','critical'=>'Prioritarias','review'=>'Para revisar','updates'=>'Extensiones pendientes','php'=>'PHP requiere revisión','joomla'=>'Joomla requiere revisión','security'=>'Señales de configuración','storage'=>'Espacio escaso','unknown'=>'Datos insuficientes'];
+$priorityFilter=isset($priorityFilters[$priorityFilter??'all'])?($priorityFilter??'all'):'all';
+$canReferences=$user->authorise('nwm.monitor','com_nicodewebmonitor');
+$uiVersion='1.1.1-dev.7';
 $canCreate=$user->authorise('core.create','com_nicodewebmonitor');
 $canAdmin=$user->authorise('core.admin','com_nicodewebmonitor');
 $canDelete=$user->authorise('core.delete','com_nicodewebmonitor');
@@ -16,7 +21,7 @@ $siteUrl=static fn($id,$section='overview',$category='')=>$rootUrl.'&site='.(int
 $selectedSiteId=$selectedSiteId??($inspectedId??0);
 $viewPage=$viewPage??'sites';$viewSection=$viewSection??(isset($inspection)?'inventory':'overview');$viewCategory=$viewCategory??'';
 $pageLabels=['sites'=>'Sitios','add'=>'Añadir sitio','monitoring'=>'Comprobaciones','maintenance'=>'Mantenimiento'];
-$siteLabels=['overview'=>'Resumen','inventory'=>'Inventario','history'=>'Historial','connection'=>'Conexión'];
+$siteLabels=['overview'=>'Resumen','health'=>'Diagnóstico','inventory'=>'Inventario','history'=>'Historial','connection'=>'Conexión'];
 if($canMaintain)$siteLabels['maintenance']='Mantenimiento';
 $selectedSite=null;
 foreach($sites as $row)if((int)$row['id']===(int)$selectedSiteId){$selectedSite=$row;break;}

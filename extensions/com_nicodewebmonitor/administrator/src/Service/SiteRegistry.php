@@ -162,6 +162,7 @@ final class SiteRegistry
     /** One explicit read, a bounded history summary and the latest allowlisted inventory. */
     public function inspect(int $id, ?InventoryClient $client = null): array
     {
+        $started=hrtime(true);
         $this->permit('core.manage');
         $row = $this->db->setQuery('SELECT * FROM #__nwm_sites WHERE id=' . (int) $id)->loadAssoc();
         if (!$row) {
@@ -175,6 +176,7 @@ final class SiteRegistry
         $result ??= ($row['connection_type']??'https')==='local'
             ? (new LocalInventory($this->db))->fetch($row['site_id'],$token)
             : ($client ?? new InventoryClient())->fetch($row['base_url'], $row['address'], $row['site_id'], $token);
+        $result['collection_ms']=(int)round((hrtime(true)-$started)/1000000);
         try {
             (new CheckHistory($this->db))->record($id, $result);
             $result['history_saved'] = true;
@@ -182,7 +184,7 @@ final class SiteRegistry
             $result['history_saved'] = false;
         }
         if($result['ok']??false){
-            try{(new InventoryStore($this->db))->save($id,$result['inventory']);$result['snapshot_saved']=true;}
+            try{(new InventoryStore($this->db))->save($id,$result['inventory'],$result['collection_ms']);$result['snapshot_saved']=true;}
             catch(\Throwable){$result['snapshot_saved']=false;}
         }
         return $result;

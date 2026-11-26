@@ -6,13 +6,14 @@
     const normalise = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
     const search = root.querySelector('#nwm-site-search');
     const state = root.querySelector('#nwm-site-state');
+    const health = root.querySelector('#nwm-site-health');
     const sites = [...root.querySelectorAll('[data-nwm-site]')];
     const filter = () => {
         if (!search || !state) return;
         const query = normalise(search.value.trim());
         let count = 0;
         sites.forEach(site => {
-            site.hidden = !(normalise(site.dataset.search).includes(query) && (state.value === 'all' || site.dataset.state === state.value));
+            site.hidden = !(normalise(site.dataset.search).includes(query) && (state.value === 'all' || site.dataset.state === state.value) && (!health || health.value==='all' || site.dataset.health.split(' ').includes(health.value)));
             if (!site.hidden) count++;
         });
         root.querySelector('[data-nwm-filter-count]').textContent = `${count} de ${sites.length} sitios`;
@@ -21,11 +22,14 @@
             if (link.dataset.nwmFilter === state.value) link.setAttribute('aria-current', 'true');
             else link.removeAttribute('aria-current');
         });
+        root.querySelectorAll('[data-nwm-health-filter]').forEach(link=>{if(link.dataset.nwmHealthFilter===health?.value)link.setAttribute('aria-current','true');else link.removeAttribute('aria-current');});
     };
     root.querySelectorAll('[data-nwm-filter-controls]').forEach(control => { control.hidden = false; });
     search?.addEventListener('input', filter);
     state?.addEventListener('change', filter);
-    root.querySelector('[data-nwm-clear-filters]')?.addEventListener('click', () => { search.value = ''; state.value = 'all'; filter(); search.focus(); });
+    health?.addEventListener('change',filter);
+    root.querySelector('[data-nwm-clear-filters]')?.addEventListener('click', () => { search.value = ''; state.value = 'all'; if(health)health.value='all'; filter(); search.focus(); });
+    root.querySelectorAll('[data-nwm-health-filter]').forEach(link=>link.addEventListener('click',event=>{if(!health)return;event.preventDefault();health.value=link.dataset.nwmHealthFilter;state.value='all';filter();}));
     root.querySelectorAll('[data-nwm-filter]').forEach(link => link.addEventListener('click', () => {
         if (state) { state.value = link.dataset.nwmFilter; filter(); }
     }));

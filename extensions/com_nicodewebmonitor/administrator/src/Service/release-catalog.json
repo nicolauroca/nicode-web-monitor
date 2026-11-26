@@ -1,0 +1,138 @@
+{
+    "php": {
+        "checked_at": 1795717804,
+        "branches": {
+            "8.6": {
+                "latest": "8.6.0",
+                "released": "2026-11-19",
+                "active_until": "2028-12-31",
+                "security_until": "2030-12-31"
+            },
+            "8.5": {
+                "latest": "8.5.13",
+                "released": "2025-11-20",
+                "active_until": "2027-12-31",
+                "security_until": "2029-12-31"
+            },
+            "8.4": {
+                "latest": "8.4.28",
+                "released": "2024-11-21",
+                "active_until": "2026-12-31",
+                "security_until": "2028-12-31"
+            },
+            "8.3": {
+                "latest": "8.3.37",
+                "released": "2023-11-23",
+                "active_until": "2025-12-31",
+                "security_until": "2027-12-31"
+            },
+            "8.2": {
+                "latest": "8.2.36",
+                "released": "2022-12-08",
+                "active_until": "2024-12-31",
+                "security_until": "2026-12-31"
+            },
+            "8.1": {
+                "latest": "8.1.34",
+                "released": "2021-11-25",
+                "active_until": "2023-11-25",
+                "security_until": "2025-12-31"
+            },
+            "8.0": {
+                "latest": "8.0.30",
+                "released": "2020-11-26",
+                "active_until": "2022-11-26",
+                "security_until": "2023-11-26"
+            },
+            "7.4": {
+                "latest": "7.4.33",
+                "released": "2019-11-28",
+                "active_until": "2021-11-28",
+                "security_until": "2022-11-28"
+            },
+            "7.3": {
+                "latest": "7.3.33",
+                "released": "2018-12-06",
+                "active_until": "2020-12-06",
+                "security_until": "2021-12-06"
+            },
+            "7.2": {
+                "latest": "7.2.34",
+                "released": "2017-11-30",
+                "active_until": "2019-11-30",
+                "security_until": "2020-11-30"
+            },
+            "7.1": {
+                "latest": "7.1.33",
+                "released": "2016-12-01",
+                "active_until": "2018-12-01",
+                "security_until": "2019-12-01"
+            },
+            "7.0": {
+                "latest": "7.0.33",
+                "released": "2015-12-03",
+                "active_until": "2018-01-04",
+                "security_until": "2019-01-10"
+            },
+            "5.6": {
+                "latest": "5.6.40",
+                "released": "2014-08-28",
+                "active_until": "2017-01-19",
+                "security_until": "2018-12-31"
+            },
+            "5.5": {
+                "latest": "5.5.38",
+                "released": "2013-06-20",
+                "active_until": "2015-07-10",
+                "security_until": "2016-07-21"
+            },
+            "5.4": {
+                "latest": "5.4.45",
+                "released": "2012-03-01",
+                "active_until": "2014-09-14",
+                "security_until": "2015-09-03"
+            },
+            "5.3": {
+                "latest": "5.3.29",
+                "released": "2009-06-30",
+                "active_until": "2013-07-11",
+                "security_until": "2014-08-14"
+            },
+            "5.2": {
+                "latest": "5.2.17",
+                "released": "2006-11-02",
+                "active_until": "2008-11-02",
+                "security_until": "2011-01-06"
+            },
+            "4.4": {
+                "latest": "4.4.9",
+                "released": "2005-07-11",
+                "active_until": "2007-07-11",
+                "security_until": "2008-08-07"
+            },
+            "4.3": {
+                "latest": "4.3.11",
+                "released": "2002-12-27",
+                "active_until": "2004-12-27",
+                "security_until": "2005-03-31"
+            }
+        }
+    },
+    "joomla": {
+        "checked_at": 1795717804,
+        "branches": {
+            "5": {
+                "latest": "5.4.11",
+                "released": "2023-10-17",
+                "active_until": "2026-10-13",
+                "security_until": "2027-10-12"
+            },
+            "6": {
+                "latest": "6.2.1",
+                "released": "2025-10-14",
+                "active_until": "2028-10-17",
+                "security_until": "2029-10-16"
+            }
+        }
+    }
+}

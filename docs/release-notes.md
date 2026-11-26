@@ -1,25 +1,32 @@
-# Nicode Web Monitor 1.1.1-dev.6 — Desarrollo
+# Nicode Web Monitor 1.1.1-dev.7 — Desarrollo
 
 **Prerelease de desarrollo. No es una versión definitiva, estable ni una beta final.**
 
-Reorganiza Central para navegar de lo general al detalle sin mostrarlo todo a la vez.
+Central interpreta la información del sitio para mostrar prioridades y próximos pasos.
 
-- Directorio a todo el ancho, una fila por Joomla y acción Entrar; búsqueda y filtros.
-- Ficha independiente: Resumen, Inventario, Historial, Conexión y Mantenimiento.
-- Inventario con índice de trece categorías; cada categoría abre su propia página.
-- Migas, pestañas y enlaces Volver para subir o bajar de nivel. Navegar consulta
-  la observación guardada; Actualizar inventario realiza una consulta nueva.
-- Alta y programación en pantallas independientes. Mantenimiento muestra únicamente
-  formularios y operaciones del sitio elegido, con los mismos permisos y confirmaciones.
-- Consulta guardada con retorno POST/303/GET para evitar repetirla al recargar.
-  Los fallos conservan su diagnóstico y no se ocultan con observaciones anteriores.
-- Formularios nativos, navegación sin JavaScript, tema oscuro y adaptación móvil.
-- Se conservan los permisos por categoría del Conector y la automonitorización.
+- Semáforos Joomla/PHP: versión al día, pendiente, solo seguridad o sin soporte.
+  Catálogo oficial con fechas y caducidad; sin verde para datos antiguos o desconocidos.
+- Referencias PHP/Joomla actualizadas por la tarea y mediante un POST autorizado.
+  Los fallos conservan las fechas; no se envían inventarios a los proveedores.
+- Actualizaciones distintas realmente superiores a la versión instalada. Se separan
+  Joomla core, duplicados, versiones desconocidas y caché sin refrescar.
+- Señales compartidas de configuración, espacio libre, modo offline y tareas
+  fallidas/bloqueadas/sin resultado, respetando los permisos del Conector.
+- Filtros por prioridad, también sin JavaScript, y página Diagnóstico con criterio,
+  fuentes y acceso a cada categoría. Resumen muestra los primeros asuntos a revisar.
+- Duración de la consulta de inventario medida desde Central, identificada como
+  local o HTTPS; no se presenta como velocidad de carga de la web ni uptime.
+- Navegación por sitio, automonitorización, formularios y mantenimiento independiente
+  conservados; diseño móvil y tema oscuro.
+
+La comparativa con mySites.guru y Watchful está en docs/competitive-analysis.md.
+Sonda pública/SSL, Lighthouse, base de vulnerabilidades e informes siguen pendientes;
+no se atribuyen a esta entrega. docs/site-health.txt explica los criterios publicados.
 
 ## Instalar
 
-En Central: **pkg_nicodemonitor-1.1.1-dev.6.zip**.
-En cada sitio: **pkg_nicodeconnector-1.1.1-dev.6.zip**.
+En Central: **pkg_nicodemonitor-1.1.1-dev.7.zip**.
+En cada sitio: **pkg_nicodeconnector-1.1.1-dev.7.zip**.
 Si Central también se supervisa, instalar ambos en ese Joomla. Actualizar los dos
 paquetes completos, sin desinstalar ni borrar tablas. «Source code» no es instalable.
 

@@ -3,17 +3,17 @@
 Monitorización de inventario y mantenimiento experimental de varios Joomla desde
 un Joomla central. Software libre, GPL-2.0-or-later; desarrollo público.
 
-**1.1.1-dev.6: desarrollo previo a beta.** La validación en los hostings del propietario
+**1.1.1-dev.7: desarrollo previo a beta.** La validación en los hostings del propietario
 está pendiente. No se promete compatibilidad con versiones anteriores de desarrollo.
 
 ## Instalar y conectar
 
-Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.6).
+Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.7).
 Los archivos automáticos «Source code» de GitHub no son instaladores Joomla.
 Para construir desde el repositorio: `python tools/build.py`.
 
-1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.6.zip` en el Joomla central.
-2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.6.zip` en cada Joomla supervisado.
+1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.7.zip` en el Joomla central.
+2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.7.zip` en cada Joomla supervisado.
 3. En **Componentes → Nicode Web Monitor — Central**, pulsa **Añadir sitio**, indica su nombre y genera un código.
 4. En **Componentes → Nicode Web Monitor — Conector** del supervisado, introduce la dirección del
    central, pega el código y pulsa **Conectar**.
@@ -27,8 +27,9 @@ vincúlalo al mismo panel. En ese caso el inventario se consulta dentro de Jooml
 sin DNS ni llamadas HTTPS a su propia web. Los nombres visibles son **Nicode Web
 Monitor — Central** y **Nicode Web Monitor — Conector**, partes del mismo producto.
 
-El Central abre un directorio a todo el ancho, con una fila por sitio. **Entrar**
-abre su ficha: Resumen, Inventario, Historial, Conexión y Mantenimiento. El inventario
+El Central muestra prioridades y semáforos de Joomla/PHP, extensiones pendientes,
+señales compartidas y duración de consulta en un directorio a todo el ancho. **Entrar**
+abre su ficha: Resumen, Diagnóstico, Inventario, Historial, Conexión y Mantenimiento. El inventario
 se explora categoría a categoría, con migas y enlaces para volver. Alta y programación
 tienen pantallas propias. [Navegación del Central](docs/central-ui.txt).
 

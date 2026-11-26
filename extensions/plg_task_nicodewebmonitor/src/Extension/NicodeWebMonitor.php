@@ -31,6 +31,8 @@ final class NicodeWebMonitor extends CMSPlugin implements SubscriberInterface {
             if (!$user->id || $user->guest || $user->block) { throw new \RuntimeException('Unavailable user'); }
             $registry = new SiteRegistry($this->db, new CredentialVault($this->getApplication()->get('secret')), $user);
             $result = $registry->monitor((int)($params->limit ?? 5), (int)($params->budget ?? 20));
+            try{$result['references']=(new \Nicode\Component\NicodeWebMonitor\Administrator\Service\ReleaseCatalog($this->db))->refresh($user);}
+            catch(\Throwable){$result['references']=['status'=>'unavailable'];}
             $config = \Joomla\CMS\Component\ComponentHelper::getParams('com_nicodewebmonitor');
             $result['notifications'] = (new \Nicode\Component\NicodeWebMonitor\Administrator\Service\Notifications($this->db, $user))->run(
                 (bool)$config->get('notifications_enabled', false), (string)$config->get('notification_recipient', ''), 5);

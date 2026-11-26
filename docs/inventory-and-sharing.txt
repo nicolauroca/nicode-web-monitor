@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.6 — inventario y permisos de consulta
+Nicode Web Monitor 1.1.1-dev.7 — inventario y permisos de consulta
 
 Decisión del sitio supervisado
 En el Conector, Información que compartes > Elegir categorías de información.
@@ -85,7 +85,7 @@ campos no permitidos antes de conservar un inventario. TLS, pinning y límites d
 respuesta (2 MiB) permanecen; inventario no modifica extensiones ni configuración.
 
 Última observación en Central
-Cada sitio muestra versiones permitidas, entradas de actualizaciones en caché y
+Cada sitio muestra versiones permitidas, extensiones pendientes distintas en caché y
 cobertura, con fecha de recepción. Actualizar inventario hace la consulta real.
 La pestaña Inventario de la ficha abre un índice de categorías. Cada enlace abre
 solo su categoría de la última observación, sin contactar el sitio; lo dice en la
@@ -119,3 +119,11 @@ categoría, sustitución de datos y fallos de almacenamiento. onboarding_http.py
 --inventory-sharing verifica formularios y política del endpoint HTTP; puede
 combinarse con --remote-transport, --central-design y --without-js. Los datos de
 los fixtures son desechables. Los resultados ejecutados están en verification.txt.
+
+Resumen para prioridades
+Central conserva también los campos compartidos de depuración/HTTPS, offline,
+capacidad total/libre, tareas bloqueadas/fallidas/sin resultado y recuentos de
+extensiones pendientes sin duplicados. No se leen categorías denegadas. Las fechas
+de caché y límites impiden afirmar que cero entradas equivalga a todo actualizado.
+La duración de consulta la mide Central y no es carga de la web. site-health.txt
+documenta la interpretación; no se introduce una nueva categoría ni override.

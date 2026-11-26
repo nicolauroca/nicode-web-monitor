@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.6 — arquitectura
+Nicode Web Monitor 1.1.1-dev.7 — arquitectura
 
 Producto e instalación
 Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.
@@ -102,3 +102,10 @@ separado de la instalación sencilla de inventario.
 Para sitios remotos se observa el PHP web. El inventario local conserva el contexto
 real del proceso: local_web desde administrador y local_cli desde tareas CLI;
 el PHP de consola puede diferir del servidor web.
+
+Diagnóstico: SiteHealth es una evaluación pura sobre el resumen permitido.
+InventoryStore conserva campos acotados de configuración/disco/tareas, recuentos
+deduplicados y duración medida por Central. ReleaseReference interpreta hechos
+públicos; ReleaseCatalog guarda caché por fuente sin alterar opciones ajenas;
+ReferenceHttp limita las dos fuentes oficiales y mantiene TLS/pinning. No hay
+servicio externo de análisis de los inventarios. Consultar site-health.txt.

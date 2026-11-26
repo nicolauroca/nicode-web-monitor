@@ -1,4 +1,7 @@
 <?php
+foreach(['ReleaseReference','ReleaseCatalog','SiteHealth'] as $healthClass){
+    if(!class_exists('Nicode\\Component\\NicodeWebMonitor\\Administrator\\Service\\'.$healthClass))require_once dirname(__DIR__).'/extensions/com_nicodewebmonitor/administrator/src/Service/'.$healthClass.'.php';
+}
 /** Synthetic current-contract inventory; never copies a site's payload. */
 require_once __DIR__.'/../extensions/plg_console_nicodewebmonitor/src/Inventory/InventorySchema.php';
 if(!class_exists(\Nicode\Component\NicodeWebMonitor\Administrator\Service\InventorySchema::class))

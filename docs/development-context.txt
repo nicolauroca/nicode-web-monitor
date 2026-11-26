@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.6 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.7 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
@@ -42,7 +42,7 @@ están en connector-ui.txt. El estado Conectado acredita la vinculación; no inv
 una última comprobación o salud en vivo a partir de connected_at. Los formularios
 siguen funcionando sin JavaScript. No sustituirlos por llamadas AJAX al rediseñar.
 La UI del Central usa un directorio a todo el ancho y fichas independientes por
-sitio. Resumen, Inventario, Historial, Conexión y Mantenimiento son páginas.
+sitio. Resumen, Diagnóstico, Inventario, Historial, Conexión y Mantenimiento son páginas.
 Inventario abre primero un índice y después una sola categoría. Migas y enlaces
 Volver permiten subir de nivel. SiteRegistry::find carga solo el sitio seleccionado.
 Una consulta guardada usa POST/303/GET; un fallo no se sustituye por caché. Los
@@ -59,6 +59,15 @@ para el directorio y las fichas. No mezclar datos antiguos de categorías revoca
 nuevas. El detalle guardado siempre se identifica como observación fechada, sin
 petición de red. Consultar inventory-and-sharing.txt para contrato y conservación.
 No convertir los estados de inventario en uptime ni disponibilidad pública.
+SiteHealth interpreta el resumen permitido con siete áreas, sin puntuación global
+de seguridad. Nunca convertir ausencia/denegación/caducidad en verde. El catálogo
+PHP/Joomla usa fuentes oficiales fijas, semilla pública y caché por fuente en params.
+El GET no llama a proveedores; la tarea actualiza diariamente y un POST autorizado
+permite refrescar. Cada fuente caduca a los siete días; los fallos conservan fechas.
+La duración medida corresponde a inventario, no a carga de portada. Los recuentos
+de actualizaciones deduplican extensiones y excluyen versiones ya instaladas.
+site-health.txt contiene criterios y competitive-analysis.md separa capacidades
+actuales de sonda pública, CVE, Lighthouse e informes todavía pendientes.
 Tarea nativa creada idempotentemente desde una acción administrativa, respetando
 pausas y personalizaciones. El estado del scheduler procede de ejecuciones reales.
 

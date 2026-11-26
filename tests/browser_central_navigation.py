@@ -6,7 +6,7 @@ def enter_site(page, central, section='overview', category='', label='Self monit
     page.get_by_role('link', name='Entrar en ' + label, exact=True).click()
     page.wait_for_load_state('networkidle')
     if section != 'overview':
-        names = {'inventory': 'Inventario', 'history': 'Historial', 'connection': 'Conexión', 'maintenance': 'Mantenimiento'}
+        names = {'health':'Diagnóstico','inventory': 'Inventario', 'history': 'Historial', 'connection': 'Conexión', 'maintenance': 'Mantenimiento'}
         page.locator('.nwm-site-tabs').get_by_role('link', name=names[section], exact=True).click()
         page.wait_for_load_state('networkidle')
     if category:

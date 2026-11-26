@@ -1,15 +1,18 @@
-Nicode Web Monitor 1.1.1-dev.6 — navegación del Central
+Nicode Web Monitor 1.1.1-dev.7 — navegación del Central
 
 Organización
 La entrada muestra exclusivamente el directorio de sitios. Ocupa todo el ancho
 disponible: una fila por Joomla con nombre/URL, estado, versiones Joomla/PHP,
-actualizaciones en caché, última comprobación, transporte y enlace Entrar.
+prioridades, extensiones pendientes en caché, señales de configuración/disco, última
+consulta, duración medida, transporte y enlace Entrar.
 Las cuatro cifras proceden del registro real; búsqueda y filtros son combinables.
 En móvil las filas se distribuyen como bloques para conservar la lectura sin
 desbordar la página. No se comprimen todas las columnas en 320 px.
 
 Entrar abre una ficha independiente y solo carga el registro de ese sitio:
-- Resumen: versiones, cobertura, fechas y accesos a sus secciones.
+- Resumen: hasta tres prioridades, versiones, cobertura, fechas y accesos.
+- Diagnóstico: siete áreas interpretadas, referencias oficiales y tiempo de consulta.
+  site-health.txt define colores, criterios, permisos y estados desconocidos.
 - Inventario: índice de las trece categorías con su estado y descripción.
   Abrir una categoría muestra únicamente sus datos, en otra dirección navegable.
 - Historial: comprobaciones, transiciones, alertas y avisos del sitio.
@@ -28,7 +31,7 @@ su acceso independiente cuando está instalado y autorizado.
 
 Rutas y acciones
 screen=sites/add/monitoring/maintenance identifica pantallas generales.
-site=N&section=overview/inventory/history/connection/maintenance identifica una
+site=N&section=overview/health/inventory/history/connection/maintenance identifica una
 ficha; category=runtime, por ejemplo, selecciona una categoría de inventario.
 Los enlaces usan GET nativos y permiten Atrás/Adelante y direcciones directas.
 Solo Inventario carga la observación completa guardada; las otras secciones usan
@@ -69,3 +72,7 @@ POST/303/GET, denegación, automonitorización y conservación fechada.
 --remote-transport y --without-js ejercitan variantes; --maintenance-tests comprueba
 roles, CSRF, confirmaciones y formularios nativos en CGI/TLS desechable.
 Los resultados vigentes y límites están en verification.txt.
+
+El directorio incluye filtros de prioridad por GET y combinación progresiva con
+búsqueda/estado. Las referencias se leen de caché; actualizar es un POST con CSRF.
+Los semáforos y la respuesta del inventario no se presentan como uptime.

@@ -1,5 +1,6 @@
 """Privacy controls in a disposable Joomla. Tokens remain in memory, never in reports."""
 from inventory_fixture import CATEGORIES
+from browser_central_navigation import enter_site, open_category
 
 
 def exercise_sharing(page, context, base, central, connector, output, check, fixture, javascript=True):
@@ -21,9 +22,19 @@ def exercise_sharing(page, context, base, central, connector, output, check, fix
         return response.json()['inventory']
 
     def inspect():
-        page.goto(central)
+        enter_site(page,central)
+        navigation=[];statuses=[]
+        def observe(request):
+            if request.is_navigation_request() and request.frame==page.main_frame:navigation.append(request.method)
+        page.on('request',observe)
+        def response_status(response):
+            if response.request.is_navigation_request() and response.request.method=='POST':statuses.append(response.status)
+        page.on('response',response_status)
         page.get_by_role('button', name='Actualizar inventario de Self monitored central', exact=True).click()
-        page.wait_for_load_state('networkidle')
+        page.wait_for_load_state('networkidle');page.remove_listener('request',observe)
+        page.remove_listener('response',response_status)
+        check(navigation==['POST','GET'],'successful inventory query redirects to a read-only page')
+        check(statuses==[303],'inventory success uses an explicit see-other redirect')
 
     page.goto(connector); page.wait_for_load_state('networkidle')
     page.locator('.nwm-sharing-options > summary').click()
@@ -41,20 +52,35 @@ def exercise_sharing(page, context, base, central, connector, output, check, fix
     inventory = wire()
     check(inventory['schema_version'] == 2 and all(inventory['sections'][key]['status'] == 'available' for key in CATEGORIES), 'HTTPS endpoint reads all thirteen permitted categories')
     inspect()
-    check(page.locator('.nwm-inventory-category').count() == 13, 'Central exposes all thirteen inventory sections')
+    check(page.locator('[data-nwm-category-link]').count() == 13, 'Central exposes all thirteen inventory sections')
+    check(page.locator('[data-category]').count()==0, 'inventory index contains no category payloads')
+    open_category(page,'users')
+    check(page.locator('[data-category]').count()==1 and page.locator('[data-nwm-category-link],[data-nwm-site]').count()==0,'category page contains only its own payload and no directory')
     check(page.locator('[data-category=users] .nwm-inventory-fields').is_visible(), 'Central shows user aggregates when explicitly permitted')
+    navigation=[]
+    def read_navigation(request):
+        if request.is_navigation_request() and request.frame==page.main_frame:navigation.append(request.method)
+    page.on('request',read_navigation)
+    page.reload();page.wait_for_load_state('networkidle')
+    page.go_back();page.wait_for_load_state('networkidle')
+    check(page.locator('[data-nwm-category-link]').count()==13,'browser Back returns from category to inventory directory')
+    page.go_forward();page.wait_for_load_state('networkidle');page.remove_listener('request',read_navigation)
+    check(page.locator('[data-category=users]').count()==1 and navigation and set(navigation)=={'GET'},'reload and browser Forward preserve category without repeating inventory POST')
+    open_category(page,'storage')
     check(page.locator('[data-category=storage]').get_by_text('No es la cuota del alojamiento.', exact=False).count() == 1, 'filesystem capacity is not presented as hosting quota')
+    open_category(page,'runtime')
     for width in [1440, 390, 320]:
         page.set_viewport_size({'width': width, 'height': 1000})
         check(page.evaluate('document.documentElement.scrollWidth<=innerWidth'), f'{width}: all thirteen shared categories fit the viewport')
         if width == 390:
             page.locator('[data-category=runtime]').screenshot(path=str(output / 'runtime-mobile.png'))
+            open_category(page,'updates')
             page.locator('[data-category=updates]').screenshot(path=str(output / 'updates-mobile.png'))
+            open_category(page,'runtime')
     page.set_viewport_size({'width': 1440, 'height': 1000})
-    page.goto(central)
-    page.get_by_role('link', name='Detalle guardado', exact=False).click(); page.wait_for_load_state('networkidle')
+    enter_site(page,central,section='inventory')
     check(page.get_by_text('Última observación guardada', exact=True).is_visible(), 'stored detail is explicitly identified')
-    cached = context.request.get(central + '&site=' + str(identity['id']))
+    cached = context.request.get(central + '&site=' + str(identity['id']) + '&section=inventory')
     check(cached.status == 200 and 'no-store' in cached.headers.get('cache-control',''), 'stored observation is private and not cacheable by intermediaries')
     check('Abrir este detalle no consulta el sitio' in page.locator('.nwm-inventory').inner_text(), 'cached observation explains its freshness boundary')
     page.locator('.nwm-inventory').screenshot(path=str(output / 'expanded-inventory.png'))
@@ -63,13 +89,14 @@ def exercise_sharing(page, context, base, central, connector, output, check, fix
     check(all(inventory['sections'][key]['status'] == 'denied' and inventory['sections'][key]['data'] is None for key in ['users', 'extensions']), 'HTTP category hints cannot bypass local denial')
     inspect()
     for key in ['users', 'extensions']:
+        open_category(page,key)
         section = page.locator('[data-category=' + key + ']')
         check(section.get_by_text('No compartido', exact=True).is_visible() and section.locator('table,dl').count() == 0, key + ': Central distinguishes denial without retaining old fields')
     policy([])
     inventory = wire()
     check(inventory['status'] == 'complete' and all(section['status'] == 'denied' and section['data'] is None for section in inventory['sections'].values()), 'deny-all returns metadata without fabricating a partial failure')
     inspect()
-    check(page.locator('.nwm-software-grid').get_by_text('No compartido', exact=True).count() == 5, 'deny-all clears previous software values')
+    check(page.locator('.nwm-category-directory').get_by_text('No compartido',exact=True).count()==13, 'deny-all clears the inventory directory without old fields')
     for width in [1440, 390, 320]:
         page.set_viewport_size({'width': width, 'height': 1000})
         page.goto(connector + '&sharing=1#nwm-sharing'); page.wait_for_load_state('networkidle')

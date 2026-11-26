@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.5 — arquitectura
+Nicode Web Monitor 1.1.1-dev.6 — arquitectura
 
 Producto e instalación
 Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.
@@ -86,6 +86,12 @@ sin mostrar cuerpos remotos, tokens ni excepciones internas. La UI muestra la
 versión de desarrollo y que no es definitiva.
 
 Alcance
+Central separa el directorio y las fichas por URL. SiteRegistry::find obtiene
+solo el registro seleccionado y su historial; solo Inventario carga el payload
+guardado. Los coordinadores limitan el listado de operaciones dentro del sitio,
+sin cargar los de otros sitios. Los formularios mantienen autorización en servidor.
+central-ui.txt describe navegación, retornos y composición de vistas.
+
 Trece categorías de inventario con consentimiento por sitio, descritas en
 inventory-and-sharing.txt. Solo las cuatro esenciales están permitidas de entrada.
 Usuarios y contenido se agregan; no se comparten identidades o textos.

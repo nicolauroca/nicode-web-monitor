@@ -72,10 +72,10 @@ final class UpdateCoordinator
     }
 
     /** Bounded display projection; never return credentials or raw receipts. */
-    public function recent(): array
+    public function recent(?int $site=null): array
     {
         $this->permit();
-        $rows = $this->db->setQuery('SELECT operation,site,status,updated_at,receipt FROM #__nwm_update_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        $rows = $this->db->setQuery('SELECT operation,site,status,updated_at,receipt FROM #__nwm_update_operations'.($site!==null?' WHERE site='.(int)$site:'').' ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
         foreach ($rows as &$row) {
             $row['history'] = (new MaintenanceHistory($this->db))->recent('update', $row['operation']);
             $receipt = json_decode($row['receipt'],true);

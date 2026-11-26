@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension type="package" method="upgrade">
  <name>Nicode Web Monitor — Conector</name><packagename>nicodeconnector</packagename>
- <author>Nicolau Roca</author><version>1.1.1-dev.5</version><license>GPL-2.0-or-later</license>
+ <author>Nicolau Roca</author><version>1.1.1-dev.6</version><license>GPL-2.0-or-later</license>
  <description>Instalación completada. Abre Componentes → Nicode Web Monitor — Conector y pega el código de tu panel central. También se puede instalar en el Joomla central.</description>
  <blockChildUninstall>true</blockChildUninstall>
  <files folder="packages">

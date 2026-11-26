@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.5 — inventario y permisos de consulta
+Nicode Web Monitor 1.1.1-dev.6 — inventario y permisos de consulta
 
 Decisión del sitio supervisado
 En el Conector, Información que compartes > Elegir categorías de información.
@@ -87,7 +87,8 @@ respuesta (2 MiB) permanecen; inventario no modifica extensiones ni configuraci�
 Última observación en Central
 Cada sitio muestra versiones permitidas, entradas de actualizaciones en caché y
 cobertura, con fecha de recepción. Actualizar inventario hace la consulta real.
-Detalle guardado abre la última observación sin contactar el sitio; lo dice en la
+La pestaña Inventario de la ficha abre un índice de categorías. Cada enlace abre
+solo su categoría de la última observación, sin contactar el sitio; lo dice en la
 pantalla y advierte si la comprobación más reciente requiere revisión. Los campos
 denegados se muestran como No compartido; un error no se convierte en ausencia.
 La tabla #__nwm_inventory conserva una sola observación normalizada por sitio,

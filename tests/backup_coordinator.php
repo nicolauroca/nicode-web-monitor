@@ -68,6 +68,14 @@ try {
     $id=$service->begin($site,true); check($calls===0,'begin has no remote effects');
     $projection=$service->recent();
     check(count($projection)===1 && $projection[0]['operation']===$id && !isset($projection[0]['receipt']) && !isset($projection[0]['credential']), 'journal projection excludes secrets and receipts');
+    $foreign=$db->setQuery('SELECT * FROM #__nwm_backup_operations WHERE operation='.$db->quote($id))->loadObject();
+    for($i=0;$i<101;$i++){
+        $foreign->operation='backup-'.str_pad(dechex($i),32,'0',STR_PAD_LEFT);$foreign->site=$site+1;$foreign->updated_at=time()+60;
+        $db->insertObject('#__nwm_backup_operations',$foreign);
+    }
+    check(count($service->recent())===100 && count($service->recent($site))===1 && $service->recent($site)[0]['operation']===$id,'backup site scope precedes global display limit');
+    check($service->recent($site+2)===[],'missing site has no backup operations');
+    $db->setQuery('DELETE FROM #__nwm_backup_operations WHERE site='.($site+1))->execute();
     invalid(fn()=>$service->run($id,true,false),'step requires confirmation');
     check($service->run($id,true,true)['receipt']['next_sequence']===1,'first sequenced step persisted');
     $before=$calls;

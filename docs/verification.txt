@@ -1,68 +1,59 @@
-Nicode Web Monitor 1.1.1-dev.5 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.6 — verificación vigente
 
 Fecha: 26 de noviembre de 2026 (Europe/Madrid).
 Entrega de DESARROLLO; prerelease, no definitiva ni beta final.
-Laboratorio desechable: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28,
-Chrome y Edge/Chromium. Sin instalaciones, credenciales ni inventarios del usuario.
+Laboratorio desechable: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28 y Chrome.
+Sin instalaciones, credenciales ni inventarios del usuario.
 
 Alcance
-Inventario schema_version=2 con trece categorías, permisos locales en el Conector,
-misma política para HTTPS y automonitorización y una última observación normalizada
-por sitio en Central. Nuevos campos, formularios, servicio de almacenamiento y DDL
-actual. Los transportes TLS/pinning y el aislamiento del mantenimiento permanecen.
-Detalle de datos, límites y conservación: inventory-and-sharing.txt.
+Navegación de Central: directorio a todo el ancho, ficha de un sitio, páginas por
+sección y una categoría por página. Alta y programación independientes. Lectura
+acotada al sitio y operaciones de mantenimiento filtradas antes del límite.
+Se conserva schema_version=2, trece categorías y consentimiento local del Conector.
+Los transportes y la autorización de efectos de mantenimiento conservan su contrato.
 
 Verificación ejecutada
-- inventory_permissions.php: 68 comprobaciones con lectores y base de datos reales.
-  Cuatro categorías esenciales por defecto; las nueve nuevas denegadas. ACL de
-  lector/invitado/cuenta bloqueada, política malformada restrictiva, ausencia de
-  identidades/secretos/rutas, denegación individual de trece categorías y reemplazo
-  de datos anteriores. Vinculación propia con todo denegado; política y conexión
-  conservadas al reinstalar el paquete actual. Fallo de escritura mediante tabla
-  temporal con restricción, aviso explícito y tarea automática fallida. Eliminación
-  de caché y rechazo de observaciones tardías tras borrar el registro; versiones
-  malformadas de actualizaciones no pueden reenviar URLs privadas.
-- inventory.php: 22 comprobaciones de versiones reales, extensiones desactivadas,
-  pertenencia a paquetes, allowlist, valores desconocidos y error de lectura sin
-  exposición de consultas ni excepciones.
-- inventory_view.php: 8 comprobaciones de escape y datos remotos malformados,
-  versiones/paquetes y ausencia de inventario anterior tras fallo.
-- Navegador local: 136 comprobaciones de vinculación con DNS bloqueado, política
-  de consulta, guardado nativo, perfiles, endpoint autenticado, inventario ampliado,
-  sustitución de campos denegados, detalle privado no cacheable y revocación.
-- Navegador remoto HTTPS: 135 comprobaciones del mismo recorrido con la conexión
-  HTTPS y CA de prueba. Formularios reales y denegación efectiva en el endpoint.
-- Recorrido adicional HTTPS: 67 comprobaciones, incluido el inventario con las
-  trece categorías abiertas a 1440/390/320 px y capturas de PHP/actualizaciones.
-- Sin JavaScript: 101 comprobaciones de POST nativos, casillas individuales,
-  inventario, historial por teclado, vinculación y revocación.
-- Vistas en 1440/390/320 px, direcciones largas, búsquedas, filtros, estados,
-  categorías y tema oscuro. Capturas revisadas visualmente, estilos nativos
-  y del componente cargados. Portapapeles simulado, sin modificar el del usuario.
-- Regresión nativa: registry.php 36; history.php 24; monitor.php 21;
-  notifications.php 20; maintenance_history.php 16; backup_coordinator.php 44;
-  self_monitoring.php 13; schema_repair.php 14; lifecycle_native.php 10.
-  Incluye revocación, programación, datos conservados y dos propietarios de paquete.
-- Vinculación con transporte simulado: plug_and_play.php 27 y pairing.php 17,
-  actualizados al contrato actual; no se atribuyen como ensayos de hosting real.
-- Cliente TLS client_http.py: 39; registro registry_tls.py: 4; lotes monitor_tls.py:
-  10. Cuerpo/cabeceras/tiempo limitados, certificado, identidad, esquema, errores,
-  URLs adversarias, pinning y ausencia de reintentos. Destinos solo loopback.
-- Formularios y roles de mantenimiento en CGI/TLS: backup_roles_http.py 27 y
-  backup_admin_http.py 45, con estilos cargados y confirmaciones en tres anchos.
-- Sintaxis de 122 PHP (extensiones y tests), 11 XML, 29 Python y 3 JavaScript;
-  enlaces de documentación y git diff --check.
-- Siete ZIP reproducibles entre fuentes LF/CRLF, incluidos ZIP hijos y binarios.
+- Regresión nativa: registry.php 40; history.php 24; monitor.php 21;
+  notifications.php 20; maintenance_history.php 20; backup_coordinator.php 46;
+  self_monitoring.php 13; inventory_permissions.php 68; inventory.php 22;
+  inventory_view.php 8. Lectura de una ficha sin credenciales, ausencia de fallback
+  a otros sitios, ACL, escape de datos, automonitorización, revocación y reemplazo
+  de categorías denegadas. Los diarios conservan confirmaciones, estados inciertos
+  y reconciliación. Para las tres capacidades, 101 operaciones de otro sitio no
+  ocultan la del seleccionado al aplicar el límite de 100.
+- client_http.py 39: TLS, certificado, identidad, esquema, errores, URLs adversarias,
+  pinning, límites y ausencia de reintentos; servidor loopback de prueba.
+- public_address.php 25; transport.php 16; alerts.php 16: destinos, autenticación,
+  revocación, estados parciales/antiguos y transiciones sin disponibilidad inventada.
+- Sintaxis: 127 PHP, 11 XML, 30 Python y 3 JavaScript; enlaces de documentación
+  y git diff --check. Siete ZIP reproducibles entre fuentes LF/CRLF, incluidos
+  los paquetes con ZIP hijos y conservación de binarios.
+
+Navegador
+Los recorridos de onboarding_http.py usan enlaces y formularios reales. Comprueban
+alta, entrada/salida de fichas, índice sin payloads, una categoría por página,
+POST/303/GET tras actualizar, permisos de consulta, caché privada y revocación.
+--central-design añade seis sitios sintéticos, filas compactas a todo el ancho,
+búsqueda/filtros, ausencia de otras identidades en la ficha, historial por teclado,
+regreso por migas y pantallas independientes de alta/programación. Capturas de
+1440/390/320 px, direcciones largas y tema oscuro revisadas visualmente.
+Recorrido HTTPS remoto: 139 comprobaciones. Formularios y roles de mantenimiento
+en CGI/TLS: backup_roles_http.py 28 y backup_admin_http.py 45, incluyendo permisos,
+CSRF, confirmación, retorno a la ficha y estilos cargados en tres anchos.
+Recorrido local sin JavaScript: 116 comprobaciones sobre los ZIP finales, con DNS
+bloqueado, vinculación propia, formularios nativos y navegación jerárquica. Incluye
+303 explícito, recarga y Atrás/Adelante entre índice y categoría sin repetir POST.
 
 Límites
 La CA y el pinning loopback se habilitan exclusivamente en copias instaladas en
 el laboratorio, restauradas en finally. La automonitorización bloquea DNS para
 probar que no depende de HTTP propio. Se desactiva el disparador por visitas al
-preparar estados sintéticos. Las respuestas simuladas solo validan contrato y
-transporte, no la salud de un Joomla remoto. Los fixtures, tokens temporales y
-capturas permanecen fuera de Git. Ninguna prueba usa un hosting del propietario.
-No es auditoría WCAG, de seguridad o una matriz de todos los PHP/motores/plantillas.
+preparar estados sintéticos. Las respuestas simuladas validan contrato y transporte,
+no la salud de un Joomla remoto. El portapapeles se simula; los fixtures, tokens
+y capturas permanecen fuera de Git. Ninguna prueba usa un hosting del propietario.
+No es auditoría WCAG, de seguridad ni una matriz de todos los PHP/motores/plantillas.
 No se atribuyen nuevos ensayos de SMTP externo, cron del hosting, cuotas del
 proveedor, captura/restauración completa ni instalación remota de actualizaciones.
-Las actualizaciones leídas son caché y las cifras de disco, sistema de archivos.
-Falta la validación del propietario en sus alojamientos antes de fijar una beta.
+La adaptación de los fixtures de efectos a las nuevas rutas no acredita su nueva
+ejecución completa. Las actualizaciones leídas son caché y las cifras de disco,
+sistema de archivos. Falta validar en los alojamientos antes de fijar una beta.

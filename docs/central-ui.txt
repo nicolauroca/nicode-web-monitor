@@ -1,69 +1,71 @@
-Nicode Web Monitor 1.1.1-dev.5 — interfaz del Central
+Nicode Web Monitor 1.1.1-dev.6 — navegación del Central
 
-Alcance
-Rediseño de las vistas y recursos locales del componente Central. Los transportes, credenciales y ACL de mantenimiento conservan su aislamiento.
-El inventario ampliado y su almacenamiento se documentan en inventory-and-sharing.txt.
-registry.php compone las vistas ui, monitoring, inventory, onboarding y maintenance.
-central.css comparte la identidad visual del Conector. central.js es una mejora
-progresiva de presentación; backup-runner.js conserva su ejecución y reconciliación,
-con textos traducidos. Los dos paquetes llevan la misma versión de desarrollo.
+Organización
+La entrada muestra exclusivamente el directorio de sitios. Ocupa todo el ancho
+disponible: una fila por Joomla con nombre/URL, estado, versiones Joomla/PHP,
+actualizaciones en caché, última comprobación, transporte y enlace Entrar.
+Las cuatro cifras proceden del registro real; búsqueda y filtros son combinables.
+En móvil las filas se distribuyen como bloques para conservar la lectura sin
+desbordar la página. No se comprimen todas las columnas en 320 px.
 
-Jerarquía del panel
-- Cabecera Nicode Web Monitor — Central, aviso de desarrollo y acceso a Añadir sitio.
-- Navegación a sitios, comprobaciones y mantenimiento según permisos; enlace al
-  Conector de este Joomla si está instalado y el usuario puede abrirlo.
-- Cuatro cifras procedentes del registro real: total, inventario reciente completo,
-  requieren revisión y sin comprobar. Revisión agrupa parcial, fallo, datos antiguos
-  y reloj no fiable. Reciente conserva el criterio del servidor de 24 horas, con
-  su tolerancia existente de cinco minutos ante diferencias de reloj.
-- Programación: estado y fechas reales de la tarea. Preparar no acredita ejecución.
-  La configuración del hosting y los enlaces del programador quedan desplegables.
-- Sitios en tarjetas: nombre, URL, estado, última comprobación y transporte. La
-  consulta manual Actualizar inventario es un POST nativo. El resumen muestra
-  versiones/cobertura de la última recepción; Detalle guardado abre esa observación
-  sin red y con fecha explícita. Historial, alertas, avisos de correo y detalles
-  técnicos se despliegan por sitio. Eliminar registro exige marcar una confirmación
-  en el navegador; la autorización sigue en el servidor y no revoca el Conector.
-- Alta en tres pasos, abierta cuando no hay sitios o se acaba de generar un código.
-  Solo pide el nombre. La dirección se detecta; el código temporal se oculta de
-  entrada y puede mostrarse/copiarse. Caduca a los diez minutos desde su emisión;
-  no se simula un temporizador. Generar otro sustituye al anterior del mismo usuario.
-- Mantenimiento independiente: copias, actualizaciones de extensiones y Joomla.
-  Formularios, permisos, campos, CSRF, credenciales separadas y confirmaciones
-  permanecen. Las operaciones inciertas requieren consulta, sin reintento ciego.
+Entrar abre una ficha independiente y solo carga el registro de ese sitio:
+- Resumen: versiones, cobertura, fechas y accesos a sus secciones.
+- Inventario: índice de las trece categorías con su estado y descripción.
+  Abrir una categoría muestra únicamente sus datos, en otra dirección navegable.
+- Historial: comprobaciones, transiciones, alertas y avisos del sitio.
+- Conexión: identidad, destino y eliminación con confirmación explícita.
+- Mantenimiento: formularios y operaciones del sitio, según permisos.
+Las migas Sitios / nombre / Inventario / categoría y los enlaces Volver permiten
+subir de nivel. Las pestañas cambian de sección sin regresar al directorio.
+Una dirección inexistente muestra Sección no disponible; nunca otro sitio.
 
-Inventario
-Tras la consulta se muestra el resultado con ancla y foco, fecha de recogida y
-recepción UTC, software/entorno, cobertura y las trece categorías. Una navegación
-local permite saltar a cada sección. No compartido distingue una decisión del
-sitio de un dato no disponible. El detalle guardado avisa de su fecha y de que no
-consulta la web; tras un fallo se advierte del estado de la última comprobación. Un fallo no
-muestra un inventario anterior como si fuera actual. Los valores no disponibles
-quedan explícitos, incluso ante valores remotos malformados. Todo dato no confiable
-se escapa como texto. La tabla tiene desplazamiento horizontal explícito y foco
-de teclado, sin ocultar columnas. No se deduce disponibilidad pública ni uptime.
+La navegación general contiene Sitios, Comprobaciones y Mantenimiento según ACL.
+Añadir sitio abre una pantalla con tres pasos de vinculación. No pide UUID,
+credencial ni IP. Comprobaciones contiene programación y fechas reales: preparar
+la tarea no acredita ejecución. Mantenimiento general permite elegir un sitio;
+los formularios aparecen dentro de su ficha. El Conector del mismo Joomla conserva
+su acceso independiente cuando está instalado y autorizado.
 
-Mejoras progresivas y accesibilidad
-Búsqueda por nombre/URL, filtro de estado y enlaces de cifras combinables, contador
-de resultados y estado vacío con opción de limpiar. La lista de extensiones tiene
-búsqueda propia. Sin JS aparecen todas las tarjetas y extensiones, funcionan los
-POST y desplegables nativos. La ejecución por lotes conserva su requisito de JS;
-siguen disponibles los pasos individuales. Copiar necesita el portapapeles del
-navegador: si no está disponible, se selecciona el texto para copiar manualmente.
-Sin JS se ofrece el código en texto seleccionable. No se guarda en almacenamiento
-del navegador ni se añaden peticiones AJAX para inventario, conexión o programación.
-El foco, etiquetas, estados escritos además de color, tamaños móviles y tema oscuro
-se contemplan. Los SVG y recursos son locales, con versión para invalidar cachés.
-La hoja se limita a .nwm-central y respeta reducción de movimiento. No se afirma
-una auditoría WCAG completa ni compatibilidad con cualquier plantilla administrativa.
+Rutas y acciones
+screen=sites/add/monitoring/maintenance identifica pantallas generales.
+site=N&section=overview/inventory/history/connection/maintenance identifica una
+ficha; category=runtime, por ejemplo, selecciona una categoría de inventario.
+Los enlaces usan GET nativos y permiten Atrás/Adelante y direcciones directas.
+Solo Inventario carga la observación completa guardada; las otras secciones usan
+resumen e historial del sitio. Navegar no consulta el Joomla remoto.
 
-Pruebas
-onboarding_http.py --central-design agrega observaciones sintéticas mediante
-browser_fixture.php: fallida, parcial, recuperada, antigua y sin comprobar. Verifica
-filtros, búsqueda, historial por teclado, acciones visibles en 1440/390/320 px,
-tema oscuro y acceso al alta. El fixture se limpia en finally. Puede combinarse
-con --remote-transport y --without-js. El portapapeles se simula en el navegador.
-inventory_view.php comprueba salida segura y valores malformados. Los tests de
-roles y formularios de mantenimiento mantienen sus comprobaciones de permisos,
-CSRF y confirmación con las etiquetas actualizadas. La ejecución y sus límites
-vigentes están en verification.txt. No guardar capturas o códigos reales en Git.
+Actualizar inventario es un POST con CSRF. Una consulta guardada correctamente
+redirige mediante 303 a Inventario del mismo sitio y conserva la categoría abierta.
+Atrás o recargar ese resultado no repite la consulta. Un fallo se muestra como
+fallo: nunca se sustituye silenciosamente por datos anteriores. Si existe una
+observación guardada se ofrece un enlace explícito para verla con su fecha.
+Las acciones de mantenimiento regresan al sitio de la operación real. Los permisos,
+credenciales independientes, confirmaciones, diarios y reconciliación se conservan.
+Eliminar registro vuelve al directorio y no revoca el Conector remoto.
+
+Lectura del inventario
+Compartido, No compartido, No disponible y Error distinguen política de consulta
+y resultado. Cada categoría se presenta aislada; extensiones conserva búsqueda
+propia y tabla con desplazamiento horizontal explícito y foco de teclado.
+La observación indica recogida/recepción UTC, conservación y posibles fallos
+posteriores. No acredita uptime ni disponibilidad pública. Los campos remotos se
+escapan como texto; valores ausentes o malformados no se convierten en cifras.
+
+Presentación y accesibilidad
+Identidad compartida con el Conector, cabecera compacta dentro de las fichas,
+estado escrito además de color, foco visible, tema oscuro y movimiento reducido.
+Recursos y SVG locales con versión para invalidar caché. central.css se limita
+a .nwm-central. central.js mejora búsqueda, filtros y copiar/mostrar; navegación
+y formularios funcionan sin JavaScript. backup-runner.js conserva su ejecución
+confirmada; los pasos individuales siguen disponibles sin JS. No se afirma una
+auditoría WCAG completa ni compatibilidad con cualquier plantilla administrativa.
+
+Verificación
+onboarding_http.py --central-design verifica seis sitios sintéticos, fila compacta,
+ancho disponible, entrada, secciones, regreso, teclado, filtros, 1440/390/320 px y
+tema oscuro. --inventory-sharing recorre categorías por URL, comprueba que el
+índice no renderiza sus datos y que cada página solo muestra una. Verifica además
+POST/303/GET, denegación, automonitorización y conservación fechada.
+--remote-transport y --without-js ejercitan variantes; --maintenance-tests comprueba
+roles, CSRF, confirmaciones y formularios nativos en CGI/TLS desechable.
+Los resultados vigentes y límites están en verification.txt.

@@ -4,7 +4,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 use Nicode\Component\NicodeWebMonitor\Administrator\Service\InventorySchema;
 $inspectedLabel='Sitio #'.(int)($inspectedId??0);$inspectedState=null;
-foreach($sites as $registeredSite)if((int)$registeredSite['id']===(int)($inspectedId??0)){$inspectedLabel=$registeredSite['label'];$inspectedState=$registeredSite['check_state'];break;}
+foreach($sites as $registeredSite)if((int)$registeredSite['id']===(int)($inspectedId??0)){$inspectedLabel=$registeredSite['label'];$inspectedState=($registeredSite['check_state']??'never_checked');break;}
 $inventory=$inspection['inventory']??[];$sections=is_array($inventory['sections']??null)?$inventory['sections']:[];
 $categories=InventorySchema::categories();$fieldDefinitions=InventorySchema::fields();$rowDefinitions=InventorySchema::rowFields();
 $availability=['available'=>['Compartido','success'],'denied'=>['No compartido','neutral'],'unavailable'=>['No disponible','neutral'],'error'=>['Error de lectura','warning']];
@@ -22,20 +22,26 @@ $format=static function($value,$type,$field='')use($unknown,$date){
 $shared=count(array_filter($sections,static fn($section)=>($section['status']??'denied')!=='denied'));
 ?>
 <section id="nwm-inventory" class="nwm-panel nwm-inventory" aria-label="Resultado de inventario" tabindex="-1">
-<div class="nwm-section-heading"><div><p class="nwm-section-label"><?= !empty($inspection['from_cache'])?'Última observación guardada':'Resultado de la comprobación' ?></p><h2>Inventario del sitio</h2><p class="nwm-muted"><?= $escape($inspectedLabel) ?></p></div><a href="#nwm-sites" class="nwm-button nwm-button--quiet">Volver a sitios</a></div>
+<div class="nwm-section-heading"><div><p class="nwm-section-label"><?= !empty($inspection['from_cache'])?'Última observación guardada':'Resultado de la comprobación' ?></p><h2><?= $viewCategory!==''?$escape($categories[$viewCategory][0]??'Categoría no disponible'):'Inventario del sitio' ?></h2></div><span class="nwm-utc-note">Fechas en UTC</span></div>
 <?php if(($inspection['history_saved']??true)===false): ?><p class="nwm-notice nwm-notice--warning" role="alert">No se ha podido guardar esta comprobación en el historial.</p><?php endif; ?>
-<?php if(($inspection['snapshot_saved']??true)===false): ?><p class="nwm-notice nwm-notice--warning" role="alert">No se ha podido conservar este inventario. Central muestra el resultado de esta consulta, pero el detalle guardado anterior no se ha actualizado.</p><?php endif; ?>
-<?php if(!$inspection['ok']): $error=$inspection['error']??'unknown'; ?>
-<div class="nwm-notice nwm-notice--danger" role="alert"><h3>No se ha obtenido el inventario</h3><p><?= $escape($detailLabels[$error]??'Revisa la conexión y los permisos del Conector antes de volver a comprobar.') ?></p><p class="nwm-field-help">Referencia técnica: <code><?= $escape($error) ?></code></p></div>
+<?php if(($inspection['snapshot_saved']??true)===false): ?><p class="nwm-notice nwm-notice--warning" role="alert">No se ha podido conservar este inventario. El detalle guardado anterior no se ha actualizado.</p><?php endif; ?>
+<?php if(empty($inspection['ok'])): $error=$inspection['error']??'inventory_not_saved'; ?>
+<div class="nwm-notice <?= $error==='inventory_not_saved'?'':'nwm-notice--danger' ?>" role="status"><h3><?= $error==='inventory_not_saved'?'Aún no hay un inventario guardado':'No se ha obtenido el inventario' ?></h3><p><?= $error==='inventory_not_saved'?'Pulsa Actualizar inventario para consultar el sitio y guardar su primera observación.':$escape($detailLabels[$error]??'Revisa la conexión y los permisos del Conector antes de volver a comprobar.') ?></p><?php if($error!=='inventory_not_saved'): ?><p class="nwm-field-help">Referencia técnica: <code><?= $escape($error) ?></code></p><?php endif; ?></div>
+<?php if(!empty($site['inventory_received_at'])): ?><p><a href="<?= $escape($siteLink('inventory')) ?>">Ver la última observación guardada<?= $icon('arrow') ?></a></p><?php endif; ?>
+<?php elseif($viewCategory!==''&&!isset($categories[$viewCategory])): ?><p>Esta categoría no existe. Vuelve al inventario y elige una de las categorías disponibles.</p>
 <?php else: ?>
-<?php if(!empty($inspection['from_cache'])): ?><div class="nwm-notice" role="status"><p>Estás viendo el último inventario recibido. Abrir este detalle no consulta el sitio. Los permisos o datos pueden haber cambiado desde esa fecha.</p><?php if(in_array($inspectedState,['check_failed','stale','clock_uncertain'],true)): ?><p><strong>La última comprobación requiere revisión: <?= $escape($states[$inspectedState][0]) ?>.</strong> Este inventario no acredita su estado actual.</p><?php endif; ?></div><?php endif; ?>
+<?php if(!empty($inspection['from_cache'])): ?><div class="nwm-observation-note" role="status"><p>Estás viendo el último inventario recibido. Abrir este detalle no consulta el sitio. Los permisos o datos pueden haber cambiado desde esa fecha.</p><?php if(in_array($inspectedState,['check_failed','stale','clock_uncertain'],true)): ?><p><strong>La última comprobación requiere revisión: <?= $escape($states[$inspectedState][0]) ?>.</strong> Este inventario no acredita su estado actual.</p><?php endif; ?></div><?php endif; ?>
 <div class="nwm-inventory-meta"><span class="nwm-badge nwm-badge--<?= ($inventory['status']??'')==='complete'?'success':'warning' ?>"><?= ($inventory['status']??'')==='complete'?'Consulta completada':'Consulta con datos parciales' ?></span><span><?= $shared ?> de <?= count($categories) ?> categorías permitidas</span><span>Recopilado <strong><?= $escape($date($inventory['collected_at']??null)) ?> UTC</strong></span><span>Recibido <strong><?= $escape($date($inspection['received_at']??null)) ?> UTC</strong></span></div>
-<h3>Software y entorno</h3><dl class="nwm-software-grid"><?php foreach([['Joomla','joomla','version'],['PHP','runtime','php_version'],['Ejecución PHP','runtime','sapi'],['Sistema operativo','runtime','os_family'],['Base de datos','database','version']] as [$label,$section,$key]): ?><div><dt><?= $label ?></dt><dd><?= $escape($value($section,$key)) ?></dd></div><?php endforeach; ?></dl>
-<nav class="nwm-inventory-nav" aria-label="Categorías de inventario"><?php foreach($categories as $key=>[$label]): ?><a href="#nwm-category-<?= $key ?>"><?= $escape($label) ?></a><?php endforeach; ?></nav>
-<details class="nwm-subdetails"><summary>Cobertura del inventario</summary><p>No compartido expresa una decisión del sitio. No disponible o Error de lectura no equivalen a ausencia de software ni a un fallo de la web. Una consulta completada respeta las categorías denegadas.</p><dl class="nwm-coverage"><?php foreach($categories as $key=>[$label]): $status=$availability[$sections[$key]['status']??'unavailable']??$availability['unavailable']; ?><div><dt><?= $escape($label) ?></dt><dd><?= $status[0] ?></dd></div><?php endforeach; ?></dl></details>
-<?php foreach($categories as $key=>[$label,$description]): $section=$sections[$key]??['status'=>'unavailable','data'=>null];$status=$availability[$section['status']]??$availability['unavailable'];$data=is_array($section['data'])?$section['data']:[]; ?>
+<?php if($viewCategory===''): ?>
+<p class="nwm-section-intro">Elige una categoría para ver sus datos. Los permisos los decide el administrador del Conector de este sitio.</p>
+<div class="nwm-category-directory" aria-label="Categorías de inventario">
+<?php foreach($categories as $key=>[$label,$description]): $status=$availability[$sections[$key]['status']??'unavailable']??$availability['unavailable']; ?>
+<a class="nwm-category-link" href="<?= $escape($siteLink('inventory',$key)) ?>" data-nwm-category-link="<?= $key ?>"><span class="nwm-badge nwm-badge--<?= $status[1] ?>"><?= $status[0] ?></span><strong><?= $escape($label) ?></strong><span><?= $escape($description) ?></span><small>Ver categoría <?= $icon('arrow') ?></small></a>
+<?php endforeach; ?></div>
+<?php else: ?>
+<?php foreach([$viewCategory=>$categories[$viewCategory]] as $key=>[$label,$description]): $section=$sections[$key]??['status'=>'unavailable','data'=>null];$status=$availability[$section['status']]??$availability['unavailable'];$data=is_array($section['data'])?$section['data']:[]; ?>
 <section id="nwm-category-<?= $key ?>" class="nwm-inventory-category" data-category="<?= $key ?>" aria-label="<?= $escape($label) ?>">
-<div class="nwm-section-heading"><h3><?= $key==='extensions'?'Extensiones instaladas':$escape($label) ?></h3><span class="nwm-badge nwm-badge--<?= $status[1] ?>"><?= $status[0] ?></span></div><p class="nwm-field-help"><?= $escape($description) ?></p>
+<div class="nwm-section-heading"><h3>Datos de esta categoría</h3><span class="nwm-badge nwm-badge--<?= $status[1] ?>"><?= $status[0] ?></span></div><p class="nwm-field-help"><?= $escape($description) ?></p>
 <?php if($section['status']!=='available'): ?>
 <p class="nwm-category-unavailable"><?= match($section['status']){'denied'=>'El administrador de este Joomla no permite compartir esta categoría. No se ha consultado ni enviado su contenido.','error'=>'El Conector no ha podido leer esta categoría. El resto del inventario sigue disponible.',default=>'Información no disponible en esta instalación.'} ?></p>
 <?php else: ?>
@@ -51,4 +57,4 @@ $shared=count(array_filter($sections,static fn($section)=>($section['status']??'
 </tbody></table></div><?php else: ?><p>No hay registros en esta categoría.</p><?php endif; ?>
 <?php if($key==='extensions'): ?><p class="nwm-field-help" data-nwm-no-extensions hidden>No hay extensiones que coincidan con la búsqueda.</p><?php endif; ?>
 <?php endif; endif; ?></section><?php endforeach; ?>
-<?php endif; ?></section>
+<?php endif; endif; ?></section>

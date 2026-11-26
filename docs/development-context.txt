@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.5 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.6 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
@@ -30,7 +30,7 @@ Paquetes Central/Connector sin piezas compartidas entre propietarios. Código de
 Credencial e identidad generadas localmente. Confirmación mediante inventario antes
 del alta. Recuperación del recibo ante respuesta perdida, ligada a petición exacta.
 Estado pendiente cifrado y revocación local desde el componente. Sin configuración
-manual de hashes de inventario. Mantenimiento agrupado en una sección independiente y desplegable.
+manual de hashes de inventario. Mantenimiento en una sección independiente por sitio.
 Para el propio Joomla central se usa inventario local en proceso, con identidad,
 credencial y revocación comprobadas. No depender de DNS ni peticiones HTTPS a sí
 mismo. El transporte local solo se selecciona dentro del código instalado, nunca
@@ -41,8 +41,13 @@ contextual y gestión de desconexión separada. Los detalles de diseño y accesi
 están en connector-ui.txt. El estado Conectado acredita la vinculación; no inventar
 una última comprobación o salud en vivo a partir de connected_at. Los formularios
 siguen funcionando sin JavaScript. No sustituirlos por llamadas AJAX al rediseñar.
-La UI del Central prioriza cifras reales, sitios con búsqueda/filtros e inventario
-legible. Alta guiada, programación y mantenimiento tienen secciones propias.
+La UI del Central usa un directorio a todo el ancho y fichas independientes por
+sitio. Resumen, Inventario, Historial, Conexión y Mantenimiento son páginas.
+Inventario abre primero un índice y después una sola categoría. Migas y enlaces
+Volver permiten subir de nivel. SiteRegistry::find carga solo el sitio seleccionado.
+Una consulta guardada usa POST/303/GET; un fallo no se sustituye por caché. Los
+retornos de mantenimiento siguen el sitio de la operación real. Alta guiada y
+programación tienen pantallas propias.
 central-ui.txt documenta estructura, accesibilidad, confirmaciones y pruebas.
 El inventario usa schema_version=2, trece categorías y la política local de
 com_nicodeconnector. InventorySchema es la única fuente de catálogo/allowlists.
@@ -50,7 +55,7 @@ Esencial permite cuatro categorías; las nuevas requieren consentimiento. Denied
 no es un fallo y siempre lleva data=null; el lector no se ejecuta. No introducir
 un override remoto de permisos ni borrar la política al desconectar.
 nwm_inventory conserva una observación por sitio, saneada y limitada, y un resumen
-para tarjetas. No mezclar datos antiguos de categorías revocadas en recepciones
+para el directorio y las fichas. No mezclar datos antiguos de categorías revocadas en recepciones
 nuevas. El detalle guardado siempre se identifica como observación fechada, sin
 petición de red. Consultar inventory-and-sharing.txt para contrato y conservación.
 No convertir los estados de inventario en uptime ni disponibilidad pública.

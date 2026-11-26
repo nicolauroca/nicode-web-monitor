@@ -76,8 +76,8 @@ params={'site_id':site_id,'token_hash':hashlib.sha256(inventory.encode()).hexdig
     'backup_token_hash':hashlib.sha256(backup.encode()).hexdigest(),
     'update_token_hash':hashlib.sha256(token.encode()).hexdigest(),'update_storage':str(store),
     'maintenance_storage':str(store/'maintenance')}
-fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.5.zip')])
-fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.5.zip')])
+fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.6.zip')])
+fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.6.zip')])
 remote=None;roledata=None
 path=central/'administrator/components/com_nicodewebmonitor/src/Service/UpdateCoordinator.php'
 original=path.read_bytes()
@@ -147,7 +147,8 @@ def prepare(op,package,from_version,to_version,**changes):
 def session(role):
     opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
     base='http://127.0.0.1:8767/administrator/index.php'
-    def call(data=None,url=base+'?option=com_nicodewebmonitor'):
+    def call(data=None,url=None):
+        if url is None:url=base+'?option=com_nicodewebmonitor&site='+str(roledata['site'])+'&section=overview'
         try:r=opener.open(url,None if data is None else urllib.parse.urlencode(data).encode(),timeout=40)
         except urllib.error.HTTPError as e:r=e
         with r:return r.status,r.read().decode()
@@ -157,6 +158,7 @@ def session(role):
     call({'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf:1},base)
     code,html=call();check(code==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated')
     csrf=re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
+    _,html=call(url=base+'?option=com_nicodewebmonitor&site='+str(roledata['site'])+'&section=maintenance')
     return call,csrf,html
 try:
     remote=fixture('setup',package=str(v1),params=params)

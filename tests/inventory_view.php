@@ -3,7 +3,7 @@ require_once __DIR__.'/inventory_fixture.php';
 /** Untrusted inventory must remain plain text; unavailable values stay explicit. */
 define('_JEXEC', 1);
 $user=new class { public function authorise($action, $component) { return false; } };
-$sites=[]; $inspectedId=1;
+$sites=[['id'=>1,'label'=>'View fixture','base_url'=>'https://example.invalid','check_state'=>'recent_partial']]; $inspectedId=1;
 $inspection=['ok'=>true, 'received_at'=>'2026-10-10T14:00:01Z', 'inventory'=>[
     'status'=>'partial', 'collected_at'=>'2026-10-10T14:00:00Z', 'sections'=>[
         'joomla'=>['status'=>'available', 'data'=>['version'=>'6.1.4']],
@@ -20,13 +20,14 @@ $inspection=['ok'=>true, 'received_at'=>'2026-10-10T14:00:01Z', 'inventory'=>[
 ]];
 function renderInventory(): string {
     global $user, $sites, $inspectedId, $inspection;
+    $viewSection='inventory';$viewCategory='extensions';
     $canUpdate=false; $canCoreUpdate=false; $canBackup=false;
     ob_start(); require dirname(__DIR__).'/extensions/com_nicodewebmonitor/administrator/tmpl/registry.php'; return ob_get_clean();
 }
 set_error_handler(static function($severity,$message) { throw new ErrorException($message,0,$severity); });
 $html=renderInventory();
 $checks=[
-    'software_version'=>str_contains($html,'6.1.4'),
+    'only_selected_category'=>str_contains($html,'data-category="extensions"')&&!str_contains($html,'data-category="runtime"'),
     'escaped_remote_name'=>!str_contains($html,'<script>') && str_contains($html,'&lt;script&gt;'),
     'unknown_values'=>str_contains($html,'No disponible') && !str_contains($html,'Array'),
     'extension_version'=>str_contains($html,'0.2.0-dev'),

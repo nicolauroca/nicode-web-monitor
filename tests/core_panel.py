@@ -38,7 +38,7 @@ def cli(script,*args,data=None,allowed=(0,)):
     return json.loads(r.stdout)
 def fixture(action,**data):
     return cli('tests/update_fixture.php',site,'--allow-disposable-writes',data=dict(action=action,**data))
-fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.5.zip')])
+fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.6.zip')])
 site_id=str(uuid.uuid4());token=secrets.token_hex(32);other=secrets.token_hex(32)
 params={'site_id':site_id,'core_token_hash':hashlib.sha256(token.encode()).hexdigest(),
     'update_token_hash':hashlib.sha256(other.encode()).hexdigest(), 'update_storage':str(store/'updates'),'maintenance_storage':str(store/'gate')}
@@ -80,7 +80,7 @@ def request(execute=False,bearer=token):
     return cli('tests/core_client.php',data={'ca':str(a.certificate.resolve()),'url':url,'site_id':site_id,'token':bearer,'operation':operation,'execute':execute})
 
 central=a.central.resolve()
-cli('tests/update_fixture.php',central,'--allow-disposable-writes',data={'action':'install','packages':[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.5.zip')]})
+cli('tests/update_fixture.php',central,'--allow-disposable-writes',data={'action':'install','packages':[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.6.zip')]})
 path=central/'administrator/components/com_nicodewebmonitor/src/Service/CoreUpdateCoordinator.php'
 original=path.read_bytes()
 assert original.replace(b'\r\n',b'\n')==(repo/'extensions/com_nicodewebmonitor/administrator/src/Service/CoreUpdateCoordinator.php').read_bytes().replace(b'\r\n',b'\n')
@@ -94,7 +94,8 @@ def roles(action,**data):
 def session(role):
     opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
     base='http://127.0.0.1:8767/administrator/index.php'
-    def call(data=None,url=base+'?option=com_nicodewebmonitor'):
+    def call(data=None,url=None):
+        if url is None:url=base+'?option=com_nicodewebmonitor&site='+str(roledata['site'])+'&section=overview'
         try:r=opener.open(url,None if data is None else urllib.parse.urlencode(data).encode(),timeout=40)
         except urllib.error.HTTPError as e:r=e
         with r:return r.status,r.read().decode()
@@ -102,6 +103,7 @@ def session(role):
     u=roledata['users'][role];call({'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf:1},base)
     code,html=call();check(code==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated')
     csrf=re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
+    _,html=call(url=base+'?option=com_nicodewebmonitor&site='+str(roledata['site'])+'&section=maintenance')
     return call,csrf,html
 
 try:

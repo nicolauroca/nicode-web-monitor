@@ -66,7 +66,7 @@ try {
     $history->record($id,$good);
     $alertRow = array_values(array_filter((new SiteRegistry($db,$vault,$admin))->all(), fn($r)=>(int)$r['id']===$id))[0];
     check(!$alertRow['alerts']['active'] && $alertRow['alerts']['transitions'][0]['kind']==='recovered','recovery survives registry reload');
-    $sites=[$alertRow]; $user=new class extends User { public function authorise($a,$asset=null) { return $a==='core.manage'; } };
+    $selectedSiteId=$id;$viewSection='history';$sites=[$alertRow]; $user=new class extends User { public function authorise($a,$asset=null) { return $a==='core.manage'; } };
     ob_start();require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php';$alertHtml=ob_get_clean();
     check(str_contains($alertHtml,'Cambios de estado') && str_contains($alertHtml,'Recuperación') && str_contains($alertHtml,'Sin alertas activas de inventario'),'panel renders recovery transition');
     check($class::state($last,(int)$last['checked_at']+86401)==='stale','old failure becomes stale');
@@ -84,7 +84,7 @@ try {
     $sites=$registry->all(); $user=new class extends User { public function authorise($a,$asset=null) { return $a==='core.manage'; } };
     ob_start();require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php';$html=ob_get_clean();
     check(str_contains($html,'Inventario reciente') && str_contains($html,'Comprobaciones recientes'),'dashboard renders persisted status and history');
-    $sites=[];$inspection=['ok'=>false,'error'=>'timeout','history_saved'=>false];$inspectedId=$id;
+    $viewSection='inventory';$sites=[$alertRow];$inspection=['ok'=>false,'error'=>'timeout','history_saved'=>false];$inspectedId=$id;
     ob_start();require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php';$html=ob_get_clean();
     check(str_contains($html,'No se ha podido guardar'),'persistence failure visible');
     $registry->remove($id);

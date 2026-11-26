@@ -19,25 +19,41 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $this->app->setHeader('Cache-Control','no-store, private',true);
         $this->app->setHeader('Referrer-Policy','no-referrer',true);
         $user = $this->app->getIdentity();
+        $selectedSiteId=$this->input->get->getInt('site',0);
+        $viewPage=$this->input->get->getCmd('screen','sites');
+        $viewSection=$this->input->get->getCmd('section','overview');
+        $viewCategory=$this->input->get->getCmd('category','');
         $registry = new SiteRegistry(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $backups = new BackupCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canBackup = !$user->guest && !$user->block && $user->authorise('nwm.backup', 'com_nicodewebmonitor');
         $updates = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\UpdateCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canUpdate = !$user->guest && !$user->block && $user->authorise('nwm.update', 'com_nicodewebmonitor');
-        $updateOperations = $canUpdate ? $updates->recent() : [];
+        $updateOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canUpdate ? $updates->recent($selectedSiteId) : [];
         $coreUpdates = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CoreUpdateCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canCoreUpdate = !$user->guest && !$user->block && $user->authorise('nwm.coreupdate', 'com_nicodewebmonitor');
-        $coreUpdateOperations = $canCoreUpdate ? $coreUpdates->recent() : [];
+        $coreUpdateOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canCoreUpdate ? $coreUpdates->recent($selectedSiteId) : [];
         $setup = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\MonitoringSetup(Factory::getContainer()->get(DatabaseInterface::class));
         $monitoring = $setup->status();
         $pairingCode = null;
         $task = $this->input->getCmd('task', 'display');
         $inspection = null;
         $inspectedId = 0;
-        if($task==='display' && $this->input->get->getInt('site')>0){
-            $inspectedId=$this->input->get->getInt('site');
-            $inspection=$registry->latest($inspectedId);
+        if($task==='display'&&$selectedSiteId>0&&$viewSection==='inventory'){
+            $inspectedId=$selectedSiteId;$inspection=$registry->latest($inspectedId);
         }
+        $siteRows=function()use($registry,&$selectedSiteId):array{
+            if($selectedSiteId!==0){$row=$registry->find($selectedSiteId);return $row?[$row]:[];}
+            return $registry->all();
+        };
+        $maintenanceReturn=function(string $kind):string{
+            $post=$this->input->post;$id=$post->getInt('id');
+            if($post->getString('operation','')!==''){
+                $db=Factory::getContainer()->get(DatabaseInterface::class);
+                $table=['backup'=>'#__nwm_backup_operations','update'=>'#__nwm_update_operations','core'=>'#__nwm_core_update_operations'][$kind];
+                $id=(int)$db->setQuery('SELECT site FROM '.$db->quoteName($table).' WHERE operation='.$db->quote($post->getString('operation')))->loadResult();
+            }
+            return 'index.php?option=com_nicodewebmonitor'.($id>0?'&site='.$id.'&section=maintenance':'&screen=maintenance');
+        };
         if ($task !== 'display') {
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
                 throw new \RuntimeException('Invalid request', 403);
@@ -46,6 +62,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 throw new \RuntimeException('Unknown task', 404);
             }
             if ($task === 'issueCode' || $task === 'setupMonitoring') {
+                $selectedSiteId=0;$viewPage=$task==='issueCode'?'add':'monitoring';
                 try {
                     if ($user->authorise('core.admin','com_nicodewebmonitor')) $setup->enable($user);
                     elseif ($task === 'setupMonitoring') throw new \RuntimeException('Access denied');
@@ -57,8 +74,8 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 } catch (\Throwable) {
                     $this->app->enqueueMessage('No se pudo preparar la conexión. Comprueba el nombre del sitio, HTTPS, tus permisos y el paquete central.','error');
                 }
-                $sites = $registry->all();
-                $backupOperations = $canBackup ? $backups->recent() : [];
+                $sites = $siteRows();
+                $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canBackup ? $backups->recent($selectedSiteId) : [];
                 $this->app->setHeader('Cache-Control','no-store, private',true);
                 $this->app->setHeader('Referrer-Policy','no-referrer',true);
                 require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
@@ -68,7 +85,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 if ($this->input->post->getString('confirmed') !== '1') { throw new \RuntimeException('Confirmation required',403); }
                 (new \Nicode\Component\NicodeWebMonitor\Administrator\Service\Notifications(Factory::getContainer()->get(DatabaseInterface::class), $user))->retry($this->input->post->getInt('id'));
                 $this->app->enqueueMessage('One notification attempt authorized for the next monitoring task. No email was sent by this action.');
-                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                $this->app->redirect('index.php?option=com_nicodewebmonitor&site='.$this->input->post->getInt('id').'&section=history');
                 return;
             }
             if (str_starts_with($task, 'update')) {
@@ -89,7 +106,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 } catch (\Throwable) {
                     $this->app->enqueueMessage('Update not confirmed. Query status before any further action. No automatic retry was made.', 'error');
                 }
-                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                $this->app->redirect($maintenanceReturn('update'));
                 return;
             }
             if (str_starts_with($task, 'coreUpdate')) {
@@ -110,7 +127,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 } catch (\Throwable) {
                     $this->app->enqueueMessage('Update not confirmed. Query status before any further action. No automatic retry was made.', 'error');
                 }
-                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                $this->app->redirect($maintenanceReturn('core'));
                 return;
             }
             if (str_starts_with($task, 'backup')) {
@@ -152,14 +169,20 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 } catch (\Throwable) {
                     $this->app->enqueueMessage('Backup action not confirmed. Review the journal and query status before advancing an uncertain operation. No automatic retry was made.', 'error');
                 }
-                $this->app->redirect('index.php?option=com_nicodewebmonitor');
+                $this->app->redirect($maintenanceReturn('backup'));
                 return;
             }
             if ($task === 'inspect') {
                 $inspectedId = $this->input->post->getInt('id');
+                $selectedSiteId=$inspectedId;$viewSection='inventory';
                 $inspection = $registry->inspect($inspectedId);
-                $sites = $registry->all();
-                $backupOperations = $canBackup ? $backups->recent() : [];
+                if(($inspection['ok']??false)&&($inspection['snapshot_saved']??false)&&($inspection['history_saved']??false)){
+                    $this->app->enqueueMessage('Inventario actualizado. Puedes explorar sus categorías.');
+                    $this->app->redirect('index.php?option=com_nicodewebmonitor&site='.$inspectedId.'&section=inventory'.($viewCategory!==''?'&category='.rawurlencode($viewCategory):''),303);
+                    return;
+                }
+                $sites = $siteRows();
+                $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canBackup ? $backups->recent($selectedSiteId) : [];
                 require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
                 return;
             }
@@ -174,8 +197,8 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             $this->app->redirect('index.php?option=com_nicodewebmonitor');
             return;
         }
-        $sites = $registry->all();
-        $backupOperations = $canBackup ? $backups->recent() : [];
+        $sites = $siteRows();
+        $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canBackup ? $backups->recent($selectedSiteId) : [];
         require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
     }
 }

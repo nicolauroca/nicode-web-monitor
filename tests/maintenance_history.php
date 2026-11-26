@@ -48,6 +48,15 @@ try {
   $service->enroll($site,bin2hex(random_bytes(32)));
   $id='history-'.$kind.'-314';$service->begin($site,$id,true);
   check($service->recent()[0]['history'][0]['status']==='ready',$kind.' begin recorded');
+  $table=$kind==='core'?'#__nwm_core_update_operations':'#__nwm_update_operations';
+  $foreign=$db->setQuery('SELECT * FROM '.$table.' WHERE operation='.$db->quote($id))->loadObject();
+  for($i=0;$i<101;$i++){
+   $foreign->operation='foreign-'.$kind.'-'.$i;$foreign->site=$site+1;$foreign->updated_at=time()+60;
+   $db->insertObject($table,$foreign);
+  }
+  check(count($service->recent())===100 && $service->recent($site)[0]['operation']===$id && count($service->recent($site))===1,$kind.' site scope precedes global display limit');
+  check($service->recent($site+2)===[],$kind.' missing site has no other operations');
+  $db->setQuery('DELETE FROM '.$table.' WHERE site='.($site+1))->execute();
   $service->run($id,true,true);$lost=false;$service->run($id);
   $history=$service->recent()[0]['history'];
   check(array_column($history,'status')===[$kind==='core'?'verified':'updated','uncertain','ready'],$kind.' lost response and reconciliation retained');

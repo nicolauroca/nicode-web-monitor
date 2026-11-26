@@ -1,6 +1,6 @@
 # Documentación vigente — Nicode Web Monitor
 
-Versión de desarrollo: **1.1.1-dev.5**. No es una beta final ni una versión de
+Versión de desarrollo: **1.1.1-dev.6**. No es una beta final ni una versión de
 producción. La compatibilidad con anteriores versiones de desarrollo no forma
 parte del contrato actual.
 

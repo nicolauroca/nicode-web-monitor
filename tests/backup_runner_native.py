@@ -60,14 +60,13 @@ def run_panel(context):
             page.on('response',response_received)
             page.on('requestfailed',lambda req: responses.append({'network_failure':req.failure}))
             base='http://127.0.0.1:8767/administrator/index.php'
-            url=base+'?option=com_nicodewebmonitor'
+            url=base+'?option=com_nicodewebmonitor&site='+str(f['site'])+'&section=maintenance'
             page.goto(base)
             page.locator('input[name=username]').fill(f['users']['operator']['username'])
             page.locator('input[name=passwd]').fill(f['users']['operator']['password'])
             page.locator('button[type=submit]').click()
             page.goto(url)
             check(page.get_by_role('heading',name='Nicode Web Monitor — Central').count()==1,'real operator browser login')
-            page.locator('#nwm-maintenance > summary').click()
             section=page.get_by_role('region',name='Copias de seguridad')
             section.locator('summary').filter(has_text='Disposable role QA').click()
             begin=section.locator('form').filter(has=page.locator('input[value=backupBegin]')).last

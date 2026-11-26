@@ -29,7 +29,7 @@ def write_zip(output, files):
             archive.writestr(info, content)
     print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 source = root / 'extensions/plg_console_nicodewebmonitor'
-output = root / 'dist/plg_console_nicodewebmonitor-1.1.1-dev.5.zip'
+output = root / 'dist/plg_console_nicodewebmonitor-1.1.1-dev.6.zip'
 output.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for file in sorted(source.rglob('*')):
@@ -45,7 +45,7 @@ with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compressleve
 print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
 component = root / 'extensions/com_nicodewebmonitor'
-output = root / 'dist/com_nicodewebmonitor-1.1.1-dev.5.zip'
+output = root / 'dist/com_nicodewebmonitor-1.1.1-dev.6.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(component).as_posix(): source_bytes(p) for p in component.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = source_bytes(root / 'LICENSE')
@@ -64,7 +64,7 @@ print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 # Bundle the same collector into the independent HTTP plugin, with its own namespace.
 # Generated copies live only in the ZIP: one reviewed source of inventory behavior.
 connector = root / 'extensions/plg_system_nicodewebmonitor'
-output = root / 'dist/plg_system_nicodewebmonitor-1.1.1-dev.5.zip'
+output = root / 'dist/plg_system_nicodewebmonitor-1.1.1-dev.6.zip'
 files = {p.relative_to(connector).as_posix(): source_bytes(p) for p in connector.rglob('*') if p.is_file()}
 for file in (source / 'src/Inventory').glob('*.php'):
     files['src/Inventory/' + file.name] = source_bytes(file).replace(
@@ -83,7 +83,7 @@ print(output.name, hashlib.sha256(output.read_bytes()).hexdigest())
 
 # Native Joomla scheduler plugin; no tasks are created during installation.
 source = root / 'extensions/plg_task_nicodewebmonitor'
-output = root / 'dist/plg_task_nicodewebmonitor-1.1.1-dev.5.zip'
+output = root / 'dist/plg_task_nicodewebmonitor-1.1.1-dev.6.zip'
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     files = {p.relative_to(source).as_posix(): source_bytes(p) for p in source.rglob('*') if p.is_file()}
     files['LICENSE.txt'] = source_bytes(root / 'LICENSE')
@@ -103,7 +103,7 @@ files['administrator/src/Service/InventorySchema.php'] = source_bytes(root / 'ex
 files['administrator/src/Service/CredentialVault.php'] = source_bytes(
     root / 'extensions/com_nicodewebmonitor/administrator/src/Service/CredentialVault.php').replace(
         b'Nicode\\Component\\NicodeWebMonitor', b'Nicode\\Component\\NicodeConnector')
-write_zip(root / 'dist/com_nicodeconnector-1.1.1-dev.5.zip', files)
+write_zip(root / 'dist/com_nicodeconnector-1.1.1-dev.6.zip', files)
 
 for package, children in {
     'nicodemonitor': ['com_nicodewebmonitor', 'plg_task_nicodewebmonitor'],
@@ -113,5 +113,5 @@ for package, children in {
     files = {manifest: source_bytes(root / 'extensions' / ('pkg_' + package) / manifest)}
     files['LICENSE.txt'] = source_bytes(root / 'LICENSE')
     for child in children:
-        files['packages/' + child + '.zip'] = (root / 'dist' / (child + '-1.1.1-dev.5.zip')).read_bytes()
-    write_zip(root / 'dist' / ('pkg_' + package + '-1.1.1-dev.5.zip'), files)
+        files['packages/' + child + '.zip'] = (root / 'dist' / (child + '-1.1.1-dev.6.zip')).read_bytes()
+    write_zip(root / 'dist' / ('pkg_' + package + '-1.1.1-dev.6.zip'), files)

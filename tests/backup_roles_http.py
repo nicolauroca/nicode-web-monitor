@@ -30,18 +30,21 @@ def client():
         if not a.certificate: raise SystemExit('Explicit local CA required for HTTPS')
         handlers.append(urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=str(a.certificate))))
     op=urllib.request.build_opener(*handlers)
-    def request(target=url,data=None):
+    def request(target=None,data=None):
+        target=target or url
         try:
             with op.open(target,None if data is None else urllib.parse.urlencode(data).encode(),timeout=15) as r: return r.status,r.read().decode()
         except urllib.error.HTTPError as e: return e.code,e.read().decode()
     return request
 initial=fixture('snapshot'); f=fixture('setup')
+url+='&site='+str(f['site'])+'&section=overview'
 try:
     for role in ('reader','operator'):
         request=client(); _,html=request(base); u=f['users'][role]
         request(base,{'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf(html):1})
         status,html=request(); check(status==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated component access')
         token=csrf(html); before=fixture('snapshot')
+        status,html=request(url.replace('section=overview','section=maintenance'))
         check(('aria-label="Copias de seguridad"' in html)==(role=='operator'),role+' backup controls visibility')
         check('Historial de mantenimiento (últimas 50 observaciones)' not in html,role+' no invented history for missing operations')
         tasks=['backupEnroll'] if role=='operator' else ['backupEnroll','backupBegin','backupAdvance','backupContinue','backupStatus']
@@ -54,7 +57,9 @@ try:
         check('Backup action not confirmed' in html and fixture('snapshot')==before,'operator begin requires confirmation without effects')
         status,html=request(data={'task':'backupBegin','id':f['site'],'confirmed':'1',token:1})
         cards=re.findall(r'<article class="nwm-backup".*?</article>',html,re.S)
-        card=next(x for x in cards if 'Sitio #'+str(f['site'])+';' in x)
+        matching=[x for x in cards if 'Sitio #'+str(f['site'])+';' in x]
+        check(bool(matching),'created operation remains on the selected site maintenance page')
+        card=matching[0]
         operation=re.search(r'backup-[a-f0-9]{32}',card).group()
         check('estado: ready' in card,'operator creates ready operation')
         before=fixture('snapshot')

@@ -30,29 +30,6 @@
         if (state) { state.value = link.dataset.nwmFilter; filter(); }
     }));
     filter();
-    function openTarget(id, focus) {
-        const target = document.getElementById(id);
-        if (!target || !root.contains(target)) return;
-        if (target.tagName === 'DETAILS') target.open = true;
-        if (focus) {
-            const field = target.querySelector('input:not([type=hidden])') || target.querySelector('summary') || target;
-            // Wait until the opened details content participates in layout.
-            requestAnimationFrame(() => field.focus({preventScroll:true}));
-        }
-    }
-    root.querySelectorAll('[data-nwm-open]').forEach(link => link.addEventListener('click', event => {
-        event.preventDefault();
-        openTarget(link.dataset.nwmOpen, true);
-        history.replaceState(null, '', link.hash);
-        document.getElementById(link.dataset.nwmOpen)?.scrollIntoView({block:'start'});
-    }));
-    function followHash() {
-        const id = location.hash.slice(1);
-        openTarget(id, false);
-        if (id === 'nwm-inventory') document.getElementById(id)?.focus({preventScroll:true});
-    }
-    window.addEventListener('hashchange', followHash);
-    followHash();
     root.querySelectorAll('[data-nwm-reveal]').forEach(button => {
         button.hidden = false;
         button.addEventListener('click', () => {

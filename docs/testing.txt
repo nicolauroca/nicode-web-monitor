@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.5 — pruebas
+Nicode Web Monitor 1.1.1-dev.6 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -75,10 +75,13 @@ desactivado, direcciones largas, tema oscuro y anchos de 1440/390/320 px.
 Añadir --inventory-sharing para comprobar formularios de permisos con y sin JS,
 política del endpoint HTTPS, ausencia de override por query y el detalle guardado.
 El token del fixture se utiliza solo en memoria, nunca en capturas ni informes.
-Añadir --central-design para los estados del panel Central, búsqueda/filtros,
-historial por teclado, tema oscuro y anchos de 1440/390/320 px. Usa observaciones
+Añadir --central-design para directorio a todo el ancho, fichas independientes,
+entrada/salida, búsqueda/filtros, historial por teclado, tema oscuro y anchos de
+1440/390/320 px. --inventory-sharing verifica índice de trece enlaces, una sola
+categoría por página, POST/303/GET tras actualizar y recarga/Atrás/Adelante sin
+repetir la consulta. Usa observaciones
 sintéticas; desactiva temporalmente la ejecución por visitas para no consultar
-los destinos remotos de esas tarjetas y las limpia
+los destinos remotos de esas filas y las limpia
 al terminar. El copiado de código/dirección utiliza un portapapeles simulado.
 Añadir --maintenance-tests para ejecutar también los fixtures de roles y
 formularios de copias contra el mismo servidor CGI/TLS; comprueba expresamente

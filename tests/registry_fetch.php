@@ -38,14 +38,14 @@ try {
         || (!$result['ok'] && $savedSite['check_state'] !== 'check_failed')) {
         throw new RuntimeException('History not persisted correctly');
     }
-    $sites=[]; $inspection=$result; $inspectedId=(int)$row->id;
+    $sites=[$savedSite];$viewSection='inventory';$viewCategory='extensions'; $inspection=$result; $inspectedId=(int)$row->id;
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     if (str_contains($html, $input['token']) || str_contains($html, $row->credential) || str_contains($html, '<script>')) { throw new RuntimeException('Unsafe output'); }
     $version=$result['inventory']['sections']['joomla']['data']['version']??null;
     $extensions=$result['inventory']['sections']['extensions']['data']['items']??[];
-    $details=$result['ok'] && is_string($version) && str_contains($html, htmlspecialchars($version, ENT_QUOTES, 'UTF-8')) && str_contains($html, 'Extensiones instaladas');
+    $details=$result['ok'] && is_string($version)  && str_contains($html, 'data-category="extensions"');
     foreach ($extensions as $extension) {
         $details=$details && str_contains($html, htmlspecialchars($extension['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     }
-    echo json_encode(['ok'=>$result['ok'], 'error'=>$result['error']??null, 'status'=>$result['inventory']['status']??null, 'joomla'=>$version, 'extensions'=>count($extensions), 'details_rendered'=>$details, 'rendered'=>str_contains($html, $result['ok'] ? 'Cobertura del inventario' : 'No se ha obtenido el inventario')]);
+    echo json_encode(['ok'=>$result['ok'], 'error'=>$result['error']??null, 'status'=>$result['inventory']['status']??null, 'joomla'=>$version, 'extensions'=>count($extensions), 'details_rendered'=>$details, 'rendered'=>str_contains($html, $result['ok'] ? 'data-category="extensions"' : 'No se ha obtenido el inventario')]);
 } finally { $db->transactionRollback(); }

@@ -40,6 +40,8 @@ try {
     $registry->add('<script>alert(1)</script>', 'https://example.org', '93.184.216.34', $uuid, $token);
     $rows = $registry->all();
     $row = array_values(array_filter($rows, fn($r)=>$r['site_id']===$uuid))[0];
+    check($registry->find((int)$row['id'])===$row, 'single site retains its own summary and history');
+    check($registry->find(-1)===null, 'missing single site does not fall back to directory');
     check(!array_key_exists('credential',$row) && !str_contains(json_encode($rows),$token), 'list excludes credential');
     $stored = $db->setQuery('SELECT credential FROM #__nwm_sites WHERE id='.(int)$row['id'])->loadResult();
     check(!str_contains($stored,$token) && $vault->open($uuid,$stored)===$token, 'database stores authenticated ciphertext');
@@ -50,6 +52,7 @@ try {
     rejects(fn()=>$registry->add('Token','https://example.org','93.184.216.34',$uuid,'bad'), 'invalid token rejected');
     $guest = new SiteRegistry($db,$vault,new User());
     rejects(fn()=>$guest->all(), 'guest read denied');
+    rejects(fn()=>$guest->find((int)$row['id']), 'guest single site denied');
     rejects(fn()=>$guest->inspect((int)$row['id']), 'guest inventory denied');
     check($registry->inspect(-1)['error']==='site_not_found', 'missing site explicit');
     $db->setQuery('UPDATE #__nwm_sites SET credential='.$db->quote('broken').' WHERE id='.(int)$row['id'])->execute();
@@ -62,6 +65,7 @@ try {
     };
     $readonly = new SiteRegistry($db,$vault,$reader);
     check(count($readonly->all()) === count($rows), 'read permission separated');
+    check($readonly->find((int)$row['id'])===$registry->find((int)$row['id']), 'reader can enter selected site without maintenance rights');
     rejects(fn()=>$readonly->add('x','https://example.org','93.184.216.34',$uuid,$token), 'reader cannot enroll');
     rejects(fn()=>$readonly->remove((int)$row['id']), 'reader cannot delete');
     // Actual template with malicious stored label, no form token needed for a reader.
@@ -69,10 +73,11 @@ try {
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
     check(!str_contains($html,'<script>') && str_contains($html,'&lt;script&gt;'), 'stored label escaped');
     check(!str_contains($html,$token) && !str_contains($html,$stored), 'template excludes secrets');
-    check(!str_contains($html,'value="remove"') && !str_contains($html,'value="add"') && str_contains($html,'value="inspect"'), 'reader can inspect without mutation controls');
+    check(!str_contains($html,'value="remove"') && !str_contains($html,'value="add"') && str_contains($html,'Entrar'), 'reader can inspect without mutation controls');
+    $selectedSiteId=(int)$row['id'];$viewSection='inventory';
     $inspection=['ok'=>false,'error'=>'access_denied']; $inspectedId=(int)$row['id'];
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
-    check(str_contains($html,'access_denied') && str_contains($html,'no acreditan la disponibilidad pública'), 'failed read not presented as offline');
+    check(str_contains($html,'access_denied') && str_contains($html,'no acredita disponibilidad pública'), 'failed read not presented as offline');
     $sid=(int)$row['id'];
     $core=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CoreUpdateCoordinator($db,$vault,$admin);
     $updates=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\UpdateCoordinator($db,$vault,$admin);

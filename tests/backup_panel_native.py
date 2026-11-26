@@ -59,7 +59,7 @@ def run_panel(context):
         check(diagnostic.get('error')=='operation_unknown', 'native readonly connectivity: '+str(diagnostic.get('error')))
         op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
         base = 'http://127.0.0.1:8767/administrator/index.php'
-        url = base+'?option=com_nicodewebmonitor'
+        url = base+'?option=com_nicodewebmonitor&site='+str(f['site'])+'&section=maintenance'
         def request(target=url, data=None):
             with op.open(target, None if data is None else urllib.parse.urlencode(data).encode(), timeout=35) as r:
                 return r.read().decode()

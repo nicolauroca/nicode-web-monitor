@@ -18,6 +18,7 @@ import threading
 import urllib.error
 import urllib.request
 from urllib.parse import urlsplit, unquote
+from browser_central_navigation import enter_site, open_category
 
 p=argparse.ArgumentParser(description=__doc__)
 for name in ['site','php','certificate','private-key','output']:
@@ -156,6 +157,10 @@ try:
         central=base+'/administrator/index.php?option=com_nicodewebmonitor'
         connector=base+'/administrator/index.php?option=com_nicodeconnector'
         page.goto(central); page.wait_for_load_state('networkidle')
+        if page.get_by_role('link',name='Añadir sitio',exact=True).count()!=1:
+            (a.output/'central-error.html').write_text(page.content(),encoding='utf-8')
+            raise AssertionError('Central directory unavailable; see private central-error.html')
+        page.get_by_role('link',name='Añadir sitio',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_role('heading',name='Añadir sitio',exact=True).count()==1,'central presents simple onboarding')
         check(page.locator('input[name=site_id],input[name=credential],input[name=address]').count()==0,'central no longer asks for identity credential or IP')
         page.locator('#new-site-name').fill('Self monitored central')
@@ -225,8 +230,9 @@ try:
             page.wait_for_load_state('networkidle')
             check(not page.locator('#jform_params_site_id').is_visible() and not page.locator('#jform_params_token_hash').is_visible(),'plugin keeps inventory identity fields out of the user interface')
             page.locator('#toolbar-apply button').click(); page.wait_for_load_state('networkidle')
-            page.goto(central); page.get_by_role('button',name='Actualizar inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
-            check(page.get_by_role('heading',name='Software y entorno',exact=True).count()==1,'saving advanced plugin settings preserves inventory connection')
+            enter_site(page,central); page.get_by_role('button',name='Actualizar inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+            check(page.locator('[data-nwm-category-link]').count()==13,'saving advanced plugin settings preserves inventory connection')
+            open_category(page,'extensions')
             page.locator('#nwm-extension-search').fill('nwm-no-such-extension')
             check(page.locator('[data-nwm-extension]:visible').count()==0 and page.locator('[data-nwm-no-extensions]').is_visible(),'extension search shows an explicit empty result')
             page.locator('#nwm-extension-search').fill('nicode')
@@ -252,7 +258,7 @@ try:
                 dashboard_fixture('clean')
         for width in [1440,390]:
             page.set_viewport_size({'width':width,'height':1000}); page.goto(central); page.wait_for_load_state('networkidle')
-            check(page.get_by_role('heading',name='Self monitored central',exact=True).count()==1,f'{width}: enrolled site appears in dashboard')
+            check(page.get_by_role('link',name='Entrar en Self monitored central',exact=True).count()==1,f'{width}: enrolled site appears in dashboard')
             check(page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'{width}: central no horizontal overflow')
             if width==390: page.screenshot(path=str(a.output/'central-mobile.png'),full_page=True)
             page.goto(connector); page.wait_for_load_state('networkidle')
@@ -265,9 +271,9 @@ try:
         page.locator('.nwm-management > summary').press('Enter')
         page.locator('input[name=confirmed]').check(); page.get_by_role('button',name='Desconectar',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_role('heading',name='Conectar este sitio',exact=True).count()==1,'browser disconnect revokes local access')
-        page.goto(central); page.get_by_role('button',name='Actualizar inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+        enter_site(page,central); page.get_by_role('button',name='Actualizar inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_text('connector_unavailable',exact=False).count()>0,'central sees revocation on next inventory check')
-        page.locator('.nwm-site-details > summary').click()
+        page.locator('.nwm-site-tabs').get_by_role('link',name='Conexión',exact=True).click(); page.wait_for_load_state('networkidle')
         page.locator('.nwm-remove > summary').click()
         page.locator('.nwm-remove input[name=confirmed]').check()
         page.get_by_role('button',name='Eliminar registro de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')

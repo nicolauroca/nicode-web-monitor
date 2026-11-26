@@ -69,10 +69,10 @@ final class BackupCoordinator
     }
 
     /** Bounded display projection; never return credentials or raw receipts. */
-    public function recent(): array
+    public function recent(?int $site=null): array
     {
         $this->permit();
-        $rows = $this->db->setQuery('SELECT operation,site,status,next_sequence,updated_at FROM #__nwm_backup_operations ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
+        $rows = $this->db->setQuery('SELECT operation,site,status,next_sequence,updated_at FROM #__nwm_backup_operations'.($site!==null?' WHERE site='.(int)$site:'').' ORDER BY updated_at DESC,operation DESC', 0, 100)->loadAssocList();
         foreach ($rows as &$row) { $row['history'] = (new MaintenanceHistory($this->db))->recent('backup', $row['operation']); }
         return $rows;
     }

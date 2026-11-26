@@ -5,11 +5,10 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Uri\Uri;
 ?>
 <?php if($canCreate): ?>
-<details id="nwm-add-site" class="nwm-panel nwm-onboarding" <?= !$sites||!empty($pairingCode)?'open':'' ?>>
-<summary><?= $icon('plus') ?><span><h2>Añadir sitio</h2><small>Instala el Conector, genera un código y vincula el sitio</small></span><?= $icon('chevron') ?></summary>
+<section id="nwm-add-site" class="nwm-panel nwm-onboarding"><div class="nwm-detail-title"><h2>Añadir sitio</h2><p>Instala el Conector, genera un código y vincula el sitio.</p></div>
 <div class="nwm-onboarding-body">
 <ol class="nwm-steps"><li><span>1</span><div><strong>Instala el Conector</strong><p>En el Joomla que vas a supervisar, instala el paquete Nicode Web Monitor — Conector y abre su componente.</p></div></li><li><span>2</span><div><strong>Genera un código aquí</strong><p>Asigna un nombre reconocible al sitio. No necesitas introducir credenciales ni datos técnicos.</p></div></li><li><span>3</span><div><strong>Conecta desde el otro sitio</strong><p>Copia la dirección de este central y el código en el Conector. El sitio aparecerá aquí tras verificar su inventario.</p></div></li></ol>
-<form class="nwm-issue-form" method="post" action="index.php?option=com_nicodewebmonitor#nwm-add-site" autocomplete="off" data-nwm-submit>
+<form class="nwm-issue-form" method="post" action="index.php?option=com_nicodewebmonitor&amp;screen=add" autocomplete="off" data-nwm-submit>
 <div><label for="new-site-name">Nombre para identificar el sitio</label><input id="new-site-name" name="label" maxlength="120" required placeholder="Por ejemplo, Web corporativa" aria-describedby="nwm-name-help"><p id="nwm-name-help" class="nwm-field-help">Este nombre solo identifica el sitio en el panel.</p></div>
 <input type="hidden" name="task" value="issueCode"><?= HTMLHelper::_('form.token') ?><button class="nwm-button nwm-button--primary" type="submit"><span data-nwm-button-label>Generar código de vinculación</span><?= $icon('arrow') ?></button>
 </form>
@@ -21,5 +20,5 @@ use Joomla\CMS\Uri\Uri;
 <p class="nwm-field-help">Sirve para un único sitio. Trátalo como una contraseña temporal. Generar otro código sustituye al anterior de tu usuario.</p><p role="status" class="nwm-copy-status" data-nwm-copy-status aria-live="polite"></p></section>
 <?php endif; ?>
 <details class="nwm-local-help"><summary>¿Quieres supervisar también este Joomla central?</summary><p>Instala aquí el paquete Conector y vincúlalo con un código de este panel. Central y Conector pueden convivir; este Joomla también puede conectarse a otro central.</p><?php if($hasConnector): ?><a href="index.php?option=com_nicodeconnector">Abrir el Conector de este Joomla<?= $icon('arrow') ?></a><?php endif; ?></details>
-</div></details>
+</div></section>
 <?php endif; ?>

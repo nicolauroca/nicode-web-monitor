@@ -1,28 +1,25 @@
-# Nicode Web Monitor 1.1.1-dev.5 — Desarrollo
+# Nicode Web Monitor 1.1.1-dev.6 — Desarrollo
 
 **Prerelease de desarrollo. No es una versión definitiva, estable ni una beta final.**
 
-Amplía el inventario y permite que cada Joomla decida qué comparte desde su Conector.
+Reorganiza Central para navegar de lo general al detalle sin mostrarlo todo a la vez.
 
-- Trece categorías: Joomla, PHP, base de datos, extensiones, actualizaciones en caché,
-  configuración, seguridad, usuarios agregados, contenido agregado, idiomas,
-  plantillas, tareas y almacenamiento.
-- Un permiso por categoría en el Conector, con perfiles Esencial/Todo/Nada y guardado
-  explícito. Solo las cuatro esenciales están permitidas de entrada.
-- La denegación se aplica antes de recoger datos y funciona tanto por HTTPS como
-  al monitorizar el propio Central. Desconectar conserva la política local.
-- Central distingue compartido, no compartido, no disponible y error. Las categorías
-  denegadas no generan por sí mismas una alerta de inventario parcial.
-- Última observación guardada por sitio, versiones y cobertura en las tarjetas y
-  detalle fechado sin peticiones de red. Cada recepción sustituye el dato anterior.
-- Sin identidades de usuarios, correos, contraseñas, textos, parámetros de extensiones,
-  URLs de actualización, rutas locales ni claves de descarga.
-- Formularios nativos, uso sin JavaScript, tema oscuro y pantallas móviles.
+- Directorio a todo el ancho, una fila por Joomla y acción Entrar; búsqueda y filtros.
+- Ficha independiente: Resumen, Inventario, Historial, Conexión y Mantenimiento.
+- Inventario con índice de trece categorías; cada categoría abre su propia página.
+- Migas, pestañas y enlaces Volver para subir o bajar de nivel. Navegar consulta
+  la observación guardada; Actualizar inventario realiza una consulta nueva.
+- Alta y programación en pantallas independientes. Mantenimiento muestra únicamente
+  formularios y operaciones del sitio elegido, con los mismos permisos y confirmaciones.
+- Consulta guardada con retorno POST/303/GET para evitar repetirla al recargar.
+  Los fallos conservan su diagnóstico y no se ocultan con observaciones anteriores.
+- Formularios nativos, navegación sin JavaScript, tema oscuro y adaptación móvil.
+- Se conservan los permisos por categoría del Conector y la automonitorización.
 
 ## Instalar
 
-En Central: **pkg_nicodemonitor-1.1.1-dev.5.zip**.
-En cada sitio: **pkg_nicodeconnector-1.1.1-dev.5.zip**.
+En Central: **pkg_nicodemonitor-1.1.1-dev.6.zip**.
+En cada sitio: **pkg_nicodeconnector-1.1.1-dev.6.zip**.
 Si Central también se supervisa, instalar ambos en ese Joomla. Actualizar los dos
 paquetes completos, sin desinstalar ni borrar tablas. «Source code» no es instalable.
 

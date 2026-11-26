@@ -16,7 +16,16 @@ final class SiteRegistry
     public function all(): array
     {
         $this->permit('core.manage');
-        $sites = $this->db->setQuery('SELECT s.id,s.site_id,s.label,s.base_url,s.address,s.connection_type,i.received_at AS inventory_received_at,i.summary AS inventory_summary FROM #__nwm_sites AS s LEFT JOIN #__nwm_inventory AS i ON i.site=s.id ORDER BY s.id')->loadAssocList();
+        return $this->rows();
+    }
+    public function find(int $id): ?array
+    {
+        $this->permit('core.manage');
+        return $this->rows($id)[0]??null;
+    }
+    private function rows(?int $id=null): array
+    {
+        $sites = $this->db->setQuery('SELECT s.id,s.site_id,s.label,s.base_url,s.address,s.connection_type,i.received_at AS inventory_received_at,i.summary AS inventory_summary FROM #__nwm_sites AS s LEFT JOIN #__nwm_inventory AS i ON i.site=s.id'.($id!==null?' WHERE s.id='.(int)$id:'').' ORDER BY s.id')->loadAssocList();
         $history = new CheckHistory($this->db);
         foreach ($sites as &$site) {
             $site['inventory_summary']=json_decode($site['inventory_summary']??'null',true);

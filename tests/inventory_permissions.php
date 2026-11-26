@@ -74,7 +74,7 @@ try{
     $summary=$registry->all()[0]['inventory_summary'];
     check($summary['joomla']['version']===null&&$summary['runtime']['php_version']===null&&$summary['updates']['total']===null,'deny-all removes old dashboard values');
     $process=proc_open([PHP_BINARY,__DIR__.'/lifecycle_step.php',JPATH_BASE,'--allow-disposable-writes'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
-    fwrite($pipes[0],json_encode(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_nicodeconnector-1.1.1-dev.5.zip')]));fclose($pipes[0]);
+    fwrite($pipes[0],json_encode(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_nicodeconnector-1.1.1-dev.6.zip')]));fclose($pipes[0]);
     $installed=stream_get_contents($pipes[1]);$errors=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);
     check(proc_close($process)===0&&str_contains($installed,'"ok":true'),'native connector package reinstalls successfully');
     check(count(array_filter($connection->sharing()))===0&&$connection->state()['state']==='connected','package reinstall preserves deny-all and the existing connection');

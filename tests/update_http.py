@@ -76,8 +76,8 @@ params={'site_id':site_id,'token_hash':hashlib.sha256(inventory.encode()).hexdig
     'backup_token_hash':hashlib.sha256(backup.encode()).hexdigest(),
     'update_token_hash':hashlib.sha256(token.encode()).hexdigest(),'update_storage':str(store),
     'maintenance_storage':str(store/'maintenance')}
-fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.3.zip')])
-fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.3.zip')])
+fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.4.zip')])
+fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.4.zip')])
 remote=None;roledata=None
 path=central/'administrator/components/com_nicodewebmonitor/src/Service/UpdateCoordinator.php'
 original=path.read_bytes()
@@ -155,7 +155,7 @@ def session(role):
     csrf=re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
     u=roledata['users'][role]
     call({'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf:1},base)
-    code,html=call();check(code==200 and '<h1>Nicode Web Monitor</h1>' in html,role+' authenticated')
+    code,html=call();check(code==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated')
     csrf=re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
     return call,csrf,html
 try:
@@ -197,11 +197,11 @@ try:
     check(original.count(b'(new UpdateClient())')==1,'single local transport override')
     path.write_bytes(original.replace(b'(new UpdateClient())',replacement.encode()))
     roledata=roles('setup',site_id=site_id,url=f'https://localhost:{secure.server_port}',backup_token=backup,update_token=token)
-    call,csrf,html=session('reader');check('Prepared extension updates' not in html,'reader cannot see update forms')
+    call,csrf,html=session('reader');check('Actualizaciones preparadas de extensiones' not in html,'reader cannot see update forms')
     check(call({'task':'updateBegin','id':roledata['site'],'operation':'native-update-01','confirmed':'1',csrf:1})[0]==403,'reader update denied')
-    call,csrf,html=session('backup_operator');check('Prepared extension updates' not in html,'backup operator has no update permission')
+    call,csrf,html=session('backup_operator');check('Actualizaciones preparadas de extensiones' not in html,'backup operator has no update permission')
     check(call({'task':'updateExecute','operation':'native-update-01','confirmed':'1',csrf:1})[0]==403,'backup permission cannot execute updates')
-    call,csrf,html=session('operator');check('Prepared extension updates' in html,'update operator has forms')
+    call,csrf,html=session('operator');check('Actualizaciones preparadas de extensiones' in html,'update operator has forms')
     check(call({'task':'updateEnroll','id':roledata['site'],'update_credential':token,csrf:1})[0]==403,'operator cannot enroll credentials')
     check(call({'task':'updateBegin','id':roledata['site'],'operation':'native-update-01','confirmed':'1'})[0]==403,'CSRF required')
     def panel(task,op='native-update-01',confirm='1'):
@@ -209,12 +209,12 @@ try:
     prepared=subprocess.run([str(a.php),str(repo/('tools/prepare_plugin_update.php' if kind=='plugin' else 'tools/prepare_extension_update.php')),str(site),str(store),str(v2),
         'native-update-01','--writers-stopped-and-recovery-verified'],text=True,capture_output=True,timeout=30)
     check(prepared.returncode==0 and json.loads(prepared.stdout)['installed'] is False,'documented local preparation CLI leaves installation unchanged')
-    check('state: ready' in panel('updateBegin')[1],'operator registers prepared update')
+    check('estado: ready' in panel('updateBegin')[1],'operator registers prepared update')
     before=post_effects;panel('updateExecute',confirm='0')
     check(post_effects==before and fixture('inspect')['version']=='1.0.0','panel confirmation denial has no remote effects')
     code,html=panel('updateExecute')
     (store/'panel-result.html').write_text(html,encoding='utf-8')
-    check(code==200 and 'state: updated' in html,'native update through panel and verified TLS')
+    check(code==200 and 'estado: updated' in html,'native update through panel and verified TLS')
     current=fixture('inspect')
     if kind=='library':
         receipt=request()[1]
@@ -227,9 +227,9 @@ try:
     if kind=='library': remote['id']=current['id']
     prepare('native-update-02',v3,'1.1.0','1.2.0');panel('updateBegin','native-update-02')
     drop=True;code,html=panel('updateExecute','native-update-02')
-    check('state: uncertain' in html and fixture('inspect')['version']=='1.2.0','lost response after native install leaves central uncertain')
+    check('estado: uncertain' in html and fixture('inspect')['version']=='1.2.0','lost response after native install leaves central uncertain')
     before=post_effects;panel('updateExecute','native-update-02');check(post_effects==before,'uncertain operation cannot retry')
-    code,html=panel('updateStatus','native-update-02');check('state: uncertain' not in html and html.count('state: updated')==2,'status read reconciles lost response')
+    code,html=panel('updateStatus','native-update-02');check('estado: uncertain' not in html and html.count('estado: updated')==2,'status read reconciles lost response')
     fixture('configure',params=dict(params,update_token_hash=''))
     check(request()[0]==503,'credential revocation disables status')
     result={'extension_kind':kind,'passed':len(checks),'checks':checks,'native_installer':True,'real_joomla_users':True,'central_panel':True,

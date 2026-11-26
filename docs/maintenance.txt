@@ -1,9 +1,9 @@
-Nicode Web Monitor 1.1.1-dev.3 — mantenimiento experimental
+Nicode Web Monitor 1.1.1-dev.4 — mantenimiento experimental
 
 Alcance y acceso
 La conexión sencilla habilita inventario. Copias, actualizaciones de extensiones
 y core siguen siendo operaciones experimentales y deliberadas. El panel las agrupa
-en Copias y actualizaciones (avanzado). No son mantenimiento desatendido.
+en la sección Mantenimiento del Central. No son mantenimiento desatendido.
 La nueva conexión local del propio central solo proporciona inventario. No configura
 un transporte de mantenimiento remoto para ese registro; usar las herramientas
 locales correspondientes y sus precondiciones para ensayos de mantenimiento.

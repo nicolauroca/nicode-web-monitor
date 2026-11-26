@@ -14,7 +14,7 @@
         pause.addEventListener('click', () => {
             stopping = true;
             pause.disabled = true;
-            progress.textContent = 'Pausing after the current step finishes…';
+            progress.textContent = 'Se pausará al terminar el paso actual…';
         });
         form.addEventListener('submit', async event => {
             event.preventDefault();
@@ -31,7 +31,7 @@
             try {
                 while (!stopping && steps < 100) {
                     const expected = Number(data.get('expected_sequence'));
-                    progress.textContent = `Running step ${expected + 1}. Pause will finish this request.`;
+                    progress.textContent = `Ejecutando paso ${expected + 1}. Pausar permite terminar esta petición.`;
                     const response = await fetch(form.action, {
                         method: 'POST', credentials: 'same-origin', redirect: 'error',
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: data,
@@ -47,7 +47,7 @@
                     form.elements.expected_sequence.value = String(receipt.next_sequence);
                     card.dataset.sequence = String(receipt.next_sequence);
                     complete = receipt.status === 'complete';
-                    card.querySelector('h4 + p').textContent = `Site #${card.dataset.site}; state: ${receipt.status}; next sequence: ${receipt.next_sequence}. Reload to see the saved journal time.`;
+                    card.querySelector('h4 + p').textContent = `Sitio #${card.dataset.site}; estado: ${receipt.status}; siguiente paso: ${receipt.next_sequence}. Recarga el panel para ver la fecha guardada.`;
                     if (complete) break;
                 }
             } catch (_) {
@@ -64,11 +64,11 @@
                         }
                     });
                 }
-                if (failed) card.querySelector('h4 + p').textContent = `Site #${card.dataset.site}; result not confirmed. Query the saved journal before continuing.`;
+                if (failed) card.querySelector('h4 + p').textContent = `Sitio #${card.dataset.site}; resultado sin confirmar. Consulta el estado guardado antes de continuar.`;
                 progress.textContent = failed
-                    ? 'Stopped: result not confirmed. Query backup status before continuing. No retry was made.'
-                    : complete ? 'Capture complete. Restoration has not been verified.'
-                    : `Paused after ${steps} step${steps === 1 ? '' : 's'}. Confirm again to continue from sequence ${data.get('expected_sequence')}.`;
+                    ? 'Detenida: resultado sin confirmar. Consulta el estado de la copia antes de continuar. No se ha reintentado.'
+                    : complete ? 'Captura completa. La restauración no se ha verificado.'
+                    : `En pausa tras ${steps} paso${steps === 1 ? '' : 's'}. Confirma de nuevo para continuar desde el paso ${data.get('expected_sequence')}.`;
             }
         });
     });

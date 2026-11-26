@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.3 — pruebas
+Nicode Web Monitor 1.1.1-dev.4 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -62,6 +62,18 @@ fixture lanza una excepción si se intenta usar: prueba el transporte local real
 Los ZIP conservan la política de red de producción.
 Añadir --design-states para capturas y comprobaciones de pendiente, acceso
 desactivado, direcciones largas, tema oscuro y anchos de 1440/390/320 px.
+Añadir --central-design para los estados del panel Central, búsqueda/filtros,
+historial por teclado, tema oscuro y anchos de 1440/390/320 px. Usa observaciones
+sintéticas; desactiva temporalmente la ejecución por visitas para no consultar
+los destinos remotos de esas tarjetas y las limpia
+al terminar. El copiado de código/dirección utiliza un portapapeles simulado.
+Añadir --maintenance-tests para ejecutar también los fixtures de roles y
+formularios de copias contra el mismo servidor CGI/TLS; comprueba expresamente
+que CSS nativo y CSS del Central estén cargados antes de evaluar el diseño móvil.
+backup_admin_http.py y backup_roles_http.py admiten HTTPS loopback con --certificate
+para confiar solo en la CA local explícita. Un servidor PHP integrado que infiera
+mal la raíz de Joomla puede devolver HTML en lugar de CSS: no usar esas capturas
+como evidencia visual.
 Añadir --without-js para validar el POST nativo y la desconexión sin JavaScript.
 El fixture de estados UI solo modifica datos sintéticos del laboratorio y los
 restaura; no se distribuye dentro del componente ni abre rutas nuevas de producción.

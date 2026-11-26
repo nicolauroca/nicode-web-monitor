@@ -72,7 +72,7 @@ try {
     check(!str_contains($html,'value="remove"') && !str_contains($html,'value="add"') && str_contains($html,'value="inspect"'), 'reader can inspect without mutation controls');
     $inspection=['ok'=>false,'error'=>'access_denied']; $inspectedId=(int)$row['id'];
     ob_start(); require JPATH_ADMINISTRATOR.'/components/com_nicodewebmonitor/tmpl/registry.php'; $html=ob_get_clean();
-    check(str_contains($html,'access_denied') && str_contains($html,'does not establish'), 'failed read not presented as offline');
+    check(str_contains($html,'access_denied') && str_contains($html,'no acreditan la disponibilidad pública'), 'failed read not presented as offline');
     $sid=(int)$row['id'];
     $core=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CoreUpdateCoordinator($db,$vault,$admin);
     $updates=new \Nicode\Component\NicodeWebMonitor\Administrator\Service\UpdateCoordinator($db,$vault,$admin);

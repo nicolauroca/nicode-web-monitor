@@ -43,9 +43,9 @@ try {
     if (str_contains($html, $input['token']) || str_contains($html, $row->credential) || str_contains($html, '<script>')) { throw new RuntimeException('Unsafe output'); }
     $version=$result['inventory']['sections']['joomla']['data']['version']??null;
     $extensions=$result['inventory']['sections']['extensions']['data']??[];
-    $details=$result['ok'] && is_string($version) && str_contains($html, htmlspecialchars($version, ENT_QUOTES, 'UTF-8')) && str_contains($html, 'Installed extensions');
+    $details=$result['ok'] && is_string($version) && str_contains($html, htmlspecialchars($version, ENT_QUOTES, 'UTF-8')) && str_contains($html, 'Extensiones instaladas');
     foreach ($extensions as $extension) {
         $details=$details && str_contains($html, htmlspecialchars($extension['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     }
-    echo json_encode(['ok'=>$result['ok'], 'error'=>$result['error']??null, 'status'=>$result['inventory']['status']??null, 'joomla'=>$version, 'extensions'=>count($extensions), 'details_rendered'=>$details, 'rendered'=>str_contains($html, $result['ok'] ? 'Inventory section availability' : 'Inventory unavailable')]);
+    echo json_encode(['ok'=>$result['ok'], 'error'=>$result['error']??null, 'status'=>$result['inventory']['status']??null, 'joomla'=>$version, 'extensions'=>count($extensions), 'details_rendered'=>$details, 'rendered'=>str_contains($html, $result['ok'] ? 'Cobertura del inventario' : 'No se ha obtenido el inventario')]);
 } finally { $db->transactionRollback(); }

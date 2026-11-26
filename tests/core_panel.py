@@ -38,7 +38,7 @@ def cli(script,*args,data=None,allowed=(0,)):
     return json.loads(r.stdout)
 def fixture(action,**data):
     return cli('tests/update_fixture.php',site,'--allow-disposable-writes',data=dict(action=action,**data))
-fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.3.zip')])
+fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.4.zip')])
 site_id=str(uuid.uuid4());token=secrets.token_hex(32);other=secrets.token_hex(32)
 params={'site_id':site_id,'core_token_hash':hashlib.sha256(token.encode()).hexdigest(),
     'update_token_hash':hashlib.sha256(other.encode()).hexdigest(), 'update_storage':str(store/'updates'),'maintenance_storage':str(store/'gate')}
@@ -80,7 +80,7 @@ def request(execute=False,bearer=token):
     return cli('tests/core_client.php',data={'ca':str(a.certificate.resolve()),'url':url,'site_id':site_id,'token':bearer,'operation':operation,'execute':execute})
 
 central=a.central.resolve()
-cli('tests/update_fixture.php',central,'--allow-disposable-writes',data={'action':'install','packages':[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.3.zip')]})
+cli('tests/update_fixture.php',central,'--allow-disposable-writes',data={'action':'install','packages':[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.4.zip')]})
 path=central/'administrator/components/com_nicodewebmonitor/src/Service/CoreUpdateCoordinator.php'
 original=path.read_bytes()
 assert original.replace(b'\r\n',b'\n')==(repo/'extensions/com_nicodewebmonitor/administrator/src/Service/CoreUpdateCoordinator.php').read_bytes().replace(b'\r\n',b'\n')
@@ -100,7 +100,7 @@ def session(role):
         with r:return r.status,r.read().decode()
     code,html=call(url=base); csrf=re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
     u=roledata['users'][role];call({'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf:1},base)
-    code,html=call();check(code==200 and '<h1>Nicode Web Monitor</h1>' in html,role+' authenticated')
+    code,html=call();check(code==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated')
     csrf=re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
     return call,csrf,html
 
@@ -113,22 +113,22 @@ try:
     roledata=roles('setup',site_id=site_id,url=url,update_token=other,core_token=token)
     for role in ['reader','operator','backup_operator']:
         call,csrf,html=session(role)
-        check('Prepared Joomla core updates' not in html,role+' cannot view core controls')
+        check('Actualizaciones preparadas de Joomla' not in html,role+' cannot view core controls')
         for task in ['coreUpdateBegin','coreUpdateExecute','coreUpdateStatus','coreUpdateEnroll']:
             check(call({'task':task,'id':roledata['site'],'operation':operation,'confirmed':'1',csrf:1})[0]==403,role+' denied '+task)
     check(post_effects==initial_posts and not (store/'gate/owner.json').exists(),'ACL denial has no outbound effects')
     call,csrf,html=session('core_operator')
-    check('Prepared Joomla core updates' in html and 'Prepared extension updates' not in html,'core-only operator sees only its controls')
+    check('Actualizaciones preparadas de Joomla' in html and 'Actualizaciones preparadas de extensiones' not in html,'core-only operator sees only its controls')
     check(call({'task':'coreUpdateEnroll','id':roledata['site'],'core_update_credential':token,csrf:1})[0]==403,'core operator cannot enroll credentials')
     check(call({'task':'coreUpdateBegin','id':roledata['site'],'operation':operation,'confirmed':'1'})[0]==403,'core CSRF required')
     def panel(task,confirm='1'):
         return call({'task':task,'id':roledata['site'],'operation':operation,'confirmed':confirm,csrf:1})
-    check('state: ready' in panel('coreUpdateBegin')[1],'panel registers prepared core operation')
+    check('estado: ready' in panel('coreUpdateBegin')[1],'panel registers prepared core operation')
     panel('coreUpdateExecute',confirm='0');check(post_effects==initial_posts,'missing confirmation has no remote dispatch')
     drop=True;code,html=panel('coreUpdateExecute')
-    check('state: uncertain' in html,'lost queue response leaves panel uncertain')
+    check('estado: uncertain' in html,'lost queue response leaves panel uncertain')
     before=post_effects;panel('coreUpdateExecute');check(before==post_effects,'uncertain core panel cannot dispatch again')
-    code,html=panel('coreUpdateStatus');check('state: queued' in html,'panel GET reconciles durable queue')
+    code,html=panel('coreUpdateStatus');check('estado: queued' in html,'panel GET reconciles durable queue')
     before=post_effects;panel('coreUpdateExecute');check(before==post_effects,'queued panel cannot redispatch')
     journal=store/'updates/core'/operation/'journal'/('op-'+operation)
     check(not journal.exists(),'web request never loads native updater')
@@ -141,14 +141,14 @@ try:
     else:
         first=cli('tools/core_update_execute.php',site,operation,'--execute-queued',allowed=(3,))
         check(first['status']=='uncertain' and (store/'gate/owner.json').exists(),'native CLI completes effects but leaves verification to a fresh process')
-        check('state: uncertain' in panel('coreUpdateStatus')[1],'panel reflects native uncertainty without loading stale updater')
+        check('estado: uncertain' in panel('coreUpdateStatus')[1],'panel reflects native uncertainty without loading stale updater')
         receipt=(journal/'returned.json').read_bytes()
         replay=cli('tools/core_update_execute.php',site,operation,'--execute-queued',allowed=(3,))
         check(replay['status']=='uncertain' and receipt==(journal/'returned.json').read_bytes(),'explicit CLI replay does not rerun native installation')
         verified=cli('tools/core_update_execute.php',site,operation,'--reconcile')
     check(verified['status']=='verified' and verified['observed']['schema_errors']==0,'new CLI verifies native runtime manifest database and schema')
     check(not (store/'gate/owner.json').exists(),'verified native operation releases shared maintenance')
-    code,html=panel('coreUpdateStatus');check('state: verified' in html,'panel observes fresh-process verified upgrade')
+    code,html=panel('coreUpdateStatus');check('estado: verified' in html,'panel observes fresh-process verified upgrade')
     before=post_effects;panel('coreUpdateExecute');check(post_effects==before,'verified core cannot reinstall')
     check(token not in html and str(store) not in html,'panel does not expose credential or private path')
     final=request();check(final['ok'] and final['receipt']['status']=='verified' and not final['reconcile_required'],'TLS client observes verified core receipt')

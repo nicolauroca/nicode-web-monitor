@@ -25,6 +25,8 @@ for name in ['site','php','certificate','private-key','output']:
 p.add_argument('--browser',help='Chrome/Chromium executable path')
 p.add_argument('--remote-transport',action='store_true',help='Exercise remote HTTPS with test-only loopback/CA overrides instead of the local shortcut')
 p.add_argument('--design-states',action='store_true',help='Also inspect pending, disabled, dark and long-address presentations with disposable UI fixture states')
+p.add_argument('--maintenance-tests',action='store_true',help='Also run native maintenance form/role suites against this TLS CGI server')
+p.add_argument('--central-design',action='store_true',help='Exercise Central states, search, keyboard, mobile and dark theme with disposable observations')
 p.add_argument('--without-js',action='store_true',help='Verify native connection/disconnection with browser JavaScript disabled')
 p.add_argument('--allow-disposable-writes',action='store_true',required=True)
 a=p.parse_args(); site=a.site.resolve(); a.output.mkdir(parents=True,exist_ok=True)
@@ -160,6 +162,16 @@ try:
         code=page.locator('#pairing-code').input_value()
         check(bool(re.fullmatch('[a-f0-9]{64}',code)),'native administrator issues temporary code')
         check(page.locator('#central-address').input_value()==base,'central URL detected automatically')
+        check(page.locator('#pairing-code').get_attribute('type')=='password','central masks the temporary code')
+        if not a.without_js:
+            page.get_by_role('button',name='Mostrar',exact=True).click()
+            check(page.locator('#pairing-code').get_attribute('type')=='text','central can reveal the code')
+            page.get_by_role('button',name='Ocultar',exact=True).click()
+            page.evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async(value)=>{window.nwmTestClipboard=value}}})")
+            page.get_by_role('button',name='Copiar código',exact=True).click()
+            check(page.evaluate('window.nwmTestClipboard')==code,'central copies the exact code through a mocked clipboard')
+            page.get_by_role('button',name='Copiar dirección',exact=True).click()
+            check(page.evaluate('window.nwmTestClipboard')==base,'central copies the detected address')
         page.screenshot(path=str(a.output/'central-desktop.png'),full_page=True)
         page.goto(connector); page.wait_for_load_state('networkidle')
         page.screenshot(path=str(a.output/'connector-setup-desktop.png'),full_page=True)
@@ -212,11 +224,31 @@ try:
             page.wait_for_load_state('networkidle')
             check(not page.locator('#jform_params_site_id').is_visible() and not page.locator('#jform_params_token_hash').is_visible(),'plugin keeps inventory identity fields out of the user interface')
             page.locator('#toolbar-apply button').click(); page.wait_for_load_state('networkidle')
-            page.goto(central); page.get_by_role('button',name='Check Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
-            check(page.get_by_role('heading',name='Software and runtime',exact=True).count()==1,'saving advanced plugin settings preserves inventory connection')
+            page.goto(central); page.get_by_role('button',name='Ver inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+            check(page.get_by_role('heading',name='Software y entorno',exact=True).count()==1,'saving advanced plugin settings preserves inventory connection')
+            page.locator('#nwm-extension-search').fill('nwm-no-such-extension')
+            check(page.locator('[data-nwm-extension]:visible').count()==0 and page.locator('[data-nwm-no-extensions]').is_visible(),'extension search shows an explicit empty result')
+            page.locator('#nwm-extension-search').fill('nicode')
+            check(page.locator('[data-nwm-extension]:visible').count()>=4,'extension search finds installed product pieces')
+            page.locator('#nwm-extension-search').fill('')
+            for width in [1440,390,320]:
+                page.set_viewport_size({'width':width,'height':1000})
+                check(page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'{width}: inventory fits the viewport with an explicit scrollable table')
+            page.set_viewport_size({'width':1440,'height':1000})
+            page.locator('.nwm-inventory').screenshot(path=str(a.output/'inventory-desktop.png'))
+        if a.central_design:
+            from browser_dashboard import exercise_dashboard
+            def dashboard_fixture(action):
+                r=subprocess.run(php+[str(Path(__file__).with_name('browser_fixture.php')),str(site),'--allow-disposable-writes',action],capture_output=True,text=True,timeout=30,creationflags=flags)
+                if r.returncode: raise RuntimeError('Dashboard fixture failed: '+r.stderr[:1000])
+            try:
+                dashboard_fixture('seed')
+                exercise_dashboard(page,central,a.output,check,not a.without_js)
+            finally:
+                dashboard_fixture('clean')
         for width in [1440,390]:
             page.set_viewport_size({'width':width,'height':1000}); page.goto(central); page.wait_for_load_state('networkidle')
-            check(page.get_by_text('Self monitored central',exact=True).count()==1,f'{width}: enrolled site appears in dashboard')
+            check(page.get_by_role('heading',name='Self monitored central',exact=True).count()==1,f'{width}: enrolled site appears in dashboard')
             check(page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'{width}: central no horizontal overflow')
             if width==390: page.screenshot(path=str(a.output/'central-mobile.png'),full_page=True)
             page.goto(connector); page.wait_for_load_state('networkidle')
@@ -229,10 +261,13 @@ try:
         page.locator('.nwm-management > summary').press('Enter')
         page.locator('input[name=confirmed]').check(); page.get_by_role('button',name='Desconectar',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_role('heading',name='Conectar este sitio',exact=True).count()==1,'browser disconnect revokes local access')
-        page.goto(central); page.get_by_role('button',name='Check Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+        page.goto(central); page.get_by_role('button',name='Ver inventario de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
         check(page.get_by_text('connector_unavailable',exact=False).count()>0,'central sees revocation on next inventory check')
-        page.get_by_role('button',name='Remove Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
-        check(page.get_by_role('cell',name='Self monitored central',exact=True).count()==0,'browser removes central registration independently')
+        page.locator('.nwm-site-details > summary').click()
+        page.locator('.nwm-remove > summary').click()
+        page.locator('.nwm-remove input[name=confirmed]').check()
+        page.get_by_role('button',name='Eliminar registro de Self monitored central',exact=True).click(); page.wait_for_load_state('networkidle')
+        check(page.locator('[data-nwm-site]').count()==0,'browser removes central registration independently')
         (a.output/'network.json').write_text(json.dumps(network,indent=2),encoding='utf-8')
         failed_assets=[r for r in network if re.search(r'\.(css|js)(?:\?|$)',r['url'])]
         for resource in failed_assets:
@@ -243,6 +278,13 @@ try:
         check(not [r for r in failed_assets if r.get('status',200)>=400],'native CSS and JavaScript resources exist')
         check(not errors,'no browser JavaScript errors: '+repr(errors))
         browser.close()
+    if a.maintenance_tests:
+        env=os.environ.copy();env['PHPRC']=str(ini)
+        for name,extra in [('backup_roles_http',['--joomla',str(site)]),('backup_admin_http',['--site',str(site),'--browser-output',str(a.output/'maintenance')])]:
+            result=subprocess.run([sys.executable,str(Path(__file__).with_name(name+'.py')),'--base-url',base,'--php',str(a.php),'--certificate',str(a.certificate),'--allow-disposable-writes',*extra],input=json.dumps(credentials),text=True,encoding='utf-8',errors='replace',capture_output=True,timeout=120,creationflags=flags,env=env)
+            (a.output/(name+'.log')).write_text(result.stdout+'\n'+result.stderr,encoding='utf-8')
+            if result.returncode: raise RuntimeError('Maintenance fixture failed: '+name+'; see private log')
+            (a.output/(name+'.json')).write_text(json.dumps(json.loads(result.stdout),indent=2),encoding='utf-8')
     report={'passed':len(checks),'checks':checks,'transport':'https' if a.remote_transport else 'local','test_only_overrides':'loopback and local CA for remote mode; forbidden DNS for self mode; installed files restored'}
     (a.output/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps(report,indent=2))

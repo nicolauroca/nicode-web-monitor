@@ -3,50 +3,23 @@
 defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Uri\Uri;
-$monitoring=$monitoring??['state'=>'pending','last'=>null,'next'=>null,'tasks'=>0];
-$monitorLabels=['pending'=>'Pendiente de preparar','paused'=>'Comprobaciones pausadas','permissions'=>'Revisar permisos del usuario de monitorización',
-    'waiting'=>'Tarea preparada; esperando la primera ejecución automática','late'=>'Sin ejecuciones recientes: revisa el disparador del hosting',
-    'running'=>'Comprobaciones automáticas verificadas recientemente','failed'=>'La última ejecución encontró errores; revisa los sitios y la tarea'];
 ?>
-<p><span class="badge bg-warning text-dark">Versión de desarrollo · 1.1.1-dev.3 · No definitiva</span></p>
-<?php if ($user->authorise('core.manage','com_nicodewebmonitor') && \Joomla\CMS\Component\ComponentHelper::isInstalled('com_nicodeconnector')): ?><p><a href="index.php?option=com_nicodeconnector">Nicode Web Monitor — Conector de este Joomla</a></p><?php endif; ?>
-<section aria-label="Comprobaciones automáticas" class="card card-body mb-4">
-<h2>Comprobaciones automáticas</h2>
-<p role="status"><strong><?= $escape($monitorLabels[$monitoring['state']]??'Revisar programación') ?></strong></p>
-<p>Última ejecución (UTC): <?= $escape($monitoring['last']??'Todavía no se ha ejecutado') ?>.<br>
-Próxima ejecución prevista (UTC): <?= $escape($monitoring['next']??'Pendiente') ?>.</p>
-<?php if ($monitoring['tasks']>1): ?><p role="alert">Hay varias tareas Nicode. Revisa la programación para evitar comprobaciones repetidas.</p><?php endif; ?>
-<?php if ($user->authorise('core.admin','com_nicodewebmonitor')): ?>
-<?php if ($monitoring['state']==='pending'): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="setupMonitoring">
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Preparar comprobaciones automáticas</button></form>
-<?php endif; ?>
-<details><summary>Configurar la ejecución en mi hosting</summary>
-<p>La tarea consulta hasta cinco sitios cada cinco minutos. Joomla puede ejecutarla cuando recibe visitas. Para mantener los intervalos aunque no haya visitas, configura una tarea cron en el hosting central, cada minuto:</p>
-<pre><code><?= $escape('php '.JPATH_ROOT.'/cli/joomla.php scheduler:run --all') ?></code></pre>
-<p>Selecciona en el hosting la misma versión de PHP que utiliza este Joomla. Si utilizas cron, desactiva el programador por visitas en las opciones de tareas. No hace falta configurar un cron en cada sitio supervisado.</p>
-<p><a href="index.php?option=com_scheduler&amp;view=tasks">Revisar tareas de Joomla</a> · <a href="index.php?option=com_config&amp;view=component&amp;component=com_scheduler">Opciones del programador</a></p>
-</details>
-<?php endif; ?></section>
-<?php if ($user->authorise('core.create','com_nicodewebmonitor')): ?>
-<section aria-label="Añadir sitio" class="card card-body mb-4">
-<h2>Añadir sitio</h2>
-<p>Instala el paquete Nicode Web Monitor — Conector en el Joomla que quieras supervisar. Después abre allí Componentes → Nicode Web Monitor — Conector.</p>
-<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
-<label for="new-site-name">Nombre para identificar el sitio</label><input id="new-site-name" name="label" class="form-control mb-3" maxlength="120" required>
-<input type="hidden" name="task" value="issueCode"><?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Generar código de vinculación</button>
+<?php if($canCreate): ?>
+<details id="nwm-add-site" class="nwm-panel nwm-onboarding" <?= !$sites||!empty($pairingCode)?'open':'' ?>>
+<summary><?= $icon('plus') ?><span><h2>Añadir sitio</h2><small>Instala el Conector, genera un código y vincula el sitio</small></span><?= $icon('chevron') ?></summary>
+<div class="nwm-onboarding-body">
+<ol class="nwm-steps"><li><span>1</span><div><strong>Instala el Conector</strong><p>En el Joomla que vas a supervisar, instala el paquete Nicode Web Monitor — Conector y abre su componente.</p></div></li><li><span>2</span><div><strong>Genera un código aquí</strong><p>Asigna un nombre reconocible al sitio. No necesitas introducir credenciales ni datos técnicos.</p></div></li><li><span>3</span><div><strong>Conecta desde el otro sitio</strong><p>Copia la dirección de este central y el código en el Conector. El sitio aparecerá aquí tras verificar su inventario.</p></div></li></ol>
+<form class="nwm-issue-form" method="post" action="index.php?option=com_nicodewebmonitor#nwm-add-site" autocomplete="off" data-nwm-submit>
+<div><label for="new-site-name">Nombre para identificar el sitio</label><input id="new-site-name" name="label" maxlength="120" required placeholder="Por ejemplo, Web corporativa" aria-describedby="nwm-name-help"><p id="nwm-name-help" class="nwm-field-help">Este nombre solo identifica el sitio en el panel.</p></div>
+<input type="hidden" name="task" value="issueCode"><?= HTMLHelper::_('form.token') ?><button class="nwm-button nwm-button--primary" type="submit"><span data-nwm-button-label>Generar código de vinculación</span><?= $icon('arrow') ?></button>
 </form>
-<?php if (!empty($pairingCode)): ?>
-<div role="status" class="alert alert-info mt-3">
-<p>En el conector del sitio, introduce estos dos datos y pulsa «Conectar». El código caduca en diez minutos; generar otro sustituye al anterior.</p>
-<label for="central-address">Dirección de este central</label><input id="central-address" class="form-control mb-3" value="<?= $escape(rtrim(Uri::root(),'/')) ?>" readonly>
-<label for="pairing-code">Código de vinculación</label><input id="pairing-code" class="form-control" value="<?= $escape($pairingCode) ?>" readonly autocomplete="off" spellcheck="false">
-<p>El código permite vincular un solo sitio. Trátalo como una contraseña temporal. Al volver al panel verás el sitio y su primer inventario.</p>
-</div>
+<?php if(!empty($pairingCode)): ?>
+<section class="nwm-pairing" aria-label="Datos de vinculación"><div class="nwm-pairing-title"><?= $icon('shield') ?><div><h3>Todo listo para vincular</h3><p>Introduce estos dos datos en el Conector y pulsa «Conectar».</p></div><span class="nwm-badge nwm-badge--warning">Caduca en 10 minutos</span></div>
+<label for="central-address">Dirección de este central</label><div class="nwm-copy-field"><input id="central-address" value="<?= $escape(rtrim(Uri::root(),'/')) ?>" readonly><button class="nwm-button nwm-button--secondary" type="button" data-nwm-copy="central-address" hidden><?= $icon('copy') ?><span>Copiar dirección</span></button></div>
+<label for="pairing-code">Código de vinculación</label><div class="nwm-copy-field"><input id="pairing-code" type="password" value="<?= $escape($pairingCode) ?>" readonly autocomplete="off" spellcheck="false"><button class="nwm-button nwm-button--quiet" type="button" data-nwm-reveal="pairing-code" aria-controls="pairing-code" aria-pressed="false" hidden>Mostrar</button><button class="nwm-button nwm-button--secondary" type="button" data-nwm-copy="pairing-code" hidden><?= $icon('copy') ?><span>Copiar código</span></button></div>
+<noscript><p>Código para copiar: <code class="nwm-code-fallback"><?= $escape($pairingCode) ?></code></p></noscript>
+<p class="nwm-field-help">Sirve para un único sitio. Trátalo como una contraseña temporal. Generar otro código sustituye al anterior de tu usuario.</p><p role="status" class="nwm-copy-status" data-nwm-copy-status aria-live="polite"></p></section>
 <?php endif; ?>
-<details class="mt-3"><summary>Monitorizar también este Joomla central</summary>
-<p>Instala aquí el paquete Nicode Web Monitor — Conector y vincúlalo con un código de este mismo panel. Central y conector pueden convivir y también conectarse a otro central.</p>
-<?php if (\Joomla\CMS\Component\ComponentHelper::isInstalled('com_nicodeconnector')): ?><p><a href="index.php?option=com_nicodeconnector">Abrir Nicode Web Monitor — Conector en este Joomla</a></p><?php endif; ?>
-</details>
-</section>
+<details class="nwm-local-help"><summary>¿Quieres supervisar también este Joomla central?</summary><p>Instala aquí el paquete Conector y vincúlalo con un código de este panel. Central y Conector pueden convivir; este Joomla también puede conectarse a otro central.</p><?php if($hasConnector): ?><a href="index.php?option=com_nicodeconnector">Abrir el Conector de este Joomla<?= $icon('arrow') ?></a><?php endif; ?></details>
+</div></details>
 <?php endif; ?>

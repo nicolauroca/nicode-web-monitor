@@ -1,7 +1,7 @@
-Nicode Web Monitor 1.1.1-dev.3 — interfaz del Conector
+Nicode Web Monitor 1.1.1-dev.4 — interfaz del Conector
 
-Alcance de esta revisión
-Rediseño de la presentación del componente Conector: connection.php, connector.css
+Diseño vigente
+Presentación del componente Conector: connection.php, connector.css
 y connector.js, dentro de administrator/tmpl. Los controladores, servicios,
 credenciales, transportes, permisos y esquema no cambian. Los dos paquetes conservan
 una versión coherente porque el protocolo de vinculación comprueba sus versiones.

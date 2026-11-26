@@ -3,15 +3,17 @@ Package: Nicode.joomla.webmonitor
 """
 import argparse, http.cookiejar, json, re, subprocess, urllib.request, urllib.parse, urllib.error
 from pathlib import Path
+import ssl
 
 p=argparse.ArgumentParser()
+p.add_argument('--certificate',type=Path,help='Explicit local CA for disposable HTTPS')
 p.add_argument('--php',required=True); p.add_argument('--joomla',required=True)
 p.add_argument('--base-url',required=True)
 p.add_argument('--allow-disposable-writes',required=True,action='store_true')
 a=p.parse_args()
 parts=urllib.parse.urlsplit(a.base_url)
-if parts.scheme!='http' or parts.hostname not in ('127.0.0.1','localhost') or parts.username or parts.password or parts.query or parts.fragment:
-    raise SystemExit('Disposable loopback HTTP only')
+if parts.scheme not in ['http','https'] or parts.hostname not in ('127.0.0.1','localhost') or parts.username or parts.password or parts.query or parts.fragment:
+    raise SystemExit('Disposable loopback HTTP(S) only')
 base=a.base_url.rstrip('/')+'/administrator/index.php'
 url=base+'?option=com_nicodewebmonitor'; checks=[]
 def fixture(action, **data):
@@ -23,7 +25,11 @@ def check(ok,name):
     checks.append(name)
 def csrf(html): return re.search(r'name="([a-f0-9]{32})" value="1"',html).group(1)
 def client():
-    op=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    handlers=[urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())]
+    if parts.scheme=='https':
+        if not a.certificate: raise SystemExit('Explicit local CA required for HTTPS')
+        handlers.append(urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=str(a.certificate))))
+    op=urllib.request.build_opener(*handlers)
     def request(target=url,data=None):
         try:
             with op.open(target,None if data is None else urllib.parse.urlencode(data).encode(),timeout=15) as r: return r.status,r.read().decode()
@@ -34,10 +40,10 @@ try:
     for role in ('reader','operator'):
         request=client(); _,html=request(base); u=f['users'][role]
         request(base,{'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf(html):1})
-        status,html=request(); check(status==200 and '<h1>Nicode Web Monitor</h1>' in html,role+' authenticated component access')
+        status,html=request(); check(status==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated component access')
         token=csrf(html); before=fixture('snapshot')
-        check(('aria-label="Remote backups"' in html)==(role=='operator'),role+' backup controls visibility')
-        check('Maintenance history (latest 50 observations)' not in html,role+' no invented history for missing operations')
+        check(('aria-label="Copias de seguridad"' in html)==(role=='operator'),role+' backup controls visibility')
+        check('Historial de mantenimiento (últimas 50 observaciones)' not in html,role+' no invented history for missing operations')
         tasks=['backupEnroll'] if role=='operator' else ['backupEnroll','backupBegin','backupAdvance','backupContinue','backupStatus']
         for task in tasks:
             status,_=request(data={'task':task,'id':f['site'],'operation':'backup-'+'a'*32,'confirmed':'1','backup_credential':'b'*64,token:1})
@@ -48,9 +54,9 @@ try:
         check('Backup action not confirmed' in html and fixture('snapshot')==before,'operator begin requires confirmation without effects')
         status,html=request(data={'task':'backupBegin','id':f['site'],'confirmed':'1',token:1})
         cards=re.findall(r'<article class="nwm-backup".*?</article>',html,re.S)
-        card=next(x for x in cards if 'Site #'+str(f['site'])+';' in x)
+        card=next(x for x in cards if 'Sitio #'+str(f['site'])+';' in x)
         operation=re.search(r'backup-[a-f0-9]{32}',card).group()
-        check('state: ready' in card,'operator creates ready operation')
+        check('estado: ready' in card,'operator creates ready operation')
         before=fixture('snapshot')
         for payload in [dict(expected_sequence='0'), dict(confirmed='1'), dict(confirmed='1',expected_sequence='1')]:
             status,body=request(data={'task':'backupContinue','operation':operation,token:1,**payload})
@@ -60,8 +66,8 @@ try:
         status,html=request(data={'task':'backupAdvance','operation':operation,token:1})
         check('Backup action not confirmed' in html and fixture('snapshot')==before,'operator advance requires confirmation')
         status,html=request(data={'task':'backupAdvance','operation':operation,'confirmed':'1',token:1})
-        check('state: uncertain' in html,'rejected transport persists uncertain journal through real dispatcher')
-        check('Maintenance history (latest 50 observations)' in html and re.search(r'UTC.</p>\s*<ol>.*?uncertain.*?ready',html,re.S), 'HTTP history renders prior ready and uncertain observations')
+        check('estado: uncertain' in html,'rejected transport persists uncertain journal through real dispatcher')
+        check('Historial de mantenimiento (últimas 50 observaciones)' in html and re.search(r'UTC.</p>\s*<ol>.*?uncertain.*?ready',html,re.S), 'HTTP history renders prior ready and uncertain observations')
         before=fixture('snapshot')
         request(data={'task':'backupAdvance','operation':operation,'confirmed':'1',token:1})
         check(fixture('snapshot')==before,'uncertain operation blocks blind advance')

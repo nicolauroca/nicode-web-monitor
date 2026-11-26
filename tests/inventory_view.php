@@ -27,15 +27,15 @@ $html=renderInventory();
 $checks=[
     'software_version'=>str_contains($html,'6.1.4'),
     'escaped_remote_name'=>!str_contains($html,'<script>') && str_contains($html,'&lt;script&gt;'),
-    'unknown_values'=>str_contains($html,'Unknown / unavailable') && !str_contains($html,'Array'),
+    'unknown_values'=>str_contains($html,'No disponible') && !str_contains($html,'Array'),
     'extension_version'=>str_contains($html,'0.2.0-dev'),
     'disabled_extension'=>str_contains($html,'<td>No</td>'),
-    'package_relation'=>str_contains($html,'<td>456</td>') && str_contains($html,'<td>123</td>') && str_contains($html,'<td>None</td>'),
+    'package_relation'=>str_contains($html,'<td>456</td>') && str_contains($html,'<td>123</td>') && str_contains($html,'<td>Ninguno</td>'),
 ];
 $inspection['inventory']['sections']['extensions']=['status'=>'error','data'=>null];
-$checks['unavailable_extensions']=str_contains(renderInventory(),'Extension inventory unavailable.');
+$checks['unavailable_extensions']=str_contains(renderInventory(),'Inventario de extensiones no disponible.');
 $inspection=['ok'=>false,'error'=>'access_denied'];
 $html=renderInventory();
-$checks['failure_without_stale_inventory']=str_contains($html,'access_denied') && !str_contains($html,'Installed extensions');
+$checks['failure_without_stale_inventory']=str_contains($html,'access_denied') && !str_contains($html,'Extensiones instaladas');
 if (in_array(false,$checks,true)) { throw new RuntimeException('View checks failed'); }
 echo json_encode(['passed'=>count($checks),'checks'=>array_keys($checks)],JSON_PRETTY_PRINT).PHP_EOL;

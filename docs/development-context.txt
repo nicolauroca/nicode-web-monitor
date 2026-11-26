@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.3 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.4 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
@@ -30,7 +30,7 @@ Paquetes Central/Connector sin piezas compartidas entre propietarios. Código de
 Credencial e identidad generadas localmente. Confirmación mediante inventario antes
 del alta. Recuperación del recibo ante respuesta perdida, ligada a petición exacta.
 Estado pendiente cifrado y revocación local desde el componente. Sin configuración
-manual de hashes de inventario. Mantenimiento agrupado bajo opciones avanzadas.
+manual de hashes de inventario. Mantenimiento agrupado en una sección independiente y desplegable.
 Para el propio Joomla central se usa inventario local en proceso, con identidad,
 credencial y revocación comprobadas. No depender de DNS ni peticiones HTTPS a sí
 mismo. El transporte local solo se selecciona dentro del código instalado, nunca
@@ -41,6 +41,10 @@ contextual y gestión de desconexión separada. Los detalles de diseño y accesi
 están en connector-ui.txt. El estado Conectado acredita la vinculación; no inventar
 una última comprobación o salud en vivo a partir de connected_at. Los formularios
 siguen funcionando sin JavaScript. No sustituirlos por llamadas AJAX al rediseñar.
+La UI del Central prioriza cifras reales, sitios con búsqueda/filtros e inventario
+legible. Alta guiada, programación y mantenimiento tienen secciones propias.
+central-ui.txt documenta estructura, accesibilidad, confirmaciones y pruebas.
+No convertir los estados de inventario en uptime ni disponibilidad pública.
 Tarea nativa creada idempotentemente desde una acción administrativa, respetando
 pausas y personalizaciones. El estado del scheduler procede de ejecuciones reales.
 
@@ -62,8 +66,7 @@ no en docs. No añadir validaciones históricas como evidencia de esta versión.
 Trabajo pendiente antes de beta final
 Validación del propietario en sus hostings, certificados y configuraciones proxy;
 diagnóstico y recuperación guiada de cambios de IP; correo en un buzón externo;
-cron real del hosting; matrices PHP/base de datos/plataforma; localización completa
-de la UI anterior; asistentes de mantenimiento que conserven las precondiciones
+cron real del hosting; matrices PHP/base de datos/plataforma; localización de mensajes internos y opciones de Joomla; asistentes de mantenimiento que conserven las precondiciones
 reales; pruebas funcionales y de recuperación tras actualizaciones. Definir la
 política de actualizaciones y compatibilidad al fijar la beta final.
 La vinculación sencilla no significa copias, actualizaciones, disponibilidad pública

@@ -1,0 +1,64 @@
+Nicode Web Monitor 1.1.1-dev.4 — interfaz del Central
+
+Alcance
+Rediseño de las vistas y recursos locales del componente Central. No cambia el
+dispatcher, servicios, transportes, credenciales, ACL, esquema ni instalador.
+registry.php compone las vistas ui, monitoring, inventory, onboarding y maintenance.
+central.css comparte la identidad visual del Conector. central.js es una mejora
+progresiva de presentación; backup-runner.js conserva su ejecución y reconciliación,
+con textos traducidos. Los dos paquetes llevan la misma versión de desarrollo.
+
+Jerarquía del panel
+- Cabecera Nicode Web Monitor — Central, aviso de desarrollo y acceso a Añadir sitio.
+- Navegación a sitios, comprobaciones y mantenimiento según permisos; enlace al
+  Conector de este Joomla si está instalado y el usuario puede abrirlo.
+- Cuatro cifras procedentes del registro real: total, inventario reciente completo,
+  requieren revisión y sin comprobar. Revisión agrupa parcial, fallo, datos antiguos
+  y reloj no fiable. Reciente conserva el criterio del servidor de 24 horas, con
+  su tolerancia existente de cinco minutos ante diferencias de reloj.
+- Programación: estado y fechas reales de la tarea. Preparar no acredita ejecución.
+  La configuración del hosting y los enlaces del programador quedan desplegables.
+- Sitios en tarjetas: nombre, URL, estado, última comprobación y transporte. La
+  consulta manual es un POST nativo. Historial, alertas, avisos de correo y detalles
+  técnicos se despliegan por sitio. Eliminar registro exige marcar una confirmación
+  en el navegador; la autorización sigue en el servidor y no revoca el Conector.
+- Alta en tres pasos, abierta cuando no hay sitios o se acaba de generar un código.
+  Solo pide el nombre. La dirección se detecta; el código temporal se oculta de
+  entrada y puede mostrarse/copiarse. Caduca a los diez minutos desde su emisión;
+  no se simula un temporizador. Generar otro sustituye al anterior del mismo usuario.
+- Mantenimiento independiente: copias, actualizaciones de extensiones y Joomla.
+  Formularios, permisos, campos, CSRF, credenciales separadas y confirmaciones
+  permanecen. Las operaciones inciertas requieren consulta, sin reintento ciego.
+
+Inventario
+Tras la consulta se muestra el resultado con ancla y foco, fecha de recogida y
+recepción UTC, software/entorno, cobertura por sección y extensiones. Un fallo no
+muestra un inventario anterior como si fuera actual. Los valores no disponibles
+quedan explícitos, incluso ante valores remotos malformados. Todo dato no confiable
+se escapa como texto. La tabla tiene desplazamiento horizontal explícito y foco
+de teclado, sin ocultar columnas. No se deduce disponibilidad pública ni uptime.
+
+Mejoras progresivas y accesibilidad
+Búsqueda por nombre/URL, filtro de estado y enlaces de cifras combinables, contador
+de resultados y estado vacío con opción de limpiar. La lista de extensiones tiene
+búsqueda propia. Sin JS aparecen todas las tarjetas y extensiones, funcionan los
+POST y desplegables nativos. La ejecución por lotes conserva su requisito de JS;
+siguen disponibles los pasos individuales. Copiar necesita el portapapeles del
+navegador: si no está disponible, se selecciona el texto para copiar manualmente.
+Sin JS se ofrece el código en texto seleccionable. No se guarda en almacenamiento
+del navegador ni se añaden peticiones AJAX para inventario, conexión o programación.
+El foco, etiquetas, estados escritos además de color, tamaños móviles y tema oscuro
+se contemplan. Los SVG y recursos son locales, con versión para invalidar cachés.
+La hoja se limita a .nwm-central y respeta reducción de movimiento. No se afirma
+una auditoría WCAG completa ni compatibilidad con cualquier plantilla administrativa.
+
+Pruebas
+onboarding_http.py --central-design agrega observaciones sintéticas mediante
+browser_fixture.php: fallida, parcial, recuperada, antigua y sin comprobar. Verifica
+filtros, búsqueda, historial por teclado, acciones visibles en 1440/390/320 px,
+tema oscuro y acceso al alta. El fixture se limpia en finally. Puede combinarse
+con --remote-transport y --without-js. El portapapeles se simula en el navegador.
+inventory_view.php comprueba salida segura y valores malformados. Los tests de
+roles y formularios de mantenimiento mantienen sus comprobaciones de permisos,
+CSRF y confirmación con las etiquetas actualizadas. La ejecución y sus límites
+vigentes están en verification.txt. No guardar capturas o códigos reales en Git.

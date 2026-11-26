@@ -2,221 +2,64 @@
 /** @license GPL-2.0-or-later */
 defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
-$stateLabels = ['never_checked'=>'Never checked', 'recent_complete'=>'Recent complete inventory', 'recent_partial'=>'Recent partial inventory', 'stale'=>'Observation older than 24 hours', 'check_failed'=>'Latest check failed', 'clock_uncertain'=>'Observation time uncertain'];
-$escape = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-if ($canBackup ?? false) {
-    $this->app->getDocument()->getWebAssetManager()->registerAndUseScript('nwm.backup.runner',
-        \Joomla\CMS\Uri\Uri::root() . 'administrator/components/com_nicodewebmonitor/tmpl/backup-runner.js', [], ['defer'=>true]);
+require __DIR__.'/ui.php';
+$uiVersion='1.1.1-dev.4';
+$counts=['recent'=>0,'review'=>0,'never'=>0];
+foreach($sites as $site){$counts[($states[$site['check_state']??'never_checked']??['Estado desconocido','warning','review'])[2]]++;}
+$canCreate=$user->authorise('core.create','com_nicodewebmonitor');
+$canAdmin=$user->authorise('core.admin','com_nicodewebmonitor');
+$canDelete=$user->authorise('core.delete','com_nicodewebmonitor');
+$canBackup=$canBackup??false;$canUpdate=$canUpdate??false;$canCoreUpdate=$canCoreUpdate??false;
+$monitoring=$monitoring??['state'=>'pending','last'=>null,'next'=>null,'tasks'=>0];
+$hasConnector=false;
+if(isset($this) && isset($this->app)){
+    $assets=$this->app->getDocument()->getWebAssetManager();
+    $base=\Joomla\CMS\Uri\Uri::root().'administrator/components/com_nicodewebmonitor/tmpl/';
+    $assets->registerAndUseStyle('nwm.central',$base.'central.css',['version'=>$uiVersion]);
+    $assets->registerAndUseScript('nwm.central',$base.'central.js',['version'=>$uiVersion],['defer'=>true]);
+    if($canBackup)$assets->registerAndUseScript('nwm.backup.runner',$base.'backup-runner.js',['version'=>$uiVersion],['defer'=>true]);
+    $hasConnector=\Joomla\CMS\Component\ComponentHelper::isInstalled('com_nicodeconnector') && $user->authorise('core.manage','com_nicodeconnector');
 }
 ?>
-<style>
-.nwm-sites td { overflow-wrap: anywhere; vertical-align: top; }
-.nwm-sites .btn { margin-bottom: .5rem; }
-@media (max-width: 991.98px) {
-    .nwm-sites, .nwm-sites tbody, .nwm-sites tr, .nwm-sites td { display: block; width: 100%; }
-    .nwm-sites thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-    .nwm-sites tr { margin-bottom: 1rem; border: 1px solid var(--border-color, #adb5bd); }
-    .nwm-sites td { border: 0; padding: .75rem; }
-    .nwm-sites td::before { content: attr(data-label); display: block; font-weight: bold; margin-bottom: .25rem; }
-    .nwm-sites caption { display: block; }
-    .nwm-sites .btn { width: 100%; }
-}
-</style>
-<h1>Nicode Web Monitor — Central</h1>
+<div class="nwm-central">
+<header class="nwm-central-header">
+    <span class="nwm-brand-mark"><?= $icon('monitor') ?></span><div class="nwm-header-copy"><p class="nwm-eyebrow">Nicode Web Monitor</p><h1 aria-label="Nicode Web Monitor — Central">Central</h1><p>Una visión clara del inventario de tus sitios Joomla.</p></div>
+    <div class="nwm-header-end"><span class="nwm-release">En desarrollo <small><?= $escape($uiVersion) ?> · No definitiva</small></span><?php if($canCreate): ?><a class="nwm-button nwm-button--light" href="#nwm-add-site" data-nwm-open="nwm-add-site"><?= $icon('plus') ?>Añadir sitio</a><?php endif; ?></div>
+</header>
+<nav class="nwm-nav" aria-label="Secciones del panel"><a href="#nwm-sites"><?= $icon('server') ?>Sitios</a><a href="#nwm-monitoring"><?= $icon('clock') ?>Comprobaciones</a><?php if($canBackup||$canUpdate||$canCoreUpdate): ?><a href="#nwm-maintenance" data-nwm-open="nwm-maintenance"><?= $icon('settings') ?>Mantenimiento</a><?php endif; ?><?php if($hasConnector): ?><a class="nwm-nav-connector" href="index.php?option=com_nicodeconnector">Conector de este Joomla<?= $icon('arrow') ?></a><?php endif; ?></nav>
+<section class="nwm-metrics" aria-label="Resumen de inventario">
+<?php foreach([['all','Sitios registrados',count($sites),'server'],['recent','Inventario reciente',$counts['recent'],'check'],['review','Requieren revisión',$counts['review'],'alert'],['never','Sin comprobar',$counts['never'],'clock']] as [$group,$label,$count,$symbol]): ?>
+<a class="nwm-metric nwm-metric--<?= $group ?>" href="#nwm-sites" data-nwm-filter="<?= $group ?>"><span class="nwm-metric-icon"><?= $icon($symbol) ?></span><span><strong><?= (int)$count ?></strong><span><?= $label ?></span></span></a>
+<?php endforeach; ?>
+</section>
+<?php require __DIR__.'/monitoring.php'; ?>
+<?php if(isset($inspection)): require __DIR__.'/inventory.php'; endif; ?>
+
+<section id="nwm-sites" class="nwm-sites-section" aria-label="Sitios registrados">
+<div class="nwm-section-heading"><div><p class="nwm-section-label">Tu inventario centralizado</p><h2>Sitios registrados <span class="nwm-count"><?= count($sites) ?></span></h2></div><span class="nwm-utc-note">Fechas en UTC</span></div>
+<p class="nwm-section-intro">Revisa la última observación de cada sitio o solicita un inventario ahora. Estos estados no acreditan la disponibilidad pública de la web.</p>
+<?php if($sites): ?>
+<div class="nwm-site-filters" hidden data-nwm-filter-controls><div class="nwm-search"><?= $icon('search') ?><label class="nwm-visually-hidden" for="nwm-site-search">Buscar sitios por nombre o URL</label><input id="nwm-site-search" type="search" placeholder="Buscar por nombre o dirección…" autocomplete="off"></div><label class="nwm-visually-hidden" for="nwm-site-state">Filtrar por estado</label><select id="nwm-site-state"><option value="all">Todos los estados</option><option value="review">Requieren revisión</option><option value="recent">Inventario reciente</option><option value="never">Sin comprobar</option></select><button class="nwm-button nwm-button--quiet" type="button" data-nwm-clear-filters>Limpiar</button><span class="nwm-filter-count" role="status" data-nwm-filter-count><?= count($sites) ?> sitios</span></div>
+<div class="nwm-site-list">
+<?php foreach($sites as $site): $state=$states[$site['check_state']??'never_checked']??['Estado desconocido','warning','review'];$last=$site['checks'][0]??null; ?>
+<article class="nwm-site" data-nwm-site data-state="<?= $escape($state[2]) ?>" data-search="<?= $escape($site['label'].' '.$site['base_url']) ?>">
+    <div class="nwm-site-main"><span class="nwm-site-icon"><?= $icon('server') ?></span><div class="nwm-site-identity"><h3><?= $escape($site['label']) ?></h3><p><?= $escape($site['base_url']) ?></p></div><span class="nwm-badge nwm-badge--<?= $state[1] ?>"><?= $icon($state[1]==='success'?'check':($state[1]==='neutral'?'clock':'alert')) ?><?= $escape($state[0]) ?></span></div>
+    <div class="nwm-site-overview"><div><span class="nwm-data-label">Última comprobación</span><strong><?= $last ? $escape($date($last['checked_at'])) : 'Todavía no realizada' ?></strong></div><div><span class="nwm-data-label">Conexión</span><strong><?= ($site['connection_type']??'https')==='local'?'Este mismo Joomla':'HTTPS remoto' ?></strong></div><form method="post" action="index.php?option=com_nicodewebmonitor#nwm-inventory" data-nwm-submit><input type="hidden" name="task" value="inspect"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="nwm-button nwm-button--primary" type="submit" aria-label="Ver inventario de <?= $escape($site['label']) ?>"><span data-nwm-button-label>Ver inventario</span><?= $icon('arrow') ?></button></form></div>
+    <details class="nwm-site-details"><summary>Historial y opciones<?= $icon('chevron') ?></summary><div class="nwm-site-details-body">
+        <div class="nwm-details-grid"><section><h4>Comprobaciones recientes</h4><?php if(!empty($site['checks'])): ?><ol class="nwm-timeline"><?php foreach($site['checks'] as $check): ?><li><time><?= $escape($date($check['checked_at'])) ?></time><span><?= $escape($detailLabels[$check['detail']]??$check['detail']) ?></span></li><?php endforeach; ?></ol><?php else: ?><p>El sitio todavía no tiene comprobaciones guardadas.</p><?php endif; ?></section>
+        <section><h4>Alertas de inventario</h4><p><?= !isset($site['alerts']) ? 'Sin información de alertas.' : ($site['alerts']['active']?'Hay una observación que requiere revisión.':(($site['alerts']['state']??'')==='never_checked'?'A la espera de la primera comprobación.':'Sin alertas activas de inventario.')) ?></p>
+        <?php if(!empty($site['alerts']['transitions'])): ?><details class="nwm-subdetails"><summary>Cambios de estado</summary><ol class="nwm-timeline"><?php foreach($site['alerts']['transitions'] as $event): ?><li><time><?= $escape($date($event['at'])) ?></time><span><?= $escape(($states[$event['from']][0]??$event['from']).' → '.($states[$event['to']][0]??$event['to'])) ?></span><small><?= $escape(['recovered'=>'Recuperación','opened'=>'Alerta detectada','changed'=>'Cambio de estado','baseline'=>'Primera observación'][$event['kind']]??$event['kind']) ?></small></li><?php endforeach; ?></ol></details><?php endif; ?>
+        <?php if(!empty($site['notification'])): $notice=$site['notification']; ?><p class="nwm-notification">Correo: <?= $escape($deliveryLabels[$notice['delivery']]??$notice['delivery']) ?>.<br>Evaluado: <?= $escape($date($notice['evaluated_at'])) ?>.</p><p class="nwm-muted">Aceptación por SMTP no confirma la entrega al buzón.</p>
+        <?php if($canAdmin && in_array($notice['delivery'],['uncertain','not_accepted'],true)): ?><form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="notificationRetry"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>"><label class="nwm-confirm"><input type="checkbox" name="confirmed" value="1" required><span>He comprobado la entrega; otro intento podría duplicar el correo.</span></label><?= HTMLHelper::_('form.token') ?><button class="nwm-button nwm-button--secondary" type="submit">Autorizar otro intento de correo</button></form><?php endif; endif; ?>
+        </section></div>
+        <details class="nwm-subdetails"><summary>Detalles técnicos de conexión</summary><dl class="nwm-tech"><dt>Identidad del conector</dt><dd><?= $escape($site['site_id']) ?></dd><dt>Destino</dt><dd><?= ($site['connection_type']??'https')==='local'?'Inventario local sin peticiones HTTP al propio sitio':$escape($site['address']) ?></dd></dl></details>
+        <?php if($canDelete): ?><details class="nwm-remove"><summary>Eliminar registro</summary><p>Elimina este sitio y su historial del panel. El acceso remoto se revoca por separado desde el Conector.</p><form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="remove"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>"><label class="nwm-confirm"><input type="checkbox" name="confirmed" value="1" required><span>Quiero eliminar el registro de <?= $escape($site['label']) ?> y su historial.</span></label><?= HTMLHelper::_('form.token') ?><button class="nwm-button nwm-button--danger" type="submit" aria-label="Eliminar registro de <?= $escape($site['label']) ?>">Eliminar registro</button></form></details><?php endif; ?>
+    </div></details>
+</article>
+<?php endforeach; ?></div><div class="nwm-empty nwm-empty--filtered" data-nwm-no-results hidden><h3>No hay coincidencias</h3><p>Prueba otro nombre, dirección o estado, o limpia los filtros.</p></div>
+<?php else: ?><div class="nwm-empty"><span><?= $icon('server') ?></span><h3>Tu primer sitio empieza aquí</h3><p>Vincula un Joomla para ver su inventario y seguir sus comprobaciones desde este panel.</p><?php if($canCreate): ?><a class="nwm-button nwm-button--primary" href="#nwm-add-site" data-nwm-open="nwm-add-site"><?= $icon('plus') ?>Añadir el primer sitio</a><?php else: ?><p>Un administrador con permiso para añadir sitios puede completar la vinculación.</p><?php endif; ?></div><?php endif; ?>
+</section>
 <?php require __DIR__.'/onboarding.php'; ?>
-<?php if ($user->authorise('core.admin','com_nicodewebmonitor')): ?>
-<p><a href="index.php?option=com_config&amp;view=component&amp;component=com_nicodewebmonitor">Permissions and email notification settings</a></p>
-<?php endif; ?>
-<p>Check a site to read its inventory now. Check summaries are retained (last 100 per site). Recent means checked and collected within 24 hours. Backups and updates require separately configured connectors and permissions.</p>
-<?php if (isset($inspection)): ?>
-<section aria-label="Inventory result">
-<?php if (($inspection['history_saved'] ?? true) === false): ?><p role="alert">This check could not be saved to history. No retry was made.</p><?php endif; ?>
-<h2>Inventory check for site #<?= (int) $inspectedId ?></h2>
-<?php if (!$inspection['ok']): ?>
-<p role="alert">Inventory unavailable: <?= $escape($inspection['error']) ?>. This does not establish that the website is offline. No retry was made.</p>
-<?php else: $inventory = $inspection['inventory']; ?>
-<p>Collection: <?= $escape($inventory['collected_at']) ?>; received: <?= $escape($inspection['received_at']) ?>. Result: <?= $escape($inventory['status']) ?>. These are point-in-time observations, not a guarantee of current health.</p>
-<table class="table"><caption>Inventory section availability</caption><thead><tr><th scope="col">Section</th><th scope="col">Status</th></tr></thead><tbody>
-<?php foreach (['joomla','runtime','database','extensions','hosting'] as $section): $value=$inventory['sections'][$section]; ?>
-<tr><th scope="row"><?= $escape($section) ?></th><td><?= $escape($value['status']) ?></td></tr>
-<?php endforeach; ?></tbody></table>
-<h3>Software and runtime</h3>
-<dl>
-<?php foreach (['Joomla'=>['joomla','version'], 'PHP'=>['runtime','php_version'], 'PHP runtime'=>['runtime','sapi'], 'Operating system'=>['runtime','os_family'], 'Database'=>['database','version']] as $label=>$path):
-    $section=$inventory['sections'][$path[0]];
-    $detail=$section['status']==='available' ? ($section['data'][$path[1]] ?? null) : null;
-?>
-<dt><?= $escape($label) ?></dt><dd><?= is_scalar($detail) && (string)$detail !== '' ? $escape($detail) : 'Unknown / unavailable' ?></dd>
-<?php endforeach; ?></dl>
-<?php $extensionSection=$inventory['sections']['extensions']; if ($extensionSection['status']==='available' && is_array($extensionSection['data'])): ?>
-<div class="table-responsive"><table class="table"><caption>Installed extensions</caption>
-<thead><tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Version</th><th scope="col">Enabled</th><th scope="col">Package ID</th></tr></thead><tbody>
-<?php foreach ($extensionSection['data'] as $extension): if (!is_array($extension)) { continue; }
-    $text = static fn($value) => is_scalar($value) ? $escape($value) : 'Unknown';
-    $version=is_array($extension['version'] ?? null) ? $extension['version'] : [];
-?>
-<tr><td><?= $text($extension['id'] ?? null) ?></td><th scope="row"><?= $text($extension['name'] ?? null) ?></th><td><?= $text($extension['type'] ?? null) ?></td><td><?= ($version['status'] ?? '')==='available' ? $text($version['value'] ?? null) : 'Unknown' ?></td><td><?= ($extension['enabled'] ?? null)===true ? 'Yes' : (($extension['enabled'] ?? null)===false ? 'No' : 'Unknown') ?></td><td><?= ($extension['package_id'] ?? null)===0 ? 'None' : (is_int($extension['package_id'] ?? null) && $extension['package_id']>0 ? $escape((string)$extension['package_id']) : 'Unknown / unavailable') ?></td></tr>
-<?php endforeach; ?></tbody></table></div>
-<?php else: ?><p>Extension inventory unavailable.</p><?php endif; ?>
-<?php endif; ?></section>
-<?php endif; ?>
-<div class="table-responsive"><table class="table nwm-sites"><caption>Enrolled sites - connector observations</caption>
-<thead><tr><th scope="col">Site</th><th scope="col">URL</th><th scope="col">Conexión</th><th scope="col">Check history (UTC)</th><th scope="col">Actions</th></tr></thead><tbody>
-<?php foreach ($sites as $site): ?>
-<tr><td data-label="Site"><?= $escape($site['label']) ?></td><td data-label="URL"><?= $escape($site['base_url']) ?></td><td data-label="Conexión"><details><summary>Detalles técnicos</summary><p><?= ($site['connection_type']??'https')==='local' ? 'Este mismo Joomla · Inventario local' : 'HTTPS · IP: '.$escape($site['address']) ?></p><p>ID: <?= $escape($site['site_id']) ?></p></details></td><td data-label="Check history (UTC)">
-<p><?= $escape($stateLabels[$site['check_state'] ?? 'never_checked'] ?? 'Unknown') ?></p>
-<?php if (!empty($site['notification'])): $notice=$site['notification']; ?>
-<p>Email: <?= $escape($notice['delivery']) ?>. Last evaluation (UTC): <?= $escape(gmdate('Y-m-d H:i:s',(int)$notice['evaluated_at'])) ?>. Accepted means accepted by the mail server, not confirmed delivery.</p>
-<?php if ($user->authorise('core.admin','com_nicodewebmonitor') && in_array($notice['delivery'],['uncertain','not_accepted'],true)): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor">
-<input type="hidden" name="task" value="notificationRetry"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label><input type="checkbox" name="confirmed" value="1" required> I checked delivery; another attempt may duplicate an email.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-secondary" type="submit">Authorize one email attempt</button>
-</form>
-<?php endif; endif; ?>
-<p>Connector observations do not establish website availability.</p>
-<?php if (isset($site['alerts'])): $alerts = $site['alerts']; ?>
-<p><strong><?= $alerts['active'] ? 'Active inventory alert' : ($alerts['state'] === 'never_checked' ? 'Awaiting first check' : 'No active inventory alert') ?></strong></p>
-<?php if ($alerts['transitions']): ?><details><summary>Alert transitions (retained history)</summary><ol>
-<?php foreach ($alerts['transitions'] as $event): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['at'])) ?> UTC: <?= $escape($event['kind']) ?> â€” <?= $escape($stateLabels[$event['from']] ?? 'Unknown') ?> â†’ <?= $escape($stateLabels[$event['to']] ?? 'Unknown') ?></li>
-<?php endforeach; ?></ol></details><?php endif; ?>
-<?php endif; ?>
-<?php if (!empty($site['checks'])): ?><details><summary>Recent checks</summary><ol>
-<?php foreach ($site['checks'] as $check): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$check['checked_at'])) ?> â€” <?= $escape($check['outcome']) ?>: <?= $escape($check['detail']) ?></li>
-<?php endforeach; ?></ol></details><?php endif; ?></td><td data-label="Actions">
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="inspect"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Check <?= $escape($site['label']) ?></button></form>
-<?php if ($user->authorise('core.delete', 'com_nicodewebmonitor')): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="remove"><input type="hidden" name="id" value="<?= (int) $site['id'] ?>"><?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-danger" type="submit">Remove <?= $escape($site['label']) ?></button></form>
-<?php endif; ?></td></tr>
-<?php endforeach; ?></tbody></table></div>
-<details class="mt-4"><summary>Copias y actualizaciones (avanzado)</summary>
-<?php if ($canBackup ?? false): ?>
-<section aria-label="Remote backups">
-<h2>Remote backups</h2>
-<p>Files and database capture requires the connector backup provider and a separate credential. Stop all writers before advancing; confirmation here does not stop them. Create an operation once, then use single steps or an explicitly confirmed batch. An uncertain result requires a status query, never a new operation as a retry. Completion does not establish a tested restoration.</p>
-<?php foreach ($sites as $site): ?>
-<details><summary>Backup: <?= $escape($site['label']) ?></summary>
-<?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
-<input type="hidden" name="task" value="backupEnroll"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label for="backup-secret-<?= (int)$site['id'] ?>">Separate backup credential</label>
-<input class="form-control" id="backup-secret-<?= (int)$site['id'] ?>" name="backup_credential" type="password" required pattern="[a-f0-9]{64}" maxlength="64" autocomplete="new-password">
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Save backup credential</button></form>
-<?php endif; ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor">
-<input type="hidden" name="task" value="backupBegin"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label><input type="checkbox" name="confirmed" value="1" required> Create a new operation for <?= $escape($site['label']) ?> (no remote capture yet).</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Create backup operation</button></form>
-</details>
-<?php endforeach; ?>
-<h3>Latest 100 operations</h3>
-<p>This journal shows current state, not an immutable event history.</p>
-<?php foreach ($backupOperations as $operation): ?>
-<article class="nwm-backup" style="overflow-wrap:anywhere" data-site="<?= (int)$operation['site'] ?>" data-operation="<?= $escape($operation['operation']) ?>" data-sequence="<?= (int)$operation['next_sequence'] ?>">
-<h4><?= $escape($operation['operation']) ?></h4>
-<p>Site #<?= (int)$operation['site'] ?>; state: <?= $escape($operation['status']) ?>; next sequence: <?= (int)$operation['next_sequence'] ?>; updated <?= $escape(gmdate('Y-m-d H:i:s', (int)$operation['updated_at'])) ?> UTC.</p>
-<form method="post" action="index.php?option=com_nicodewebmonitor">
-<input type="hidden" name="task" value="backupStatus"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary" type="submit">Query backup status</button></form>
-<?php if (in_array($operation['status'], ['ready','progress'], true)): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor">
-<input type="hidden" name="task" value="backupAdvance"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
-<label><input type="checkbox" name="confirmed" value="1" required> All writers are stopped; advance this operation by one step.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Advance backup step</button></form>
-<form class="nwm-backup-runner" method="post" action="index.php?option=com_nicodewebmonitor" hidden>
-<input type="hidden" name="task" value="backupContinue"><input type="hidden" name="operation" value="<?= $escape($operation['operation']) ?>">
-<input type="hidden" name="expected_sequence" value="<?= (int)$operation['next_sequence'] ?>">
-<label><input type="checkbox" name="confirmed" value="1" required> All writers remain stopped; run up to 100 sequential steps in this tab.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary" type="submit">Run backup steps</button>
-<button class="btn btn-outline-secondary nwm-backup-pause" type="button" disabled>Pause after current step</button>
-<p class="nwm-backup-progress" role="status" aria-live="polite">Ready. Keep this tab open. Pause finishes the current request; it does not undo a capture.</p>
-</form>
-<?php endif; ?>
-<details><summary>Maintenance history (latest 50 observations)</summary>
-<p>Recorded from version 0.9. Earlier states are not reconstructed. Times are UTC.</p>
-<ol><?php foreach ($operation['history'] ?? [] as $event): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['recorded_at'])) ?> — <?= $escape($event['status']) ?>; actor #<?= (int)$event['actor_id'] ?><?php if ($event['next_sequence'] !== null): ?>; next step <?= (int)$event['next_sequence'] ?><?php endif; ?></li>
-<?php endforeach; ?></ol></details>
-</article>
-<?php endforeach; ?></section>
-<?php endif; ?>
-<?php if ($canUpdate): ?>
-<section aria-label="Remote extension updates"><h2>Prepared extension updates</h2>
-<p>First prepare and verify the package and recovery locally on the remote site. Enter that operation ID here. Execution requires a separate confirmation. An uncertain operation can only be queried, never retried automatically.</p>
-<?php foreach ($sites as $site): ?>
-<?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
-<input type="hidden" name="task" value="updateEnroll"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label>Update credential for <?= $escape($site['label']) ?> <input type="password" name="update_credential" required autocomplete="new-password"></label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Save update credential</button></form>
-<?php endif; ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor">
-<input type="hidden" name="task" value="updateBegin"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label>Prepared operation ID for <?= $escape($site['label']) ?> <input name="operation" pattern="[a-z0-9-]{8,64}" required></label>
-<label><input type="checkbox" name="confirmed" value="1" required> I verified this local package and its recovery procedure.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Register prepared update</button></form>
-<?php endforeach; ?>
-<?php foreach ($updateOperations as $op): ?>
-<article class="nwm-update"><h3><?= $escape($op['operation']) ?></h3><p>Site #<?= (int)$op['site'] ?>; state: <?= $escape($op['status']) ?></p>
-<?php if (isset($op['compound'])): ?>
-<details><summary>Package and child observations</summary>
-<?php foreach (['before'=>'Before update','observed'=>'Last recorded observation'] as $phase=>$label): ?>
-<h4><?= $label ?></h4>
-<?php if ($op['compound'][$phase] === null): ?><p>No observation available. Query status; do not repeat installation.</p>
-<?php else: ?><ul>
-<?php foreach (array_merge($op['compound'][$phase]['parents'],$op['compound'][$phase]['children']) as $row): ?>
-<li><?= $escape($row['identity']['type'].' '.$row['identity']['element']) ?>; ID <?= (int)$row['id'] ?>; package ID <?= (int)$row['package_id'] ?>; version <?= $escape($row['version'] ?? 'unknown') ?></li>
-<?php endforeach; ?></ul><?php endif; ?>
-<?php endforeach; ?></details>
-<?php endif; ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateStatus"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Query update status</button></form>
-<?php if ($op['status']==='ready'): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="updateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
-<label><input type="checkbox" name="confirmed" value="1" required> Execute this prepared update now.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Execute update</button></form>
-<?php endif; ?>
-<details><summary>Maintenance history (latest 50 observations)</summary>
-<p>Recorded from version 0.9. Earlier states are not reconstructed. Times are UTC.</p>
-<ol><?php foreach ($op['history'] ?? [] as $event): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['recorded_at'])) ?> — <?= $escape($event['status']) ?>; actor #<?= (int)$event['actor_id'] ?><?php if ($event['next_sequence'] !== null): ?>; next step <?= (int)$event['next_sequence'] ?><?php endif; ?></li>
-<?php endforeach; ?></ol></details>
-</article>
-<?php endforeach; ?></section>
-<?php endif; ?>
-<?php if ($canCoreUpdate): ?>
-<section aria-label="Remote Joomla core updates"><h2>Prepared Joomla core updates</h2>
-<p>First prepare and verify the package and recovery locally on the remote site. Enter that operation ID here. Queueing requires a separate confirmation. Queued means waiting for the remote CLI runner, not installed; verified means a fresh process checked the installed versions and database schema. An uncertain operation can only be queried, never retried automatically.</p>
-<?php foreach ($sites as $site): ?>
-<?php if ($user->authorise('core.admin', 'com_nicodewebmonitor')): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor" autocomplete="off">
-<input type="hidden" name="task" value="coreUpdateEnroll"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label>Separate Joomla core credential for <?= $escape($site['label']) ?> <input type="password" name="core_update_credential" required autocomplete="new-password"></label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Save update credential</button></form>
-<?php endif; ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor">
-<input type="hidden" name="task" value="coreUpdateBegin"><input type="hidden" name="id" value="<?= (int)$site['id'] ?>">
-<label>Prepared operation ID for <?= $escape($site['label']) ?> <input name="operation" pattern="[a-z0-9-]{8,64}" required></label>
-<label><input type="checkbox" name="confirmed" value="1" required> I verified this local package and its recovery procedure.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Register prepared update</button></form>
-<?php endforeach; ?>
-<?php foreach ($coreUpdateOperations as $op): ?>
-<article class="nwm-update"><h3><?= $escape($op['operation']) ?></h3><p>Site #<?= (int)$op['site'] ?>; state: <?= $escape($op['status']) ?></p>
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="coreUpdateStatus"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-outline-primary">Query update status</button></form>
-<?php if ($op['status']==='ready'): ?>
-<form method="post" action="index.php?option=com_nicodewebmonitor"><input type="hidden" name="task" value="coreUpdateExecute"><input type="hidden" name="operation" value="<?= $escape($op['operation']) ?>">
-<label><input type="checkbox" name="confirmed" value="1" required> Queue this prepared Joomla update. The remote CLI runner must execute and verify it.</label>
-<?= HTMLHelper::_('form.token') ?><button class="btn btn-primary">Queue Joomla update</button></form>
-<?php endif; ?>
-<details><summary>Maintenance history (latest 50 observations)</summary>
-<p>Recorded from version 0.9. Earlier states are not reconstructed. Times are UTC.</p>
-<ol><?php foreach ($op['history'] ?? [] as $event): ?>
-<li><?= $escape(gmdate('Y-m-d H:i:s', (int)$event['recorded_at'])) ?> — <?= $escape($event['status']) ?>; actor #<?= (int)$event['actor_id'] ?><?php if ($event['next_sequence'] !== null): ?>; next step <?= (int)$event['next_sequence'] ?><?php endif; ?></li>
-<?php endforeach; ?></ol></details>
-</article>
-<?php endforeach; ?></section>
-<?php endif; ?>
-</details>
+<?php if($canBackup||$canUpdate||$canCoreUpdate): ?><details id="nwm-maintenance" class="nwm-panel nwm-maintenance" <?= preg_match('/^(backup|update|coreUpdate)/',$task??'')?'open':'' ?>><summary><?= $icon('settings') ?><span><strong>Mantenimiento</strong><small>Copias y actualizaciones preparadas · Funciones experimentales</small></span><?= $icon('chevron') ?></summary><div class="nwm-maintenance-body"><?php require __DIR__.'/maintenance.php'; ?></div></details><?php endif; ?>
+<footer class="nwm-central-footer"><p>Inventario reciente: comprobado y recopilado en las últimas 24 horas. Se conservan hasta 100 resúmenes por sitio.</p><?php if($canAdmin): ?><a href="index.php?option=com_config&amp;view=component&amp;component=com_nicodewebmonitor">Permisos y avisos por correo<?= $icon('arrow') ?></a><?php endif; ?></footer>
+</div>

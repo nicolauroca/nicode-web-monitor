@@ -17,7 +17,7 @@ $db=$c->get(DatabaseInterface::class);$checks=[];
 function check($ok,$name){global $checks;if(!$ok)throw new RuntimeException($name);$checks[]=$name;}
 function installCurrent():void {
     $p=proc_open([PHP_BINARY,__DIR__.'/lifecycle_step.php',JPATH_BASE,'--allow-disposable-writes'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
-    fwrite($pipes[0],json_encode(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_nicodemonitor-1.1.1-dev.3.zip')],JSON_THROW_ON_ERROR));fclose($pipes[0]);
+    fwrite($pipes[0],json_encode(['action'=>'install','zip'=>realpath(__DIR__.'/../dist/pkg_nicodemonitor-1.1.1-dev.4.zip')],JSON_THROW_ON_ERROR));fclose($pipes[0]);
     $out=stream_get_contents($pipes[1]);$err=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);
     if(proc_close($p)!==0 || !str_contains($out,'"ok":true'))throw new RuntimeException('Native installer failed: '.substr($out.$err,0,300));
 }

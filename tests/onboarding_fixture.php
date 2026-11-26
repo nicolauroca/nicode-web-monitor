@@ -13,8 +13,11 @@ if ($input['action']==='begin') {
     if ((int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_sites')->loadResult()
         || (int)$db->setQuery('SELECT COUNT(*) FROM #__nwm_pairing')->loadResult()
         || (int)$db->setQuery("SELECT COUNT(*) FROM #__scheduler_tasks WHERE type='nicode.monitor'")->loadResult()) throw new RuntimeException('Empty disposable fixture required');
-    $rows=$db->setQuery("SELECT extension_id,params,enabled FROM #__extensions WHERE element IN ('com_nicodeconnector','nicodewebmonitor','guidedtours','stats','debug')")->loadAssocList();
+    $rows=$db->setQuery("SELECT extension_id,params,enabled FROM #__extensions WHERE element IN ('com_nicodeconnector','com_scheduler','nicodewebmonitor','guidedtours','stats','debug')")->loadAssocList();
     $db->setQuery("UPDATE #__extensions SET enabled=0 WHERE type='plugin' AND element IN ('guidedtours','stats','debug')")->execute();
+    $schedulerParams=new Joomla\Registry\Registry($db->setQuery("SELECT params FROM #__extensions WHERE type='component' AND element='com_scheduler'")->loadResult());
+    $schedulerParams->set('lazy_scheduler.enabled',0);
+    $db->setQuery('UPDATE #__extensions SET params='.$db->quote($schedulerParams->toString())." WHERE type='component' AND element='com_scheduler'")->execute();
     $systemId=(int)$db->setQuery("SELECT extension_id FROM #__extensions WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->loadResult();
     echo json_encode(['rows'=>$rows,'system_id'=>$systemId],JSON_THROW_ON_ERROR);
 } elseif ($input['action']==='ui_snapshot') {

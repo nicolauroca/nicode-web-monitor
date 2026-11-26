@@ -1,31 +1,43 @@
-Nicode Web Monitor 1.1.1-dev.2 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.3 — verificación vigente
 
-Fecha: 25 de noviembre de 2026 (Europe/Madrid).
+Fecha: 26 de noviembre de 2026 (Europe/Madrid).
 Entrega de DESARROLLO; prerelease, no definitiva ni beta final.
-Entorno aislado: Joomla 6.1.4, PHP 8.5.8 Windows y MariaDB 10.4.28 local.
-No se utilizaron credenciales ni datos de sitios reales.
+Entorno aislado: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28 y Chrome.
+No se utilizaron credenciales, inventarios ni instalaciones reales del usuario.
 
-Corrección y pruebas de esta revisión
-- schema_repair.php: 14 comprobaciones. Reproduce el error 1054 eliminando
-  connection_type en un Joomla desechable con sitios e historial sintéticos.
-  Ensaya marcador de esquema 1.1.1 (actual), 1.1.0 (anterior) y marcador ausente.
-  En cada caso instala el ZIP Central real en un proceso nuevo, abre el registro
-  y verifica columna reparada, credencial cifrada idéntica e historial conservado.
-  Repite la instalación con la columna presente y modo local, sin duplicarla ni
-  sobrescribir valores. El instalador consulta la tabla real antes del SQL nativo.
-- lifecycle_native.php: 10 comprobaciones de instalación/reinstalación y retirada
-  independientes, identidades estables, datos conservados y pausa de tareas.
-- self_monitoring.php: 13 comprobaciones de vinculación local con DNS bloqueado,
-  colección manual/automática, identidad, credencial, revocación, recibos y versiones.
-- Build reproducible: siete ZIP idénticos entre fuentes LF/CRLF, binarios conservados.
-- Sintaxis PHP/XML/Python y enlaces de documentación comprobados.
+Alcance
+Rediseño de la vista del Conector y sus recursos CSS/JS. Los controladores y
+servicios de conexión, los transportes, el esquema y el instalador conservan su
+código. Se actualiza la versión de los dos paquetes para mantener la comprobación
+existente de versiones iguales. Los detalles están en connector-ui.txt.
 
-Alcance y límites
-Esta revisión cambia el instalador y los números de versión. No introduce una
-capa de compatibilidad de APIs ni cambia transportes, colecciones o mantenimiento.
-Las pruebas de esta revisión validan la reparación y el ciclo nativo; no se
-atribuyen aquí como nuevos resultados las pruebas de navegador/TLS/SMTP o de
-restauración realizadas en otras revisiones. El historial de Git conserva esos
-informes. Faltan la instalación por el propietario en su hosting y sus verificaciones.
-Los datos y entornos de ensayo quedan en .local, ignorados por Git. Los checksums
-exactos acompañan los ZIP de esta prerelease.
+Verificación ejecutada
+- Recorrido de navegador local con DNS bloqueado: 59 comprobaciones, incluyendo
+  estados y tamaños de pantalla; vinculación, primer inventario,
+  guardado de parámetros del plugin, revocación y eliminación independiente.
+- Recorrido remoto HTTPS: 50 comprobaciones, incluyendo el formulario rediseñado,
+  validación accesible, atajo de URL, visibilidad de código y estados visuales.
+- JavaScript desactivado: 25 comprobaciones con POST nativos de conexión y
+  desconexión y confirmación requerida, conservando el registro y la revocación.
+- Presentaciones de desconectado, pendiente, acceso desactivado y conectado;
+  direcciones largas, 1440/390/320 px y tema oscuro. Revisión visual de capturas.
+  Los estados de presentación se preparan solo en el Joomla desechable y se
+  restauran; el caso pendiente con motor desactivado guía a cancelar el intento.
+- self_monitoring.php: 13 comprobaciones de colección local manual/automática,
+  credencial, identidad, revocación, recibos y coherencia de versiones.
+- lifecycle_native.php: 10 comprobaciones de reinstalación conservando configuración,
+  propietarios independientes de paquetes, datos conservados y pausa de tareas.
+- Sintaxis PHP/JavaScript/XML/Python, enlaces de documentación y diff comprobados.
+- Siete ZIP reproducibles entre fuentes LF/CRLF, incluidos hijos y binarios.
+
+Límites
+El modo remoto del fixture usa loopback y una CA de prueba solo en las copias
+instaladas; se restauran al terminar. El modo local bloquea DNS para comprobar que
+la automonitorización no depende del acceso HTTPS propio. El servidor CGI/TLS local
+puede producir fallos transitorios de recursos nativos: se comprueba expresamente
+su disponibilidad y no se ignoran respuestas 404. No se realiza una auditoría WCAG
+completa ni se afirma compatibilidad con todos los navegadores o plantillas admin.
+No se atribuyen a esta revisión ensayos nuevos de cron del hosting, SMTP externo,
+restauración o actualizaciones nativas de extensiones/core. Faltan las pruebas del
+propietario en su alojamiento. Las capturas y datos sintéticos quedan en .local,
+ignorados por Git. Los checksums acompañan los ZIP de esta prerelease.

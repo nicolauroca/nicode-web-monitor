@@ -1,0 +1,159 @@
+/* Nicode Web Monitor — Conector. Scoped to the component; no template overrides. */
+.nwm-connector {
+    --nwm-ink: #172b3a;
+    --nwm-muted: #526573;
+    --nwm-surface: #fff;
+    --nwm-soft: #f5f8fa;
+    --nwm-border: #dce5eb;
+    --nwm-accent: #006c63;
+    --nwm-accent-hover: #00554e;
+    --nwm-positive: #08674d;
+    --nwm-positive-soft: #e9f7ef;
+    --nwm-warning: #795113;
+    --nwm-warning-soft: #fff6e5;
+    --nwm-danger: #ad3035;
+    --nwm-danger-soft: #fff5f4;
+    color: var(--nwm-ink);
+    max-width: 1240px;
+    margin: 0 auto 32px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+.nwm-connector *, .nwm-connector *::before, .nwm-connector *::after { box-sizing: border-box; }
+.nwm-connector [hidden] { display: none !important; }
+.nwm-connector h1, .nwm-connector h2, .nwm-connector h3, .nwm-connector p, .nwm-connector dl, .nwm-connector dd { margin: 0; }
+.nwm-connector h2, .nwm-connector h3 { color: var(--nwm-ink); }
+.nwm-connector h2 { font-size: 23px; font-weight: 700; line-height: 1.3; letter-spacing: -.35px; }
+.nwm-connector h3 { font-size: 17px; font-weight: 700; }
+.nwm-connector .nwm-icon { width: 21px; height: 21px; flex: 0 0 auto; vertical-align: middle; }
+.nwm-connector a { text-underline-offset: 4px; }
+.nwm-connector :is(a, button, input, summary):focus-visible { outline: 3px solid #397cdb; outline-offset: 4px; }
+.nwm-header { display: flex; align-items: center; gap: 20px; background: #152e40; color: #d6e5ee; padding: 29px 32px; border-radius: 16px; }
+.nwm-brand-mark { display: grid; place-items: center; width: 62px; height: 62px; border: 1px solid #456172; border-radius: 15px; background: #203f52; color: #9de1d3; flex: 0 0 auto; }
+.nwm-brand-mark .nwm-icon { width: 34px; height: 34px; }
+.nwm-header-copy { min-width: 0; }
+.nwm-header .nwm-eyebrow { color: #a5c5d5; font-size: 11px; letter-spacing: 1.8px; font-weight: 700; text-transform: uppercase; margin-bottom: 3px; }
+.nwm-header h1 { color: #fff; font-size: 32px; font-weight: 700; line-height: 1.2; letter-spacing: -.7px; margin-bottom: 6px; }
+.nwm-header-copy > p:last-child { color: #ccdee9; font-size: 14px; }
+.nwm-release { display: flex; align-items: flex-end; flex-direction: column; gap: 7px; margin-left: auto; padding-left: 16px; white-space: nowrap; font-size: 11px; color: #b5cad6; }
+.nwm-release-label { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #6f674b; background: #393d38; border-radius: 7px; padding: 4px 9px; color: #ffdc99; font-size: 12px; font-weight: 600; }
+.nwm-release-label > span { width: 6px; height: 6px; background: #eec37c; border-radius: 50%; }
+.nwm-page-context { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; padding: 20px 2px; color: var(--nwm-muted); font-size: 13px; }
+.nwm-page-context > span { display: inline-flex; align-items: center; gap: 7px; }
+.nwm-page-context .nwm-icon { width: 16px; height: 16px; }
+.nwm-page-context strong { color: var(--nwm-ink); font-weight: 600; overflow-wrap: anywhere; }
+.nwm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.nwm-main, .nwm-sidebar { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.nwm-panel { background: var(--nwm-surface); border: 1px solid var(--nwm-border); border-radius: 13px; box-shadow: 0 2px 4px #132e4003; }
+.nwm-setup-panel { padding: 30px; }
+.nwm-panel-heading, .nwm-status-heading { display: flex; align-items: center; gap: 15px; }
+.nwm-heading-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: #eaf4f3; color: var(--nwm-accent); flex: 0 0 auto; }
+.nwm-section-label { color: var(--nwm-muted); font-size: 11px; font-weight: 700; letter-spacing: 1.15px; text-transform: uppercase; margin-bottom: 5px !important; }
+.nwm-connector .nwm-intro { color: var(--nwm-muted); margin-top: 18px; max-width: 56ch; }
+.nwm-connect-form { margin-top: 26px; }
+.nwm-field { margin-bottom: 22px; }
+.nwm-field label { display: block; color: var(--nwm-ink); font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.nwm-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.nwm-label-row label { margin-bottom: 0; }
+.nwm-text-button { appearance: none; background: none; border: 0; min-height: 44px; padding: 4px 0; color: var(--nwm-accent); font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.nwm-connector .nwm-input { display: block; width: 100%; min-width: 0; height: 48px; border: 1px solid #afc1cd; border-radius: 8px; background: var(--nwm-surface); color: var(--nwm-ink); padding: 11px 14px; font: inherit; font-size: 15px; box-shadow: none; transition: border-color .15s ease, box-shadow .15s ease; }
+.nwm-connector .nwm-input::placeholder { color: #6e8290; opacity: 1; }
+.nwm-connector .nwm-input:focus { border-color: var(--nwm-accent); box-shadow: 0 0 0 3px #00776c1a; outline: 0; }
+.nwm-connector .nwm-input:focus-visible { outline: 3px solid #397cdb; outline-offset: 2px; box-shadow: none; }
+.nwm-connector .nwm-input[aria-invalid="true"] { border-color: var(--nwm-danger); }
+.nwm-connector .nwm-field-help { color: var(--nwm-muted); font-size: 12px; margin-top: 8px; line-height: 1.5; }
+.nwm-inline-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .95em; }
+.nwm-connector .nwm-field-error { color: var(--nwm-danger); font-size: 12px; margin-top: 6px; }
+.nwm-code-input { position: relative; }
+.nwm-code-input .nwm-input { padding-right: 90px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.nwm-code-toggle { position: absolute; right: 6px; top: 2px; height: 44px; border: 0; border-left: 1px solid var(--nwm-border); border-radius: 0 4px 4px 0; background: var(--nwm-surface); color: var(--nwm-accent); padding: 0 12px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.nwm-form-action { display: flex; align-items: center; flex-wrap: wrap; gap: 13px 18px; padding-top: 3px; }
+.nwm-form-action > span { display: flex; align-items: center; gap: 5px; color: var(--nwm-muted); font-size: 11px; }
+.nwm-form-action > span .nwm-icon { width: 15px; height: 15px; }
+.nwm-connector .nwm-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 45px; border: 1px solid transparent; border-radius: 8px; padding: 10px 17px; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.5; text-decoration: none; cursor: pointer; }
+.nwm-connector .nwm-button .nwm-icon { width: 18px; height: 18px; }
+.nwm-connector .nwm-button--primary { background: var(--nwm-accent); color: #fff; }
+.nwm-connector .nwm-button--primary:hover { background: var(--nwm-accent-hover); color: #fff; }
+.nwm-connector .nwm-button--danger { border-color: #d9a6a8; background: var(--nwm-surface); color: var(--nwm-danger); }
+.nwm-connector .nwm-button--danger:hover { background: var(--nwm-danger-soft); }
+.nwm-connector .nwm-button:disabled { opacity: .65; cursor: wait; }
+.nwm-connector .nwm-submit-status { margin-top: 12px; font-size: 12px; color: var(--nwm-muted); }
+.nwm-guide, .nwm-scope { padding: 24px; }
+.nwm-sidebar h2 { font-size: 16px; line-height: 1.4; letter-spacing: -.1px; }
+.nwm-steps { list-style: none; padding: 0; margin: 23px 0 0; }
+.nwm-steps li { display: flex; gap: 13px; padding-bottom: 24px; position: relative; }
+.nwm-steps li:last-child { padding-bottom: 0; }
+.nwm-steps li:not(:last-child)::after { content: ''; position: absolute; top: 33px; bottom: 5px; left: 14px; width: 1px; background: var(--nwm-border); }
+.nwm-steps li > span { display: grid; place-items: center; flex: 0 0 auto; width: 29px; height: 29px; border: 1px solid var(--nwm-border); border-radius: 50%; background: var(--nwm-soft); color: var(--nwm-accent); font-size: 12px; font-weight: 700; }
+.nwm-steps strong { color: var(--nwm-ink); font-size: 13px; }
+.nwm-steps p { color: var(--nwm-muted); font-size: 13px; line-height: 1.6; margin-top: 3px; }
+.nwm-connector .nwm-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--nwm-accent); font-size: 13px; font-weight: 600; text-decoration: none; }
+.nwm-connector .nwm-link:hover { text-decoration: underline; }
+.nwm-link .nwm-icon { width: 16px; height: 16px; }
+.nwm-guide > .nwm-link { border-top: 1px solid var(--nwm-border); margin-top: 22px; padding-top: 17px; width: 100%; }
+.nwm-side-title { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.nwm-side-title > .nwm-icon { width: 18px; height: 18px; color: var(--nwm-accent); }
+.nwm-scope > p { color: var(--nwm-muted); font-size: 13px; }
+.nwm-feature-list { list-style: none; padding: 0; margin: 19px 0; display: grid; gap: 12px; }
+.nwm-feature-list li { display: flex; align-items: center; gap: 9px; font-size: 13px; }
+.nwm-feature-list .nwm-icon { width: 17px; height: 17px; color: var(--nwm-positive); }
+.nwm-connector .nwm-scope-note { border-top: 1px solid var(--nwm-border); padding-top: 16px; font-size: 11px; }
+.nwm-status-panel { overflow: hidden; }
+.nwm-status-heading { padding: 30px; align-items: flex-start; }
+.nwm-status-heading > div { min-width: 0; }
+.nwm-status-heading > div > p:last-child { color: var(--nwm-muted); font-size: 14px; margin-top: 8px; }
+.nwm-status-heading h2 { font-size: 28px; color: var(--nwm-positive); }
+.nwm-status-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--nwm-positive-soft); color: var(--nwm-positive); flex: 0 0 auto; }
+.nwm-status-icon .nwm-icon { width: 29px; height: 29px; }
+.nwm-facts { display: grid; grid-template-columns: 1fr 1fr; padding: 0 30px 25px; gap: 23px 24px; }
+.nwm-fact { min-width: 0; }
+.nwm-fact--wide { grid-column: 1/-1; padding-top: 22px; border-top: 1px solid var(--nwm-border); }
+.nwm-fact dt { color: var(--nwm-muted); font-size: 12px; font-weight: 500; margin-bottom: 7px; }
+.nwm-fact dd { color: var(--nwm-ink); font-size: 14px; }
+.nwm-fact dd > strong { display: block; font-size: 19px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.nwm-url { display: block; font-size: 12px; color: var(--nwm-muted); overflow-wrap: anywhere; margin-top: 4px; }
+.nwm-method { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.nwm-method .nwm-icon { width: 17px; height: 17px; color: var(--nwm-accent); }
+.nwm-fact-help { display: block; color: var(--nwm-muted); font-size: 12px; line-height: 1.5; margin-top: 5px; }
+.nwm-panel-footer { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; background: var(--nwm-soft); border-top: 1px solid var(--nwm-border); padding: 21px 30px; }
+.nwm-panel-footer > p { color: var(--nwm-muted); font-size: 12px; max-width: 56ch; }
+.nwm-next-step { display: flex; align-items: flex-start; gap: 12px; padding: 3px 5px; }
+.nwm-next-step > span { color: var(--nwm-accent); }
+.nwm-next-step h2 { font-size: 13px; font-weight: 700; }
+.nwm-next-step p { color: var(--nwm-muted); font-size: 13px; margin-top: 5px; }
+.nwm-notice { display: flex; gap: 11px; align-items: flex-start; padding: 15px; border: 1px solid var(--nwm-border); border-radius: 9px; background: var(--nwm-soft); color: var(--nwm-muted); margin-top: 20px; font-size: 13px; }
+.nwm-notice .nwm-icon { width: 19px; height: 19px; margin-top: 2px; }
+.nwm-notice--warning { background: var(--nwm-warning-soft); border-color: #ead5ac; color: var(--nwm-warning); }
+.nwm-status-panel > .nwm-notice { margin: 0 30px 22px; }
+.nwm-connector[data-connection-state="disabled"] .nwm-status-icon { color: var(--nwm-warning); background: var(--nwm-warning-soft); }
+.nwm-connector[data-connection-state="disabled"] .nwm-status-heading h2 { color: var(--nwm-warning); }
+.nwm-connector[data-connection-state="disabled"] .nwm-heading-icon { color: var(--nwm-warning); background: var(--nwm-warning-soft); }
+.nwm-connector[data-connection-state="pending"] .nwm-heading-icon { background: var(--nwm-warning-soft); color: var(--nwm-warning); }
+.nwm-management > summary, .nwm-advanced > summary { display: flex; gap: 10px; align-items: center; list-style: none; cursor: pointer; }
+.nwm-management > summary::-webkit-details-marker, .nwm-advanced > summary::-webkit-details-marker { display: none; }
+.nwm-management > summary { padding: 18px 23px; color: var(--nwm-muted); font-size: 13px; font-weight: 600; }
+.nwm-management > summary .nwm-icon:first-child { width: 18px; height: 18px; }
+.nwm-management > summary .nwm-icon:last-child, .nwm-advanced > summary > .nwm-icon:last-child { width: 15px; height: 15px; margin-left: auto; }
+.nwm-management[open] > summary > .nwm-icon:last-child, .nwm-advanced[open] > summary > .nwm-icon:last-child { transform: rotate(90deg); }
+.nwm-management-content { border-top: 1px solid var(--nwm-border); padding: 22px 23px 24px; }
+.nwm-management-content > p { color: var(--nwm-muted); font-size: 13px; margin-top: 7px; max-width: 64ch; }
+.nwm-confirm { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; padding: 8px 0; margin: 15px 0 12px; color: var(--nwm-ink); font-size: 13px; cursor: pointer; }
+.nwm-confirm > input { flex: 0 0 auto; width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--nwm-accent); }
+.nwm-advanced { margin-top: 25px; border-top: 1px solid var(--nwm-border); }
+.nwm-advanced > summary { color: var(--nwm-muted); padding: 18px 2px; font-size: 13px; font-weight: 600; }
+.nwm-advanced > summary > .nwm-icon:first-child { width: 17px; height: 17px; }
+.nwm-advanced-label { color: var(--nwm-muted); border: 1px solid var(--nwm-border); border-radius: 5px; padding: 2px 6px; margin-left: 8px; font-size: 10px; font-weight: 500; }
+.nwm-advanced > div { padding: 0 3px 15px 29px; }
+.nwm-advanced p { color: var(--nwm-muted); font-size: 13px; margin-bottom: 10px; max-width: 75ch; }
+[data-bs-theme="dark"] .nwm-connector { --nwm-ink: #e3edf3; --nwm-muted: #aabecb; --nwm-surface: #1b2b37; --nwm-soft: #213441; --nwm-border: #3b5261; --nwm-accent: #8ddbcc; --nwm-accent-hover: #a8e7db; --nwm-positive: #8fddb9; --nwm-positive-soft: #173e33; --nwm-warning: #f0cc8b; --nwm-warning-soft: #3d3321; --nwm-danger: #ffa8ad; --nwm-danger-soft: #40282e; }
+[data-bs-theme="dark"] .nwm-connector .nwm-button--primary { color: #142e2a; }
+[data-bs-theme="dark"] .nwm-connector .nwm-heading-icon { background: #203e3b; }
+[data-bs-theme="dark"] .nwm-connector .nwm-input { border-color: #647f90; }
+[data-bs-theme="dark"] .nwm-connector .nwm-input::placeholder { color: #99aebd; }
+[data-bs-theme="dark"] .nwm-notice--warning { border-color: #79613b; }
+@media (min-width: 1500px) { .nwm-layout { grid-template-columns: minmax(0, 1fr) 345px; } }
+@media (max-width: 1100px) { .nwm-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; } .nwm-setup-panel, .nwm-status-heading { padding: 24px; } .nwm-facts { padding: 0 24px 24px; } .nwm-guide, .nwm-scope { padding: 21px; } .nwm-release { font-size: 10px; } }
+@media (max-width: 900px) { .nwm-layout { grid-template-columns: minmax(0, 1fr); } .nwm-sidebar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; } .nwm-header { flex-wrap: wrap; } .nwm-release { align-items: flex-start; flex-direction: row; align-self: center; padding-left: 82px; margin-left: 0; width: 100%; gap: 12px; } .nwm-release > span:last-child { padding-top: 3px; } }
+@media (max-width: 600px) { .nwm-connector { font-size: 14px; margin-bottom: 20px; } .nwm-header { padding: 23px 21px; gap: 14px; border-radius: 12px; } .nwm-brand-mark { width: 45px; height: 45px; border-radius: 11px; } .nwm-brand-mark .nwm-icon { width: 26px; height: 26px; } .nwm-header-copy { flex: 1; } .nwm-header h1 { font-size: 27px; } .nwm-header-copy > p:last-child { font-size: 12px; } .nwm-header .nwm-eyebrow { font-size: 9px; letter-spacing: 1.3px; } .nwm-release { padding-left: 0; padding-top: 15px; margin-top: 2px; border-top: 1px solid #375163; gap: 9px; justify-content: space-between; } .nwm-release-label { font-size: 10px; } .nwm-release > span:last-child { font-size: 9px; padding-top: 5px; } .nwm-page-context { padding: 17px 1px; font-size: 12px; gap: 7px; } .nwm-setup-panel, .nwm-status-heading { padding: 23px 20px; } .nwm-panel-heading { gap: 12px; } .nwm-heading-icon { width: 40px; height: 40px; border-radius: 10px; } .nwm-connector h2 { font-size: 21px; } .nwm-section-label { font-size: 9px; letter-spacing: .9px; } .nwm-intro { font-size: 13px; } .nwm-connect-form { margin-top: 24px; } .nwm-label-row { gap: 5px; } .nwm-field label { font-size: 13px; } .nwm-field-help { font-size: 11px; } .nwm-connector .nwm-input { font-size: 16px; } .nwm-form-action { align-items: center; flex-direction: column; gap: 13px; } .nwm-form-action .nwm-button { width: 100%; } .nwm-form-action > span { font-size: 10px; } .nwm-sidebar { display: flex; flex-direction: column; } .nwm-sidebar h2 { font-size: 16px; } .nwm-steps { margin-top: 20px; } .nwm-guide, .nwm-scope { padding: 22px; } .nwm-status-heading { gap: 12px; } .nwm-status-icon { width: 43px; height: 43px; } .nwm-status-icon .nwm-icon { width: 25px; height: 25px; } .nwm-status-heading h2 { font-size: 26px; } .nwm-status-heading > div > p:last-child { font-size: 12px; } .nwm-facts { grid-template-columns: minmax(0, 1fr); padding: 0 20px 24px; gap: 21px; } .nwm-fact dd > strong { font-size: 18px; } .nwm-fact dt { font-size: 11px; } .nwm-panel-footer { padding: 20px; } .nwm-panel-footer .nwm-button { width: 100%; } .nwm-status-panel > .nwm-notice { margin: 0 20px 20px; } .nwm-management > summary { padding: 17px 20px; } .nwm-management-content { padding: 20px; } .nwm-management-content .nwm-button { width: 100%; } .nwm-confirm { font-size: 12px; } .nwm-next-step { padding: 5px 3px; } .nwm-next-step h2 { font-size: 13px; } .nwm-advanced > summary { gap: 7px; font-size: 12px; } .nwm-advanced-label { margin-left: 4px; font-size: 9px; } .nwm-advanced > div { padding-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .nwm-connector *, .nwm-connector *::before, .nwm-connector *::after { transition: none !important; } }
+@media (forced-colors: active) { .nwm-connector .nwm-button { border-color: ButtonText; } .nwm-status-icon, .nwm-heading-icon { border: 1px solid CanvasText; } }

@@ -8,7 +8,7 @@ $monitorLabels=['pending'=>'Pendiente de preparar','paused'=>'Comprobaciones pau
     'waiting'=>'Tarea preparada; esperando la primera ejecución automática','late'=>'Sin ejecuciones recientes: revisa el disparador del hosting',
     'running'=>'Comprobaciones automáticas verificadas recientemente','failed'=>'La última ejecución encontró errores; revisa los sitios y la tarea'];
 ?>
-<p><span class="badge bg-warning text-dark">Versión de desarrollo · 1.1.1-dev.2 · No definitiva</span></p>
+<p><span class="badge bg-warning text-dark">Versión de desarrollo · 1.1.1-dev.3 · No definitiva</span></p>
 <?php if ($user->authorise('core.manage','com_nicodewebmonitor') && \Joomla\CMS\Component\ComponentHelper::isInstalled('com_nicodeconnector')): ?><p><a href="index.php?option=com_nicodeconnector">Nicode Web Monitor — Conector de este Joomla</a></p><?php endif; ?>
 <section aria-label="Comprobaciones automáticas" class="card card-body mb-4">
 <h2>Comprobaciones automáticas</h2>

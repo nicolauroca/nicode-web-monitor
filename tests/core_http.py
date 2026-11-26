@@ -34,7 +34,7 @@ def cli(script,*args,data=None,allowed=(0,)):
     return json.loads(r.stdout)
 def fixture(action,**data):
     return cli('tests/update_fixture.php',site,'--allow-disposable-writes',data=dict(action=action,**data))
-fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.2.zip')])
+fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.3.zip')])
 site_id=str(uuid.uuid4());token=secrets.token_hex(32);other=secrets.token_hex(32)
 params={'site_id':site_id,'core_token_hash':hashlib.sha256(token.encode()).hexdigest(),
     'update_token_hash':hashlib.sha256(other.encode()).hexdigest(), 'update_storage':str(store/'updates'),'maintenance_storage':str(store/'gate')}

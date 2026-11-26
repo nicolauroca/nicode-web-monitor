@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.2 — pruebas
+Nicode Web Monitor 1.1.1-dev.3 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -60,6 +60,11 @@ restaura esos archivos en finally. Añadir --remote-transport para probar el rec
 HTTPS remoto con destino loopback y CA de pruebas. Sin esa opción, el DNS del
 fixture lanza una excepción si se intenta usar: prueba el transporte local real.
 Los ZIP conservan la política de red de producción.
+Añadir --design-states para capturas y comprobaciones de pendiente, acceso
+desactivado, direcciones largas, tema oscuro y anchos de 1440/390/320 px.
+Añadir --without-js para validar el POST nativo y la desconexión sin JavaScript.
+El fixture de estados UI solo modifica datos sintéticos del laboratorio y los
+restaura; no se distribuye dentro del componente ni abre rutas nuevas de producción.
 No es un ensayo de DNS público ni de certificado de hosting. Revisar visualmente
 las capturas PNG generadas; no publicar capturas con códigos reales.
 python tests/connection_transport.py --php PHP_EXECUTABLE --certificate LOCAL_CERT --private-key LOCAL_KEY

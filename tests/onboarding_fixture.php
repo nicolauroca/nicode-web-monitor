@@ -17,6 +17,18 @@ if ($input['action']==='begin') {
     $db->setQuery("UPDATE #__extensions SET enabled=0 WHERE type='plugin' AND element IN ('guidedtours','stats','debug')")->execute();
     $systemId=(int)$db->setQuery("SELECT extension_id FROM #__extensions WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->loadResult();
     echo json_encode(['rows'=>$rows,'system_id'=>$systemId],JSON_THROW_ON_ERROR);
+} elseif ($input['action']==='ui_snapshot') {
+    echo json_encode(['rows'=>$db->setQuery("SELECT extension_id,params,enabled FROM #__extensions WHERE (type='component' AND element='com_nicodeconnector') OR (type='plugin' AND folder='system' AND element='nicodewebmonitor')")->loadAssocList()],JSON_THROW_ON_ERROR);
+} elseif ($input['action']==='ui_restore') {
+    foreach($input['rows'] as $row)$db->setQuery('UPDATE #__extensions SET params='.$db->quote($row['params']).',enabled='.(int)$row['enabled'].' WHERE extension_id='.(int)$row['extension_id'])->execute();
+    echo '{"ok":true}';
+} elseif ($input['action']==='ui_preview') {
+    if(!in_array($input['state'],['connected','pending','disconnected'],true))throw new RuntimeException('Invalid preview state');
+    $params=new Joomla\Registry\Registry($db->setQuery("SELECT params FROM #__extensions WHERE type='component' AND element='com_nicodeconnector'")->loadResult());
+    $params->set('connection_state',$input['state']);$params->set('central_url',$input['central_url']);$params->set('connection_type','https');
+    $db->setQuery('UPDATE #__extensions SET params='.$db->quote($params->toString())." WHERE type='component' AND element='com_nicodeconnector'")->execute();
+    $db->setQuery('UPDATE #__extensions SET enabled='.(int)$input['enabled']." WHERE type='plugin' AND folder='system' AND element='nicodewebmonitor'")->execute();
+    echo '{"ok":true}';
 } elseif ($input['action']==='seed_inventory') {
     $admin=new Joomla\CMS\User\User((int)$db->setQuery('SELECT user_id FROM #__user_usergroup_map WHERE group_id=8')->loadResult());
     $registry=new Nicode\Component\NicodeWebMonitor\Administrator\Service\SiteRegistry($db,new Nicode\Component\NicodeWebMonitor\Administrator\Service\CredentialVault($app->get('secret')),$admin);

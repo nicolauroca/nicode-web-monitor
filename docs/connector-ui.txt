@@ -1,0 +1,60 @@
+Nicode Web Monitor 1.1.1-dev.3 — interfaz del Conector
+
+Alcance de esta revisión
+Rediseño de la presentación del componente Conector: connection.php, connector.css
+y connector.js, dentro de administrator/tmpl. Los controladores, servicios,
+credenciales, transportes, permisos y esquema no cambian. Los dos paquetes conservan
+una versión coherente porque el protocolo de vinculación comprueba sus versiones.
+La marca sigue siendo Nicode Web Monitor; Central y Conector son sus dos funciones.
+
+Jerarquía visual
+Cabecera común de producto, identificación del sitio y aviso visible de desarrollo.
+Contenido principal a la izquierda y ayuda contextual/alcance a la derecha, apilados
+en móvil. Colores azul oscuro y verde azulado, superficies claras, bordes discretos,
+espaciado y estilos tipográficos diferenciados. El tema oscuro sigue data-bs-theme
+de Joomla. CSS con prefijo nwm y sin modificar las plantillas globales de Joomla.
+Los SVG se incluyen en el código; no se descargan fuentes, imágenes ni recursos
+de terceros. CSS/JS se versionan con la entrega para evitar cachés de otra versión.
+
+Estados que deben mantenerse claros
+- Sin vinculación: formulario de dos campos y guía de tres pasos. Si este Joomla
+  contiene el Central y el usuario tiene acceso, un botón copia su URL canónica
+  al formulario; es una acción local en el navegador, no una vinculación automática.
+- Pendiente: instrucciones para repetir EXACTAMENTE dirección y código anteriores,
+  sin sugerir generar otro antes de cancelar. Confirmar conexión vuelve a utilizar
+  el POST original. Cancelar conserva la confirmación y revocación existentes.
+- Conectado: central identificado por dominio/URL, conexión local o HTTPS, fecha
+  de vinculación verificada en UTC y acceso al panel. La fecha NO es la última
+  comprobación automática. El Conector no dispone de un estado de salud en vivo.
+- Acceso desactivado: presentación de atención, sin mostrar un estado verde de
+  conexión activa. Se explica cómo revocar la vinculación y conectar de nuevo.
+- Usuario sin core.admin: puede leer el estado, pero no aparecen formularios de
+  conexión/revocación. Los permisos del servidor siguen siendo la autoridad.
+
+Gestión y funciones avanzadas
+La desconexión queda en Gestionar conexión, separada de la acción principal, con
+checkbox obligatorio antes de enviar. El bloque se abre de entrada si el intento
+está pendiente o el acceso desactivado. La eliminación del registro en el central
+continúa siendo independiente. Copias/actualizaciones quedan en otro desplegable,
+con acceso a su configuración solo si los permisos de Joomla lo permiten.
+
+Accesibilidad y mejora progresiva
+Etiquetas visibles, ayuda asociada mediante aria-describedby, errores junto al
+campo, foco de teclado visible, iconos decorativos sin lectura duplicada y estados
+expresados en texto además de color. Las direcciones largas se ajustan al ancho.
+El código está oculto inicialmente; Mostrar/Ocultar solo cambia la presentación
+del input, y al volver a la página se vuelve a ocultar. No utiliza localStorage, sessionStorage ni almacenamiento propio.
+JavaScript añade el atajo de URL, ayuda de validación y estado Conectando, evitando
+dobles envíos. No realiza fetch, AJAX ni cambios de credenciales o permisos.
+Los formularios siguen siendo POST nativos con CSRF, validación y confirmación.
+Sin JavaScript funcionan la vinculación, la desconexión y los desplegables; los
+botones que necesitan JS permanecen ocultos. Se respeta reducción de movimiento
+y se contemplan colores forzados. Esto no equivale a una auditoría WCAG completa.
+
+Verificación
+tests/onboarding_http.py comprueba el recorrido local/remoto y permite:
+ --design-states: estados sintéticos pendientes, desactivados y conectados,
+ direcciones largas, 1440/390/320 px y tema oscuro. Solo altera datos del Joomla
+ desechable mediante el fixture; los restaura al terminar.
+ --without-js: recorrido real de formularios con JavaScript desactivado.
+Las capturas se revisan en .local. No generar ni publicar capturas de códigos reales.

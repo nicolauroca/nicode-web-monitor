@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.2 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.3 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
@@ -36,6 +36,11 @@ credencial y revocación comprobadas. No depender de DNS ni peticiones HTTPS a s
 mismo. El transporte local solo se selecciona dentro del código instalado, nunca
 desde un payload HTTP. Las piezas con versiones distintas se rechazan expresamente.
 Todos los nombres visibles pertenecen a Nicode Web Monitor: Central y Conector.
+La UI del Conector usa cabecera de producto, panel de estado/formulario, ayuda
+contextual y gestión de desconexión separada. Los detalles de diseño y accesibilidad
+están en connector-ui.txt. El estado Conectado acredita la vinculación; no inventar
+una última comprobación o salud en vivo a partir de connected_at. Los formularios
+siguen funcionando sin JavaScript. No sustituirlos por llamadas AJAX al rediseñar.
 Tarea nativa creada idempotentemente desde una acción administrativa, respetando
 pausas y personalizaciones. El estado del scheduler procede de ejecuciones reales.
 

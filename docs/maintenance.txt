@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.7 — mantenimiento experimental
+Nicode Web Monitor 1.1.1-dev.8 — mantenimiento experimental
 
 Alcance y acceso
 La conexión sencilla habilita inventario. Copias, actualizaciones de extensiones

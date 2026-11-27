@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.7 — arquitectura
+Nicode Web Monitor 1.1.1-dev.8 — arquitectura
 
 Producto e instalación
 Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.
@@ -109,3 +109,10 @@ deduplicados y duración medida por Central. ReleaseReference interpreta hechos
 públicos; ReleaseCatalog guarda caché por fuente sin alterar opciones ajenas;
 ReferenceHttp limita las dos fuentes oficiales y mantiene TLS/pinning. No hay
 servicio externo de análisis de los inventarios. Consultar site-health.txt.
+
+Instalación de paquetes
+Cada propietario pkg_ incorpora script.php y scriptfile en su propio manifiesto.
+Preflight comprueba Joomla/Sodium/cURL y falla con un diagnóstico específico antes
+de ejecutar hijos. Los componentes conservan el guard para instalaciones internas
+individuales. No hay dependencia del Central para instalar el Conector ni helpers
+compartidos entre propietarios. La desinstalación puede ejecutarse sin los módulos.

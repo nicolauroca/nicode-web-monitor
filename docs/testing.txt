@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.7 — pruebas
+Nicode Web Monitor 1.1.1-dev.8 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -128,3 +128,15 @@ extensiones, espacio crítico, filtros de prioridad y página Diagnóstico. Comp
 el filtro GET sin JS, ausencia de mezcla de sitios y tres anchos de pantalla.
 Para renovar los hechos públicos distribuidos: php tools/update_release_catalog.php,
 con CA de PHP válida, seguido de build.py; revisar las fuentes antes de publicar.
+
+Instalación limpia y requisitos reales
+python tests/connector_clean_install.py --site JOOMLA_ROOT --php PHP_EXECUTABLE --ini COMPLETE_PHP_INI --package CONNECTOR_PKG_ZIP --output PRIVATE_OUTPUT --allow-disposable-writes
+Requiere Joomla desechable sin ningún paquete Nicode ni Central, PHP con Sodium y
+cURL cargables desde el ini, y MySQLi para el fixture. Genera perfiles privados sin
+Sodium, sin cURL y sin ambos; comprueba sus ausencias reales, rechazo antes de hijos,
+mensaje español, instalación completa sin Central, propietarios, reinstalación
+con política conservada y retirada sin los módulos. Deja el Conector instalado.
+La metadata española sintética se limita al idioma del objeto Language en el
+fixture CLI y se retira al terminar; no se distribuye ni reemplaza paquetes de idioma.
+connector_install_step.php es la sonda nativa auxiliar, con JSON por stdin y salida
+sin parámetros/credenciales: únicamente hashes de parámetros para compararlos.

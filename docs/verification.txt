@@ -1,66 +1,52 @@
-Nicode Web Monitor 1.1.1-dev.7 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.8 — verificación vigente
 
-Fecha: 26 de noviembre de 2026 (Europe/Madrid).
-Entrega de DESARROLLO; prerelease, no definitiva ni beta final.
-Laboratorio desechable: Joomla 6.1.4, PHP 8.5.8 Windows, MariaDB 10.4.28 y Chrome.
-No se usan instalaciones, credenciales ni inventarios del propietario.
+Fecha: 27 de noviembre de 2026 (Europe/Madrid).
+Prerelease de DESARROLLO, no definitiva ni beta final.
+Joomla 6.2.0 oficial, paquete completo con SHA256 comprobado; instalación nueva
+en directorio/base de datos desechables, PHP 8.5.8 Windows y MariaDB 10.4.28.
+No se utiliza la instalación ni las credenciales del propietario.
 
-Alcance
-Prioridades del directorio, semáforos de versiones y soporte, catálogo oficial,
-recuentos de extensiones pendientes, diagnóstico de siete áreas y duración de
-consulta de inventario. Mismo schema_version=2 y consentimiento de 13 categorías.
-Se preservan navegación por sitio, TLS/pinning y permisos de mantenimiento.
+Reproducción y alcance
+Con el paquete publicado anterior, Joomla 6.2.0 sin Sodium instala el plugin system
+y rechaza el componente sin diagnóstico concreto. Con el módulo disponible, el
+Conector se instala sin necesitar Central. La causa del hosting del propietario
+no se da por confirmada: Joomla 6.2.0 es compatible y falta conocer su PHP/módulos.
+Se corrige el diagnóstico y la comprobación previa del pkg_, conservando el
+requisito criptográfico y el transporte. Los componentes tienen también su guard.
 
-Verificación ejecutada
-- site_health.php: 29 comprobaciones deterministas. Ramas soportadas frente a
-  nuevas ramas, parches pendientes, solo seguridad, EOL, versiones personalizadas,
-  catálogo caducado/futuro, fin de día inclusivo, fuente malformada, deduplicación,
-  versiones ya instaladas, datos denegados/antiguos, espacio bajo y tareas sin
-  resultado. Incluye tareas permitidas con configuración denegada.
-- release_catalog.php: 12 comprobaciones con tabla temporal de conexión. ACL,
-  lectura sin red, refresco independiente, conservación de opciones y fechas,
-  fallo parcial y limitación de reintentos. El transporte se sustituye por respuestas
-  públicas sintéticas; no hay consultas externas desde este fixture.
-- Lectura real de las dos fuentes oficiales con tools/update_release_catalog.php,
-  PHP/cURL, TLS verificado y direcciones públicas fijadas. El PHP del laboratorio
-  utiliza las CA ya confiadas por Windows; sin desactivar la verificación. Catálogo
-  distribuido consultado el 26 de noviembre de 2026 a las 18:30 UTC.
-- Regresión nativa: registry.php 40; history.php 24; monitor.php 21;
-  notifications.php 20; maintenance_history.php 20; backup_coordinator.php 46;
-  self_monitoring.php 13; inventory_permissions.php 68; inventory.php 22;
-  inventory_view.php 8. Revocación, sustitución de categorías denegadas, escritura
-  fallida explícita, diarios y confirmaciones independientes conservados.
-- scheduler.php: 10 comprobaciones de cola nativa y recurrencia en procesos CLI
-  nuevos, incluyendo la tarea que ahora comprueba referencias. No crea cron del SO.
-- client_http.py: 39 casos TLS/protocolo con servidor loopback. Identidad, formato,
-  certificado, redirecciones rechazadas, límites y destinos adversarios.
-- Sintaxis de 135 PHP de extensiones/tests, herramienta CLI ejecutada, 11 XML,
-  30 Python y 3 JavaScript; enlaces de documentación y git diff --check.
-- Siete ZIP reproducibles LF/CRLF, con ZIP hijos y conservación de binarios.
-
-Navegador
-Recorridos locales y HTTPS remoto: 166 comprobaciones cada uno, con consentimiento,
-POST/303/GET, categorías aisladas, búsqueda/filtros, semáforos, 56 ofertas de dos
-extensiones, prioridad EOL/disco, diagnóstico y control de acceso al refresco.
-Sin JavaScript: 134 comprobaciones con consentimiento y navegación nativa.
-Recorrido final sobre los ZIP finales: 97 comprobaciones sin JavaScript,
-incluida configuración denegada con tareas permitidas, filtros GET y automonitorización.
-Roles y formularios de mantenimiento CGI/TLS: 28 y 45 comprobaciones; CSRF,
-confirmaciones, contexto del sitio y estilos nativos cargados.
-Capturas revisadas de directorio, diagnóstico y categorías a 1440/390/320 px,
-direcciones largas y tema oscuro. No se observa desbordamiento de página ni
-mezcla de otros sitios. Portapapeles simulado; no se modifica el del usuario.
+Ejecutado
+- connector_clean_install.py: 24 comprobaciones. Runtime real sin Sodium, sin cURL
+  y sin ambos; mensaje español con versiones, rechazo sin hijos, instalación
+  autónoma sin Central, propietarios correctos, reinstalación con política/identidad
+  conservadas, rechazo de reinstalación sin alterar hijos, desinstalación sin módulos
+  y reinstalación posterior limpia. Los perfiles ini se generan fuera de Git.
+- Reintento del paquete corregido sobre el plugin que dejó la instalación fallida:
+  no lo altera mientras falta Sodium; con el módulo disponible completa los tres
+  registros y asigna ambos hijos a su paquete.
+- Paquete Central sin Sodium: rechazo explícito antes de instalarlo; con los
+  módulos disponibles se instala junto al Conector en el mismo Joomla 6.2.0.
+- self_monitoring.php: 13 comprobaciones, incluidas vinculación local, inventario
+  manual/automático sin DNS propio, revocación, identidad y rechazo de versiones
+  instaladas diferentes.
+- lifecycle_native.php: 10 comprobaciones de dos propietarios, configuración
+  preservada, retirada independiente de Central/Conector y conservación de datos.
+  Repetidas también al actualizar la instalación previa de desarrollo en Joomla
+  6.1.4; no constituyen un contrato de compatibilidad con entregas pre-beta.
+- schema_repair.php: 14 comprobaciones de connection_type con marcadores actuales,
+  anteriores y ausentes; el guard de requisitos no sustituye la reparación del DDL.
+- Navegador sobre Joomla 6.2.0: 42 comprobaciones de alta desde los componentes,
+  conexión propia con DNS bloqueado, inventario, revocación y retirada independiente,
+  estilos cargados, móvil y ausencia de errores JavaScript. HTTPS/CGI local;
+  las sustituciones del fixture se restauran al finalizar.
+- Sintaxis de 138 PHP, 11 XML, 31 Python y 3 JavaScript; enlaces y git diff --check.
+  Siete ZIP reproducibles LF/CRLF, incluidos script.php de los paquetes, ZIP hijos
+  y conservación de binarios.
 
 Límites
-Las CA y destinos loopback son dependencias del laboratorio y no se distribuyen.
-Los archivos instalados alterados por los fixtures se restauran en finally; datos,
-códigos y cuentas temporales se retiran. Se bloquea DNS en automonitorización
-para acreditar que el inventario local no depende de HTTP propio. Se desactiva
-la ejecución por visitas mientras existen sitios sintéticos. El catálogo público
-no contiene datos del usuario y su lectura no envía versiones instaladas.
-No se atribuyen uptime, carga de portada, TLS público, escaneo de malware, base
-CVE, Lighthouse, SMTP externo, cron del hosting ni recuperación/restauración.
-Las copias y actualizaciones conservan su estado experimental; sus ensayos completos
-de instalación/restauración no se han repetido por este cambio de diagnóstico.
-No es auditoría WCAG ni matriz de todos los PHP, motores o plantillas. Falta validar
-los paquetes en los alojamientos del propietario antes de fijar una beta.
+La ausencia de módulos se prueba en nuevos procesos PHP con ini propio; no se
+modifica el PHP global ni el hosting del usuario. El fixture de idioma aporta
+metadata temporal para el tag de Language de Joomla, sin simular las comprobaciones
+de extensión PHP. No se afirma una matriz completa de versiones PHP, motores,
+plantillas o alojamientos. Los inventarios, capturas, instaladores Joomla, bases y
+perfiles generados permanecen en .local. La actualización de los números de versión
+en los demás fixtures no implica que se hayan repetido todos sus ensayos.

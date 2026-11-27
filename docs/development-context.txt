@@ -13,9 +13,17 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.7 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.8 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
+Los dos pkg_ tienen su propio script de preflight, incluido expresamente por
+build.py. Comprobar Joomla 6+, ext-sodium y ext-curl ANTES de instalar hijos;
+el fallo informa del requisito y PHP/Joomla detectados, en español o inglés.
+Los componentes mantienen el mismo guard al instalarse por separado. Desinstalar
+no exige estos módulos, para poder retirar o reparar una instalación incompleta.
+No eliminar Sodium ni sustituir el cifrado como solución a un hosting sin el módulo.
+connector_clean_install.py reproduce ausencias reales en procesos PHP nuevos,
+instalación sin Central, reinstalación y conservación de la política.
 Las tablas se conservan al desinstalar. CREATE TABLE IF NOT EXISTS no actualiza
 columnas de una tabla conservada, y Joomla puede marcar el esquema como actual
 durante una reinstalación. El preflight comprueba la tabla real y asegura

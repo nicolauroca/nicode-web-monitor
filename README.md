@@ -3,17 +3,17 @@
 Monitorización de inventario y mantenimiento experimental de varios Joomla desde
 un Joomla central. Software libre, GPL-2.0-or-later; desarrollo público.
 
-**1.1.1-dev.7: desarrollo previo a beta.** La validación en los hostings del propietario
+**1.1.1-dev.8: desarrollo previo a beta.** La validación en los hostings del propietario
 está pendiente. No se promete compatibilidad con versiones anteriores de desarrollo.
 
 ## Instalar y conectar
 
-Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.7).
+Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.8).
 Los archivos automáticos «Source code» de GitHub no son instaladores Joomla.
 Para construir desde el repositorio: `python tools/build.py`.
 
-1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.7.zip` en el Joomla central.
-2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.7.zip` en cada Joomla supervisado.
+1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.8.zip` en el Joomla central.
+2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.8.zip` en cada Joomla supervisado.
 3. En **Componentes → Nicode Web Monitor — Central**, pulsa **Añadir sitio**, indica su nombre y genera un código.
 4. En **Componentes → Nicode Web Monitor — Conector** del supervisado, introduce la dirección del
    central, pega el código y pulsa **Conectar**.
@@ -37,6 +37,10 @@ El Conector presenta un panel de estado, central vinculada, tipo de conexión y
 fecha de vinculación, con instrucciones específicas para cada estado. El diseño
 se adapta a móvil y al tema oscuro de Joomla; las acciones de desconexión quedan
 separadas del formulario principal. [Diseño y comportamiento](docs/connector-ui.txt).
+
+El instalador comprueba los requisitos antes de instalar las piezas y señala
+Sodium o cURL cuando faltan en el PHP de la web. Tras activarlos, vuelve a subir
+el paquete completo.
 
 Necesitas Joomla 6 compatible con tu PHP/base de datos, cURL, Sodium y HTTPS válido.
 El panel distingue conexión, tarea preparada y ejecución automática reciente.

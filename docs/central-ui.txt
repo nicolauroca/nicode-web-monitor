@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.7 — navegación del Central
+Nicode Web Monitor 1.1.1-dev.8 — navegación del Central
 
 Organización
 La entrada muestra exclusivamente el directorio de sitios. Ocupa todo el ancho

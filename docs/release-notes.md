@@ -1,32 +1,26 @@
-# Nicode Web Monitor 1.1.1-dev.7 — Desarrollo
+# Nicode Web Monitor 1.1.1-dev.8 — Desarrollo
 
 **Prerelease de desarrollo. No es una versión definitiva, estable ni una beta final.**
 
-Central interpreta la información del sitio para mostrar prioridades y próximos pasos.
+Corrige el diagnóstico y el orden de las comprobaciones al instalar desde cero.
 
-- Semáforos Joomla/PHP: versión al día, pendiente, solo seguridad o sin soporte.
-  Catálogo oficial con fechas y caducidad; sin verde para datos antiguos o desconocidos.
-- Referencias PHP/Joomla actualizadas por la tarea y mediante un POST autorizado.
-  Los fallos conservan las fechas; no se envían inventarios a los proveedores.
-- Actualizaciones distintas realmente superiores a la versión instalada. Se separan
-  Joomla core, duplicados, versiones desconocidas y caché sin refrescar.
-- Señales compartidas de configuración, espacio libre, modo offline y tareas
-  fallidas/bloqueadas/sin resultado, respetando los permisos del Conector.
-- Filtros por prioridad, también sin JavaScript, y página Diagnóstico con criterio,
-  fuentes y acceso a cada categoría. Resumen muestra los primeros asuntos a revisar.
-- Duración de la consulta de inventario medida desde Central, identificada como
-  local o HTTPS; no se presenta como velocidad de carga de la web ni uptime.
-- Navegación por sitio, automonitorización, formularios y mantenimiento independiente
-  conservados; diseño móvil y tema oscuro.
+- Los paquetes Central y Conector verifican Joomla 6+, Sodium y cURL antes de
+  instalar sus piezas. Un requisito ausente no deja hijos nuevos instalados.
+- El error identifica módulos ausentes, versiones Joomla/PHP detectadas y el paso
+  necesario en el alojamiento, en español o inglés.
+- Los componentes comprueban también sus requisitos si se instalan individualmente.
+- Desinstalar sigue siendo posible aunque falten Sodium o cURL.
+- Validado el Conector solo, sin Central, en un Joomla 6.2.0 nuevo; reinstalación,
+  conservación de permisos y automonitorización con ambos paquetes.
 
-La comparativa con mySites.guru y Watchful está en docs/competitive-analysis.md.
-Sonda pública/SSL, Lighthouse, base de vulnerabilidades e informes siguen pendientes;
-no se atribuyen a esta entrega. docs/site-health.txt explica los criterios publicados.
+La ausencia de Sodium o cURL en el PHP del servidor sigue requiriendo su activación
+en el alojamiento. El ZIP no puede habilitar esos módulos. No se modifica el cifrado
+ni se rebaja la verificación HTTPS para evitar el requisito.
 
 ## Instalar
 
-En Central: **pkg_nicodemonitor-1.1.1-dev.7.zip**.
-En cada sitio: **pkg_nicodeconnector-1.1.1-dev.7.zip**.
+En Central: **pkg_nicodemonitor-1.1.1-dev.8.zip**.
+En cada sitio: **pkg_nicodeconnector-1.1.1-dev.8.zip**.
 Si Central también se supervisa, instalar ambos en ese Joomla. Actualizar los dos
 paquetes completos, sin desinstalar ni borrar tablas. «Source code» no es instalable.
 

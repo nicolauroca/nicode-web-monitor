@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.8 — comprobaciones automáticas y correo
+Nicode Web Monitor 1.1.1-dev.9 — comprobaciones automáticas y correo
 
 Preparación
 El paquete central instala el plugin de tareas. Como administrador del componente,

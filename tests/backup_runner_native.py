@@ -60,7 +60,7 @@ def run_panel(context):
             page.on('response',response_received)
             page.on('requestfailed',lambda req: responses.append({'network_failure':req.failure}))
             base='http://127.0.0.1:8767/administrator/index.php'
-            url=base+'?option=com_nicodewebmonitor&site='+str(f['site'])+'&section=maintenance'
+            url=base+'?option=com_nicodewebmonitor&site='+str(f['site'])+'&section=maintenance&tool=backups'
             page.goto(base)
             page.locator('input[name=username]').fill(f['users']['operator']['username'])
             page.locator('input[name=passwd]').fill(f['users']['operator']['password'])

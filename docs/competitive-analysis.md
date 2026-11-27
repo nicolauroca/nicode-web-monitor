@@ -1,8 +1,8 @@
 # Comparativa de producto y prioridades
 
-Revisión: 26 de noviembre de 2026. Estado de Nicode Web Monitor **1.1.1-dev.8**, desarrollo previo a beta.
+Revisión: 27 de noviembre de 2026. Estado de Nicode Web Monitor **1.1.1-dev.9**, desarrollo previo a beta.
 
-Se han consultado las páginas oficiales de [mySites.guru](https://mysites.guru/features/), su [directorio y semáforos](https://mysites.guru/blog/site-information-all-in-one-place-with-mysites-guru/) y [Watchful](https://watchful.net/watchful-features/). Describen prestaciones comerciales; esta comparación no es un ensayo de sus servicios ni afirma paridad de Nicode.
+Se han consultado las páginas oficiales de [mySites.guru](https://mysites.guru/features/), su [directorio y semáforos](https://mysites.guru/blog/site-information-all-in-one-place-with-mysites-guru/), [Watchful](https://watchful.net/watchful-features/) y [Akeeba Panopticon](https://www.akeeba.com/products/panopticon.html). Describen prestaciones comerciales; esta comparación no es un ensayo de sus servicios ni afirma paridad de Nicode.
 
 | Capacidad observada | Nicode actual | Siguiente trabajo |
 | --- | --- | --- |
@@ -22,3 +22,7 @@ Se han consultado las páginas oficiales de [mySites.guru](https://mysites.guru/
 P1 es el siguiente bloque de monitorización; P2 organiza carteras e informes; P3 necesita una decisión de producto y seguridad. Son trabajo pendiente, no funciones publicadas ni compromisos de fecha.
 
 La mejora buscada es explicar cada resultado y permitir actuar sobre su causa. Los colores necesitan datos recientes, fuentes mantenidas y un estado “sin evaluar”. Se preservan la navegación por niveles, la denegación desde cada Conector y las confirmaciones de mantenimiento.
+
+El catálogo detallado de acciones, permisos, configuración y diseño de las
+confirmaciones se mantiene en [central-actions.md](central-actions.md). La entrega
+actual reorganiza herramientas existentes; no habilita todas las propuestas.

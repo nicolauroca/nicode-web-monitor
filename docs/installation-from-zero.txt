@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.8 — instalación y conexión
+Nicode Web Monitor 1.1.1-dev.9 — instalación y conexión
 
 Requisitos
 Joomla 6, PHP y base de datos compatibles con esa instalación. PHP necesita cURL,
@@ -14,11 +14,11 @@ Python 3 se utiliza solo al reconstruir los paquetes desde el repositorio.
 1. Obtener los instaladores
 Desde la raíz del repositorio: python tools/build.py
 Los dos archivos para usuarios son:
- - dist/pkg_nicodemonitor-1.1.1-dev.8.zip: panel central y plugin de tareas.
- - dist/pkg_nicodeconnector-1.1.1-dev.8.zip: componente de conexión y motor system.
+ - dist/pkg_nicodemonitor-1.1.1-dev.9.zip: panel central y plugin de tareas.
+ - dist/pkg_nicodeconnector-1.1.1-dev.9.zip: componente de conexión y motor system.
 El build también genera ZIP individuales para pruebas y un plugin CLI opcional;
 no instalarlos en el recorrido normal. Descargar los dos pkg_ de la prerelease
-1.1.1-dev.8, no «Source code» ni los ZIP de una release anterior.
+1.1.1-dev.9, no «Source code» ni los ZIP de una release anterior.
 
 Comprobación de requisitos
 El paquete comprueba Joomla 6+, Sodium y cURL en el PHP que ejecuta esta web
@@ -99,7 +99,7 @@ Reinstalar un paquete actual no es una limpieza de las tablas conservadas. Antes
 de reutilizar un laboratorio viejo, decidir explícitamente qué datos conservar.
 
 Si Central muestra 1054 Unknown column connection_type
-Instalar los dos ZIP completos de 1.1.1-dev.8 encima de los existentes, sin
+Instalar los dos ZIP completos de 1.1.1-dev.9 encima de los existentes, sin
 desinstalar, borrar tablas ni ejecutar SQL manualmente. El instalador Central
 comprueba las columnas reales y añade connection_type si falta, conservando sitios,
 credenciales e historial, incluso si Joomla ya marcaba el esquema como actualizado.

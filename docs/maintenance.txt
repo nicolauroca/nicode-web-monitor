@@ -1,16 +1,21 @@
-Nicode Web Monitor 1.1.1-dev.8 — mantenimiento experimental
+Nicode Web Monitor 1.1.1-dev.9 — mantenimiento experimental
 
 Alcance y acceso
 La conexión sencilla habilita inventario. Copias, actualizaciones de extensiones
 y core siguen siendo operaciones experimentales y deliberadas. El panel las agrupa
-en la ficha de cada sitio: Sitios > Entrar > Mantenimiento. El acceso general
+en la ficha de cada sitio: Sitios > Entrar > Mantenimiento > herramienta. La entrada
+permite elegir Copias, Extensiones o Joomla; no mezcla sus formularios. El acceso general
 Mantenimiento permite elegir el sitio. Solo se muestran sus formularios y sus
 últimas 100 operaciones de cada capacidad; el filtro por sitio se aplica antes
-del límite. Tras una acción se vuelve al sitio de la operación real. No son
+del límite. Tras una acción se vuelve al sitio y herramienta de la operación real. Los avisos
+esenciales quedan junto a la confirmación; la ayuda extensa está bajo (i), el acceso
+avanzado se despliega y solo la primera operación se abre inicialmente. No son
 mantenimiento desatendido.
 La nueva conexión local del propio central solo proporciona inventario. No configura
 un transporte de mantenimiento remoto para ese registro; usar las herramientas
 locales correspondientes y sus precondiciones para ensayos de mantenimiento.
+La UI no presenta creación/ejecución remotas para ese registro local; conserva
+consulta e historial de operaciones existentes y ofrece enlaces nativos si hay permisos.
 En Nicode Web Monitor — Conector, el apartado avanzado lleva al plugin system para preparar
 estas capacidades. Este formulario técnico no forma parte de conectar inventario.
 
@@ -59,7 +64,7 @@ No crea trabajo en segundo plano ni renueva el permiso local de mantenimiento.
 Fases: files → database → verify → complete. La verificación final compara el
 manifiesto de archivos tras capturar la base de datos. No es una copia transaccional
 de un sitio vivo. El resultado declara restoration_verified:false.
-Una respuesta perdida requiere Query backup status. Un resultado incierto bloquea
+Una respuesta perdida requiere Consultar estado de la copia. Un resultado incierto bloquea
 el avance; no crear otro ID ni repetir el paso a ciegas. Un permiso vencido solo
 puede renovarlo un operador tras confirmar que la ventana detenida continúa.
 
@@ -121,3 +126,7 @@ El central reserva estado incierto ANTES de escrituras y añade observaciones
 atómicamente con cambios de estado. La UI muestra hasta 50 observaciones recientes
 por operación, con tiempo UTC, actor, secuencia y digest. No es un log externo
 inmutable ni reconstruye efectos previos a que existiera el registro.
+
+Catálogo de ampliaciones y criterios UX: central-actions.md. Las nuevas acciones
+de configuración, caché, selección directa de actualizaciones y lotes siguen siendo
+propuestas; no se añaden endpoints de escritura por cambiar la interfaz.

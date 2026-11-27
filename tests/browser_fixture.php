@@ -63,6 +63,13 @@ if ($action === 'seed') {
         if ($state === 'recovered') {
             $history->record($id, ['ok'=>false, 'error'=>'connection_failed']);
             $history->record($id, $good);
+            foreach(['backup'=>'#__nwm_backup_operations','update'=>'#__nwm_update_operations','core'=>'#__nwm_core_update_operations'] as $kind=>$table){
+                $operation=$kind==='backup'?'backup-'.substr(hash('sha256',$uuid),0,32):'fixture-'.$kind.'-'.substr(hash('sha256',$uuid),0,12);
+                $record=(object)['operation'=>$operation,'site'=>$id,'site_id'=>$uuid,'status'=>'ready','receipt'=>'{}','updated_at'=>time()];
+                if($kind==='backup')$record->next_sequence=0;
+                $db->insertObject($table,$record);
+                if($kind==='core'){$record->operation.='-uncertain';$record->status='uncertain';$db->insertObject($table,$record);}
+            }
         }
         if ($state === 'stale') {
             $history->record($id, $good);

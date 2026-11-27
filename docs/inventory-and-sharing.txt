@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.8 — inventario y permisos de consulta
+Nicode Web Monitor 1.1.1-dev.9 — inventario y permisos de consulta
 
 Decisión del sitio supervisado
 En el Conector, Información que compartes > Elegir categorías de información.

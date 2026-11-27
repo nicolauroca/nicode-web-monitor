@@ -39,7 +39,7 @@ $icons=[
     'chevron'=>'<path d="m9 5 7 7-7 7"/>',
 ];
 $icon=static fn($name)=>'<svg class="nwm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'.$icons[$name].'</svg>';
-$uiVersion='1.1.1-dev.8';
+$uiVersion='1.1.1-dev.9';
 $assets=$this->app->getDocument()->getWebAssetManager();
 $assetRoot=Uri::root().'administrator/components/com_nicodeconnector/tmpl/';
 $assets->registerAndUseStyle('nwm.connector',$assetRoot.'connector.css',['version'=>$uiVersion]);

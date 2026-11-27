@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.8 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.9 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Los dos pkg_ tienen su propio script de preflight, incluido expresamente por
@@ -54,7 +54,7 @@ sitio. Resumen, Diagnóstico, Inventario, Historial, Conexión y Mantenimiento s
 Inventario abre primero un índice y después una sola categoría. Migas y enlaces
 Volver permiten subir de nivel. SiteRegistry::find carga solo el sitio seleccionado.
 Una consulta guardada usa POST/303/GET; un fallo no se sustituye por caché. Los
-retornos de mantenimiento siguen el sitio de la operación real. Alta guiada y
+retornos de mantenimiento siguen el sitio y herramienta de la operación real. Alta guiada y
 programación tienen pantallas propias.
 central-ui.txt documenta estructura, accesibilidad, confirmaciones y pruebas.
 El inventario usa schema_version=2, trece categorías y la política local de
@@ -112,3 +112,15 @@ esta revisión en GitHub; no confundir una release con una versión definitiva.
 No guardar credenciales, inventarios, instalaciones, dumps ni capturas de sitios
 reales en Git. dist y .local son generados e ignorados. No publicar paquetes ni
 enviar cambios a GitHub como efecto implícito de una prueba local.
+
+Acciones de Central
+central-actions.md es el catálogo vigente de acciones actuales y propuestas, con
+comparación de mySites.guru, Watchful y Panopticon. No confundir preparación local
+experimental con actualización guiada automática. Mantenimiento tiene un selector
+y páginas tool=backups/extensions/joomla; solo se cargan sus operaciones. Ayuda
+(i) accesible por teclado/táctil, riesgo esencial fuera de la ayuda, credenciales
+plegadas y operaciones con la primera abierta. Los formularios, tokens y guardas
+de los proveedores no cambian. La conexión local sigue sirviendo inventario y
+remite a herramientas Joomla propias; no inventar un transporte de escritura.
+Configuración remota, caché, actualizaciones desde ofertas y lotes requieren sus
+contratos y permisos separados; no hay una API genérica de configuración o consola.

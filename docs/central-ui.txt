@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.8 — navegación del Central
+Nicode Web Monitor 1.1.1-dev.9 — navegación del Central
 
 Organización
 La entrada muestra exclusivamente el directorio de sitios. Ocupa todo el ancho
@@ -17,7 +17,9 @@ Entrar abre una ficha independiente y solo carga el registro de ese sitio:
   Abrir una categoría muestra únicamente sus datos, en otra dirección navegable.
 - Historial: comprobaciones, transiciones, alertas y avisos del sitio.
 - Conexión: identidad, destino y eliminación con confirmación explícita.
-- Mantenimiento: formularios y operaciones del sitio, según permisos.
+- Mantenimiento: selector de Copias, Extensiones o Joomla, con una herramienta
+  por página, acceso avanzado plegable, ayuda (i) y avisos esenciales visibles.
+  Operaciones plegables y confirmación independiente de cada ejecución.
 Las migas Sitios / nombre / Inventario / categoría y los enlaces Volver permiten
 subir de nivel. Las pestañas cambian de sección sin regresar al directorio.
 Una dirección inexistente muestra Sección no disponible; nunca otro sitio.
@@ -76,3 +78,9 @@ Los resultados vigentes y límites están en verification.txt.
 El directorio incluye filtros de prioridad por GET y combinación progresiva con
 búsqueda/estado. Las referencias se leen de caché; actualizar es un POST con CSRF.
 Los semáforos y la respuesta del inventario no se presentan como uptime.
+
+Mantenimiento utiliza tool=backups/extensions/joomla, validado contra herramientas
+autorizadas. Los retornos POST siguen el sitio y tipo de la operación real. Una
+herramienta desconocida no muestra formularios; la conexión de inventario local
+remite a los actualizadores nativos con ACL, sin ofrecer ejecución remota nueva.
+El catálogo de acciones propuestas está en central-actions.md.

@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.8 — prioridades y diagnóstico
+Nicode Web Monitor 1.1.1-dev.9 — prioridades y diagnóstico
 
 Objetivo
 El directorio conserva una fila por sitio y permite decidir qué revisar. Inventario

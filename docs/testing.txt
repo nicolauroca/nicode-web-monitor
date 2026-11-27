@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.8 — pruebas
+Nicode Web Monitor 1.1.1-dev.9 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -140,3 +140,15 @@ La metadata española sintética se limita al idioma del objeto Language en el
 fixture CLI y se retira al terminar; no se distribuye ni reemplaza paquetes de idioma.
 connector_install_step.php es la sonda nativa auxiliar, con JSON por stdin y salida
 sin parámetros/credenciales: únicamente hashes de parámetros para compararlos.
+
+Herramientas de mantenimiento y ayuda contextual
+--central-design recorre Mantenimiento > Copias/Extensiones/Joomla en
+1440/390/320 px. browser_fixture.php prepara únicamente diarios sintéticos para
+comprobar avisos, confirmación sin marcar, registro incierto, navegación por migas,
+ayuda nativa por teclado y ausencia de mezcla de herramientas. No confirma ni
+ejecuta esas operaciones. Comprueba también el registro local del propio Central:
+se conservan monitorización y enlaces nativos con ACL, sin formularios de ejecución
+remota no preparada. --without-js prueba la misma ayuda y navegación sin JavaScript.
+--maintenance-tests conserva roles/CSRF/confirmación y sigue los retornos tool=backups.
+Los fixtures de efectos usan tool=extensions o tool=joomla según capacidad; cambiar
+su ruta de presentación no acredita que se hayan repetido sus instalaciones reales.

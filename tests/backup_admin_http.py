@@ -61,7 +61,7 @@ check(status==200 and label in html,'fixture site visible')
 check(credential not in html,'credential not echoed in HTML')
 row=next(x for x in re.findall(r'<tr data-nwm-site.*?</tr>',html,re.S) if label in x)
 rowid=re.search(r'&amp;site=(\d+)',row).group(1)
-url+='&site='+rowid+'&section=maintenance'
+url+='&site='+rowid+'&section=maintenance&tool=backups'
 backup=secrets.token_hex(32)
 for task in ['backupEnroll','backupBegin','backupAdvance','backupStatus']:
     check(request(url,{'task':task,'id':rowid})[0]==403,task+' rejects missing CSRF')

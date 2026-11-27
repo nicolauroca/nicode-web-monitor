@@ -1,52 +1,49 @@
-Nicode Web Monitor 1.1.1-dev.8 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.9 — verificación vigente
 
 Fecha: 27 de noviembre de 2026 (Europe/Madrid).
 Prerelease de DESARROLLO, no definitiva ni beta final.
-Joomla 6.2.0 oficial, paquete completo con SHA256 comprobado; instalación nueva
-en directorio/base de datos desechables, PHP 8.5.8 Windows y MariaDB 10.4.28.
+Entorno desechable: Joomla 6.2.0, PHP 8.5.8 Windows, MariaDB 10.4.28,
+HTTPS/CGI local y Chrome. Ambos paquetes instalados en el mismo Joomla.
 No se utiliza la instalación ni las credenciales del propietario.
 
-Reproducción y alcance
-Con el paquete publicado anterior, Joomla 6.2.0 sin Sodium instala el plugin system
-y rechaza el componente sin diagnóstico concreto. Con el módulo disponible, el
-Conector se instala sin necesitar Central. La causa del hosting del propietario
-no se da por confirmada: Joomla 6.2.0 es compatible y falta conocer su PHP/módulos.
-Se corrige el diagnóstico y la comprobación previa del pkg_, conservando el
-requisito criptográfico y el transporte. Los componentes tienen también su guard.
+Alcance de esta revisión
+Separación de Mantenimiento en selector y páginas Copias/Extensiones/Joomla,
+ayuda contextual, credenciales plegables, avisos de riesgo y operaciones con
+estado/fecha. No se añaden proveedores de actualización, escrituras de
+configuración, limpieza de caché, lotes ni un transporte local de mantenimiento.
+central-actions.md distingue funciones experimentales y propuestas.
 
 Ejecutado
-- connector_clean_install.py: 24 comprobaciones. Runtime real sin Sodium, sin cURL
-  y sin ambos; mensaje español con versiones, rechazo sin hijos, instalación
-  autónoma sin Central, propietarios correctos, reinstalación con política/identidad
-  conservadas, rechazo de reinstalación sin alterar hijos, desinstalación sin módulos
-  y reinstalación posterior limpia. Los perfiles ini se generan fuera de Git.
-- Reintento del paquete corregido sobre el plugin que dejó la instalación fallida:
-  no lo altera mientras falta Sodium; con el módulo disponible completa los tres
-  registros y asigna ambos hijos a su paquete.
-- Paquete Central sin Sodium: rechazo explícito antes de instalarlo; con los
-  módulos disponibles se instala junto al Conector en el mismo Joomla 6.2.0.
-- self_monitoring.php: 13 comprobaciones, incluidas vinculación local, inventario
-  manual/automático sin DNS propio, revocación, identidad y rechazo de versiones
-  instaladas diferentes.
-- lifecycle_native.php: 10 comprobaciones de dos propietarios, configuración
-  preservada, retirada independiente de Central/Conector y conservación de datos.
-  Repetidas también al actualizar la instalación previa de desarrollo en Joomla
-  6.1.4; no constituyen un contrato de compatibilidad con entregas pre-beta.
-- schema_repair.php: 14 comprobaciones de connection_type con marcadores actuales,
-  anteriores y ausentes; el guard de requisitos no sustituye la reparación del DDL.
-- Navegador sobre Joomla 6.2.0: 42 comprobaciones de alta desde los componentes,
-  conexión propia con DNS bloqueado, inventario, revocación y retirada independiente,
-  estilos cargados, móvil y ausencia de errores JavaScript. HTTPS/CGI local;
-  las sustituciones del fixture se restauran al finalizar.
-- Sintaxis de 138 PHP, 11 XML, 31 Python y 3 JavaScript; enlaces y git diff --check.
-  Siete ZIP reproducibles LF/CRLF, incluidos script.php de los paquetes, ZIP hijos
-  y conservación de binarios.
+- registry: 40 comprobaciones; history: 24; self_monitoring: 13.
+  Vinculación e inventario del propio Central, revocación, identidad y rechazo
+  de versiones instaladas diferentes; sin necesitar DNS propio.
+- backup_coordinator: 46 comprobaciones; maintenance_history: 20;
+  inventory_permissions: 68. Credenciales/ACL independientes y conservación
+  de los permisos de consulta del Conector.
+- Navegador: 193 comprobaciones con JavaScript y 163 sin JavaScript.
+  Selector sin formularios de ejecución,
+  una herramienta por página, retorno y migas, ayuda por teclado, confirmación
+  requerida y inicialmente desmarcada, avisos visibles y resultado incierto sin
+  ejecución ciega. Anchos de 1440, 390 y 320 píxeles; sin desbordamiento global.
+  El registro local ofrece herramientas nativas y no formularios remotos de inicio
+  o ejecución. Los diarios listos/inciertos de diseño son datos sintéticos; esta
+  comprobación visual no ejecuta instalaciones ni acredita recuperación.
+- backup_roles_http: 28 comprobaciones; backup_admin_http: 45. Verifican
+  roles y formularios contra Joomla
+  real, CSRF, confirmación, respuestas y acceso a operaciones por su sitio real.
+- Sintaxis de 141 PHP, 11 XML, 31 Python y 3 JavaScript; enlaces de docs y
+  git diff --check. Siete ZIP reproducibles entre LF/CRLF, conservando binarios.
 
 Límites
-La ausencia de módulos se prueba en nuevos procesos PHP con ini propio; no se
-modifica el PHP global ni el hosting del usuario. El fixture de idioma aporta
-metadata temporal para el tag de Language de Joomla, sin simular las comprobaciones
-de extensión PHP. No se afirma una matriz completa de versiones PHP, motores,
-plantillas o alojamientos. Los inventarios, capturas, instaladores Joomla, bases y
-perfiles generados permanecen en .local. La actualización de los números de versión
-en los demás fixtures no implica que se hayan repetido todos sus ensayos.
+Los motores de mantenimiento conservan preparación local y precondiciones; esta
+revisión no acredita actualizaciones reales de extensiones o core ni restauración
+de copias después del rediseño. No convierte la credencial registrada en permiso
+remoto comprobado. Las pruebas de lectura y UI no prometen paridad con plataformas
+comerciales ni una instalación en un clic.
+
+No se repite aquí toda la matriz de instalación sin módulos de la revisión
+anterior ni todos los fixtures de actualización. Los cambios de sus números de
+versión no implican una nueva ejecución. No se afirma una matriz completa de
+PHP, bases de datos, plantillas, proveedores o alojamientos. Los perfiles,
+instalaciones, inventarios, capturas y diarios generados quedan fuera de Git.
+Las sustituciones del fixture HTTPS se restauran al finalizar cada ensayo.

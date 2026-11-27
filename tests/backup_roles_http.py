@@ -44,7 +44,7 @@ try:
         request(base,{'option':'com_login','task':'login','username':u['username'],'passwd':u['password'],csrf(html):1})
         status,html=request(); check(status==200 and 'aria-label="Nicode Web Monitor — Central"' in html,role+' authenticated component access')
         token=csrf(html); before=fixture('snapshot')
-        status,html=request(url.replace('section=overview','section=maintenance'))
+        status,html=request(url.replace('section=overview','section=maintenance&tool=backups'))
         check(('aria-label="Copias de seguridad"' in html)==(role=='operator'),role+' backup controls visibility')
         check('Historial de mantenimiento (últimas 50 observaciones)' not in html,role+' no invented history for missing operations')
         tasks=['backupEnroll'] if role=='operator' else ['backupEnroll','backupBegin','backupAdvance','backupContinue','backupStatus']

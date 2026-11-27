@@ -1,6 +1,6 @@
 # Documentación vigente — Nicode Web Monitor
 
-Versión de desarrollo: **1.1.1-dev.8**. No es una beta final ni una versión de
+Versión de desarrollo: **1.1.1-dev.9**. No es una beta final ni una versión de
 producción. La compatibilidad con anteriores versiones de desarrollo no forma
 parte del contrato actual.
 
@@ -15,6 +15,7 @@ parte del contrato actual.
 - [Protocolo de conexión](connector-contract.txt): vinculación, inventario y TLS.
 - [Comprobaciones automáticas](automatic-monitoring.txt): preparación, estados,
   ejecución en el hosting y correo.
+- [Acciones desde Central](central-actions.md): catálogo, prioridades, permisos y confirmaciones.
 - [Mantenimiento experimental](maintenance.txt): copias, extensiones y Joomla core.
 - [Recuperación](recovery.txt): límites de las capturas y restauración aislada.
 - [Pruebas](testing.txt): comandos, requisitos y separación de los ensayos.

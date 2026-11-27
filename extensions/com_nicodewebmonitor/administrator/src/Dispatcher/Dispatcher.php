@@ -23,16 +23,22 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
         $viewPage=$this->input->get->getCmd('screen','sites');
         $viewSection=$this->input->get->getCmd('section','overview');
         $viewCategory=$this->input->get->getCmd('category','');
+        $viewTool=$this->input->get->getCmd('tool','');
         $priorityFilter=$this->input->get->getCmd('health','all');
         $registry = new SiteRegistry(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $backups = new BackupCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canBackup = !$user->guest && !$user->block && $user->authorise('nwm.backup', 'com_nicodewebmonitor');
         $updates = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\UpdateCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canUpdate = !$user->guest && !$user->block && $user->authorise('nwm.update', 'com_nicodewebmonitor');
-        $updateOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canUpdate ? $updates->recent($selectedSiteId) : [];
+        $updateOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $viewTool==='extensions' && $canUpdate ? $updates->recent($selectedSiteId) : [];
         $coreUpdates = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\CoreUpdateCoordinator(Factory::getContainer()->get(DatabaseInterface::class), new CredentialVault($this->app->get('secret')), $user);
         $canCoreUpdate = !$user->guest && !$user->block && $user->authorise('nwm.coreupdate', 'com_nicodewebmonitor');
-        $coreUpdateOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canCoreUpdate ? $coreUpdates->recent($selectedSiteId) : [];
+        $coreUpdateOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $viewTool==='joomla' && $canCoreUpdate ? $coreUpdates->recent($selectedSiteId) : [];
+        $maintenanceCredentialStored=false;
+        $credentialTables=['backups'=>[$canBackup,'#__nwm_backup_credentials'],'extensions'=>[$canUpdate,'#__nwm_update_credentials'],'joomla'=>[$canCoreUpdate,'#__nwm_core_update_credentials']];
+        if($selectedSiteId>0&&$viewSection==='maintenance'&&isset($credentialTables[$viewTool])&&$credentialTables[$viewTool][0]){
+            $maintenanceCredentialStored=(bool)Factory::getContainer()->get(DatabaseInterface::class)->setQuery('SELECT site FROM '.$credentialTables[$viewTool][1].' WHERE site='.$selectedSiteId)->loadResult();
+        }
         $setup = new \Nicode\Component\NicodeWebMonitor\Administrator\Service\MonitoringSetup(Factory::getContainer()->get(DatabaseInterface::class));
         $monitoring = $setup->status();
         $pairingCode = null;
@@ -53,7 +59,8 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                 $table=['backup'=>'#__nwm_backup_operations','update'=>'#__nwm_update_operations','core'=>'#__nwm_core_update_operations'][$kind];
                 $id=(int)$db->setQuery('SELECT site FROM '.$db->quoteName($table).' WHERE operation='.$db->quote($post->getString('operation')))->loadResult();
             }
-            return 'index.php?option=com_nicodewebmonitor'.($id>0?'&site='.$id.'&section=maintenance':'&screen=maintenance');
+            $tool=['backup'=>'backups','update'=>'extensions','core'=>'joomla'][$kind];
+            return 'index.php?option=com_nicodewebmonitor'.($id>0?'&site='.$id.'&section=maintenance&tool='.$tool:'&screen=maintenance');
         };
         if ($task !== 'display') {
             if ($this->input->getMethod() !== 'POST' || !Session::checkToken('post')) {
@@ -83,7 +90,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                     $this->app->enqueueMessage('No se pudo preparar la conexión. Comprueba el nombre del sitio, HTTPS, tus permisos y el paquete central.','error');
                 }
                 $sites = $siteRows();
-                $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canBackup ? $backups->recent($selectedSiteId) : [];
+                $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $viewTool==='backups' && $canBackup ? $backups->recent($selectedSiteId) : [];
                 $this->app->setHeader('Cache-Control','no-store, private',true);
                 $this->app->setHeader('Referrer-Policy','no-referrer',true);
                 require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
@@ -190,7 +197,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
                     return;
                 }
                 $sites = $siteRows();
-                $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canBackup ? $backups->recent($selectedSiteId) : [];
+                $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $viewTool==='backups' && $canBackup ? $backups->recent($selectedSiteId) : [];
                 require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
                 return;
             }
@@ -206,7 +213,7 @@ final class Dispatcher extends \Joomla\CMS\Dispatcher\ComponentDispatcher
             return;
         }
         $sites = $siteRows();
-        $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $canBackup ? $backups->recent($selectedSiteId) : [];
+        $backupOperations = $selectedSiteId>0 && $viewSection==='maintenance' && $viewTool==='backups' && $canBackup ? $backups->recent($selectedSiteId) : [];
         require JPATH_ADMINISTRATOR . '/components/com_nicodewebmonitor/tmpl/registry.php';
     }
 }

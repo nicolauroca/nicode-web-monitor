@@ -8,7 +8,7 @@ foreach($sites as &$row)$row['health']=\Nicode\Component\NicodeWebMonitor\Admini
 $priorityFilters=['all'=>'Todas las prioridades','critical'=>'Prioritarias','review'=>'Para revisar','updates'=>'Extensiones pendientes','php'=>'PHP requiere revisión','joomla'=>'Joomla requiere revisión','security'=>'Señales de configuración','storage'=>'Espacio escaso','unknown'=>'Datos insuficientes'];
 $priorityFilter=isset($priorityFilters[$priorityFilter??'all'])?($priorityFilter??'all'):'all';
 $canReferences=$user->authorise('nwm.monitor','com_nicodewebmonitor');
-$uiVersion='1.1.1-dev.8';
+$uiVersion='1.1.1-dev.9';
 $canCreate=$user->authorise('core.create','com_nicodewebmonitor');
 $canAdmin=$user->authorise('core.admin','com_nicodewebmonitor');
 $canDelete=$user->authorise('core.delete','com_nicodewebmonitor');

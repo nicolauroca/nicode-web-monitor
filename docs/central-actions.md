@@ -1,6 +1,6 @@
 # Acciones desde Central: catálogo y diseño
 
-Revisión: 27 de noviembre de 2026. Nicode Web Monitor **1.1.1-dev.9**, desarrollo previo a beta.
+Revisión: 27 de noviembre de 2026. Nicode Web Monitor **1.1.1-dev.10**, desarrollo previo a beta.
 
 ## Qué ofrecen las referencias
 

@@ -1,12 +1,13 @@
 # Documentación vigente — Nicode Web Monitor
 
-Versión de desarrollo: **1.1.1-dev.9**. No es una beta final ni una versión de
+Versión de desarrollo: **1.1.1-dev.10**. No es una beta final ni una versión de
 producción. La compatibilidad con anteriores versiones de desarrollo no forma
 parte del contrato actual.
 
 - [Instalación y conexión](installation-from-zero.txt): los dos paquetes, el código
   temporal y la combinación de central y sitio supervisado en un mismo Joomla.
 - [Arquitectura](architecture.txt): responsabilidades, paquetes, datos y permisos.
+- [Marca y aplicación visual](brand/README.md): manual Nicode Studio, recursos originales y reglas del producto.
 - [Interfaz del Central](central-ui.txt): organización, estados, inventario y mantenimiento.
 - [Interfaz del Conector](connector-ui.txt): diseño, estados, accesibilidad y límites.
 - [Prioridades y diagnóstico](site-health.txt): semáforos, referencias, criterios y tiempo de consulta.

@@ -76,8 +76,8 @@ params={'site_id':site_id,'token_hash':hashlib.sha256(inventory.encode()).hexdig
     'backup_token_hash':hashlib.sha256(backup.encode()).hexdigest(),
     'update_token_hash':hashlib.sha256(token.encode()).hexdigest(),'update_storage':str(store),
     'maintenance_storage':str(store/'maintenance')}
-fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.9.zip')])
-fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.9.zip')])
+fixture('install',packages=[str(repo/'dist/plg_system_nicodewebmonitor-1.1.1-dev.10.zip')])
+fixture('install',target=central,packages=[str(repo/'dist/com_nicodewebmonitor-1.1.1-dev.10.zip')])
 remote=None;roledata=None
 path=central/'administrator/components/com_nicodewebmonitor/src/Service/UpdateCoordinator.php'
 original=path.read_bytes()

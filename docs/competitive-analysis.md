@@ -1,6 +1,6 @@
 # Comparativa de producto y prioridades
 
-Revisión: 27 de noviembre de 2026. Estado de Nicode Web Monitor **1.1.1-dev.9**, desarrollo previo a beta.
+Revisión: 27 de noviembre de 2026. Estado de Nicode Web Monitor **1.1.1-dev.10**, desarrollo previo a beta.
 
 Se han consultado las páginas oficiales de [mySites.guru](https://mysites.guru/features/), su [directorio y semáforos](https://mysites.guru/blog/site-information-all-in-one-place-with-mysites-guru/), [Watchful](https://watchful.net/watchful-features/) y [Akeeba Panopticon](https://www.akeeba.com/products/panopticon.html). Describen prestaciones comerciales; esta comparación no es un ensayo de sus servicios ni afirma paridad de Nicode.
 

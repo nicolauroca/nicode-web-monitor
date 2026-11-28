@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.9 — interfaz del Conector
+Nicode Web Monitor 1.1.1-dev.10 — interfaz del Conector
 
 Diseño vigente
 Presentación del componente Conector: connection.php, sharing.php, connector.css
@@ -11,11 +11,13 @@ La marca sigue siendo Nicode Web Monitor; Central y Conector son sus dos funcion
 Jerarquía visual
 Cabecera común de producto, identificación del sitio y aviso visible de desarrollo.
 Contenido principal a la izquierda y ayuda contextual/alcance a la derecha, apilados
-en móvil. Colores azul oscuro y verde azulado, superficies claras, bordes discretos,
-espaciado y estilos tipográficos diferenciados. El tema oscuro sigue data-bs-theme
+en móvil. Marca Nicode Studio 1.0: Sora local, violeta de acción y superficies neutras,
+isotipo original y estados semánticos separados. brand/README.md recoge los tokens,
+recursos y aplicaciones. El tema oscuro sigue data-bs-theme
 de Joomla. CSS con prefijo nwm y sin modificar las plantillas globales de Joomla.
-Los SVG se incluyen en el código; no se descargan fuentes, imágenes ni recursos
-de terceros. CSS/JS se versionan con la entrega para evitar cachés de otra versión.
+Los iconos funcionales se incluyen en el código; fuente WOFF2 con licencia OFL e
+isotipo SVG se instalan dentro del propio paquete, sin recursos de terceros en
+tiempo de ejecución. CSS/JS se versionan con la entrega para evitar cachés de otra versión.
 
 Estados que deben mantenerse claros
 - Sin vinculación: formulario de dos campos y guía de tres pasos. Si este Joomla

@@ -1,2 +1,7 @@
 * text=auto eol=lf
 *.zip binary
+*.png binary
+*.woff2 binary
+*.ttf binary
+# Preserve upstream license wording/spacing.
+tools/brand/fuentes/OFL-Sora.txt whitespace=-blank-at-eol

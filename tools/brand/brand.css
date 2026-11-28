@@ -1,0 +1,89 @@
+/* Nicode Studio manual 1.0. Product styles stay inside the two components.
+ * The build gives each package its own copy; no CDN or shared package owner.
+ */
+@font-face {
+    font-family: "Nicode Sora";
+    src: url("Sora-variable.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+}
+.nwm-central, .nwm-connector {
+    --nicode-paper: #fff;
+    --nicode-surface: #f5f3f8;
+    --nicode-ink: #201429;
+    --nicode-muted: #62586b;
+    --nicode-line: #e1dce7;
+    --nicode-action: #7023df;
+    --nicode-action-hover: #5216ac;
+    --nicode-accent: #7628eb;
+    --nicode-dark: #1c0d29;
+    --nicode-on-dark-accent: #c495ff;
+    --nicode-on-dark-ink: #fff;
+    --nicode-on-dark-muted: #ddd0e8;
+    --nwm-bg: var(--nicode-surface);
+    --nwm-surface: var(--nicode-paper);
+    --nwm-soft: var(--nicode-surface);
+    --nwm-ink: var(--nicode-ink);
+    --nwm-muted: var(--nicode-muted);
+    --nwm-line: var(--nicode-line);
+    --nwm-border: var(--nwm-line);
+    --nwm-control-border: #817687;
+    --nwm-accent: var(--nicode-action);
+    --nwm-accent-hover: var(--nicode-action-hover);
+    --nwm-accent-soft: #f2eafa;
+    --nwm-action-ink: #fff;
+    --nwm-focus: var(--nicode-action);
+    --nwm-focus-soft: #7023df20;
+    --nwm-positive: #146c43;
+    --nwm-positive-soft: #e8f3ed;
+    --nwm-warn: #795000;
+    --nwm-warn-bg: #fff4d9;
+    --nwm-warning: var(--nwm-warn);
+    --nwm-warning-soft: var(--nwm-warn-bg);
+    --nwm-danger: #a52934;
+    --nwm-danger-bg: #fceced;
+    --nwm-danger-soft: var(--nwm-danger-bg);
+    --nwm-shadow: #2014290a;
+    font-family: "Nicode Sora", Arial, Helvetica, sans-serif;
+    font-synthesis: none;
+}
+[data-bs-theme="dark"] .nwm-central,
+[data-bs-theme="dark"] .nwm-connector {
+    /* Dark form/table surfaces are an adaptation of the supplied dark opening. */
+    --nwm-bg: #160d20;
+    --nwm-surface: #24182f;
+    --nwm-soft: #302239;
+    --nwm-ink: #fff;
+    --nwm-muted: var(--nicode-on-dark-muted);
+    --nwm-line: #51415e;
+    --nwm-control-border: #a99bb2;
+    --nwm-accent: var(--nicode-on-dark-accent);
+    --nwm-accent-hover: #d5b4ff;
+    --nwm-accent-soft: #3c2454;
+    --nwm-action-ink: #241034;
+    --nwm-focus: var(--nicode-on-dark-accent);
+    --nwm-focus-soft: #c495ff30;
+    --nwm-positive: #91d5b6;
+    --nwm-positive-soft: #19392e;
+    --nwm-warn: #f3d288;
+    --nwm-warn-bg: #3c301c;
+    --nwm-danger: #ffb0b7;
+    --nwm-danger-bg: #43232d;
+    color-scheme: dark;
+}
+.nwm-central .nwm-brand-symbol,
+.nwm-connector .nwm-brand-symbol {
+    display: block;
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+.nwm-central[data-nwm-page="site"] .nwm-brand-symbol {
+    width: 28px;
+    height: 28px;
+}
+@media (max-width: 600px) {
+    .nwm-central .nwm-brand-symbol,
+    .nwm-connector .nwm-brand-symbol { width: 28px; height: 28px; }
+}

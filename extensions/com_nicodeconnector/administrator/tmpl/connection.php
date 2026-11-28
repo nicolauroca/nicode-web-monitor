@@ -39,15 +39,16 @@ $icons=[
     'chevron'=>'<path d="m9 5 7 7-7 7"/>',
 ];
 $icon=static fn($name)=>'<svg class="nwm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'.$icons[$name].'</svg>';
-$uiVersion='1.1.1-dev.9';
+$uiVersion='1.1.1-dev.10';
 $assets=$this->app->getDocument()->getWebAssetManager();
 $assetRoot=Uri::root().'administrator/components/com_nicodeconnector/tmpl/';
+$assets->registerAndUseStyle('nwm.connector.brand',$assetRoot.'brand/brand.css',['version'=>$uiVersion]);
 $assets->registerAndUseStyle('nwm.connector',$assetRoot.'connector.css',['version'=>$uiVersion]);
 $assets->registerAndUseScript('nwm.connector',$assetRoot.'connector.js',['version'=>$uiVersion],['defer'=>true]);
 ?>
 <div class="nwm-connector" data-connection-state="<?= $escape($visualState) ?>">
     <header class="nwm-header">
-        <div class="nwm-brand-mark"><?= $icon('monitor') ?></div>
+        <div class="nwm-brand-mark"><img class="nwm-brand-symbol" src="<?= $escape($assetRoot.'brand/isotipo-dark.svg') ?>" alt="Nicode Studio" width="40" height="40"></div>
         <div class="nwm-header-copy">
             <p class="nwm-eyebrow">Nicode Web Monitor</p>
             <h1 aria-label="Nicode Web Monitor — Conector">Conector</h1>

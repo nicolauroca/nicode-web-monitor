@@ -45,6 +45,7 @@ def exercise_dashboard(page, central, output, check, javascript=True):
         page.evaluate('scrollTo(0,0)');page.screenshot(path=str(output/f'central-directory-{width}.png'),full_page=True)
         page.get_by_role('link',name='Entrar en NWM browser fixture recovered',exact=True).click();page.wait_for_load_state('networkidle')
         check(page.locator('[data-nwm-site],#nwm-add-site,#nwm-monitoring').count()==0,f'{width}: entering a site replaces the directory')
+        check(page.locator('.nwm-brand-symbol').evaluate("e=>e.getBoundingClientRect().width>=24&&e.parentElement.getBoundingClientRect().width>=e.getBoundingClientRect().width*1.5"),f'{width}: compact site header preserves original symbol clear space')
         check(page.get_by_role('heading',name='NWM browser fixture recovered',exact=True).is_visible(),f'{width}: selected site identified')
         check(page.get_by_text('NWM browser fixture failed',exact=True).count()==0,f'{width}: other site identities absent')
         page.screenshot(path=str(output/f'site-overview-{width}.png'),full_page=True)
@@ -88,7 +89,7 @@ def exercise_dashboard(page, central, output, check, javascript=True):
         check(page.locator('[data-nwm-site]').count()==6,f'{width}: breadcrumb returns to all sites')
     if javascript:
         page.set_viewport_size({'width':1440,'height':1000});page.evaluate("document.documentElement.dataset.bsTheme='dark'")
-        check(page.locator('.nwm-site-table').evaluate("e=>getComputedStyle(e).backgroundColor==='rgb(27, 43, 55)'"),'directory follows native dark theme')
+        check(page.locator('.nwm-site-table').evaluate("e=>getComputedStyle(e).backgroundColor==='rgb(36, 24, 47)'"),'directory follows native dark theme')
         page.screenshot(path=str(output/'central-dark.png'),full_page=True);page.evaluate("delete document.documentElement.dataset.bsTheme")
     page.goto(central);page.wait_for_load_state('networkidle')
     page.get_by_role('link',name='Entrar en Self monitored central',exact=True).click();page.wait_for_load_state('networkidle')

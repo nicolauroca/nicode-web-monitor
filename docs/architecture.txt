@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.9 — arquitectura
+Nicode Web Monitor 1.1.1-dev.10 — arquitectura
 
 Producto e instalación
 Central: pkg_nicodemonitor contiene com_nicodewebmonitor + plg_task_nicodewebmonitor.

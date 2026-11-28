@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.9 — pruebas
+Nicode Web Monitor 1.1.1-dev.10 — pruebas
 
 Reglas
 Usar un Joomla desechable, base vacía/controlada y directorios privados nuevos.
@@ -152,3 +152,11 @@ remota no preparada. --without-js prueba la misma ayuda y navegación sin JavaSc
 --maintenance-tests conserva roles/CSRF/confirmación y sigue los retornos tool=backups.
 Los fixtures de efectos usan tool=extensions o tool=joomla según capacidad; cambiar
 su ruta de presentación no acredita que se hayan repetido sus instalaciones reales.
+
+Marca y recursos locales
+El recorrido de navegador comprueba carga real de Sora WOFF2, símbolo SVG local
+y su área libre, además del contraste 4,5:1 de texto, texto secundario, acción
+normal/hover y estados. --design-states incluye el Conector oscuro;
+--central-design incluye Central oscuro. El resto del administrador conserva su
+fuente nativa. build_reproducible.py comprueba fuentes binarias y SVG dentro de
+ambos componentes anidados en pkg_, también al variar finales LF/CRLF.

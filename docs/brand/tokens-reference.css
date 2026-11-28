@@ -1,0 +1,22 @@
+/* Nicode Studio manual 1.0; opt-in tokens, no global styles. */
+:root {
+  --nicode-paper: #FFFFFF;
+  --nicode-surface: #F5F3F8;
+  --nicode-ink: #201429;
+  --nicode-muted: #62586B;
+  --nicode-line: #E1DCE7;
+  --nicode-action: #7023DF;
+  --nicode-action-hover: #5216AC;
+  --nicode-accent: #7628EB;
+  --nicode-dark: #1C0D29;
+  --nicode-on-dark-accent: #C495FF;
+  --nicode-on-dark-ink: #FFFFFF;
+  --nicode-on-dark-muted: #DDD0E8;
+  --nicode-control-border: #817687;
+  --nicode-logo-purple: #7828F5;
+  --nicode-logo-lavender: #B88CFF;
+  --nicode-logo-fold: #5603AD;
+  --nicode-font: "Sora", Arial, Helvetica, sans-serif;
+  --nicode-radius-button: 6px;
+  --nicode-radius-card: 8px;
+}

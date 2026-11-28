@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.9 — navegación del Central
+Nicode Web Monitor 1.1.1-dev.10 — navegación del Central
 
 Organización
 La entrada muestra exclusivamente el directorio de sitios. Ocupa todo el ancho
@@ -59,6 +59,8 @@ escapan como texto; valores ausentes o malformados no se convierten en cifras.
 Presentación y accesibilidad
 Identidad compartida con el Conector, cabecera compacta dentro de las fichas,
 estado escrito además de color, foco visible, tema oscuro y movimiento reducido.
+Se aplica el manual Nicode Studio 1.0: Sora local, acción violeta, isotipo original,
+neutros de lectura y colores semánticos de estado. brand/README.md es la referencia.
 Recursos y SVG locales con versión para invalidar caché. central.css se limita
 a .nwm-central. central.js mejora búsqueda, filtros y copiar/mostrar; navegación
 y formularios funcionan sin JavaScript. backup-runner.js conserva su ejecución

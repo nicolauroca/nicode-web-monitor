@@ -1,4 +1,4 @@
-Nicode Web Monitor 1.1.1-dev.9 — protocolo de conexión
+Nicode Web Monitor 1.1.1-dev.10 — protocolo de conexión
 
 Seguridad de transporte
 HTTPS obligatorio según el entorno fiable de PHP. No se confía automáticamente

@@ -8,7 +8,7 @@ foreach($sites as &$row)$row['health']=\Nicode\Component\NicodeWebMonitor\Admini
 $priorityFilters=['all'=>'Todas las prioridades','critical'=>'Prioritarias','review'=>'Para revisar','updates'=>'Extensiones pendientes','php'=>'PHP requiere revisión','joomla'=>'Joomla requiere revisión','security'=>'Señales de configuración','storage'=>'Espacio escaso','unknown'=>'Datos insuficientes'];
 $priorityFilter=isset($priorityFilters[$priorityFilter??'all'])?($priorityFilter??'all'):'all';
 $canReferences=$user->authorise('nwm.monitor','com_nicodewebmonitor');
-$uiVersion='1.1.1-dev.9';
+$uiVersion='1.1.1-dev.10';
 $canCreate=$user->authorise('core.create','com_nicodewebmonitor');
 $canAdmin=$user->authorise('core.admin','com_nicodewebmonitor');
 $canDelete=$user->authorise('core.delete','com_nicodewebmonitor');
@@ -26,8 +26,10 @@ if($canMaintain)$siteLabels['maintenance']='Mantenimiento';
 $selectedSite=null;
 foreach($sites as $row)if((int)$row['id']===(int)$selectedSiteId){$selectedSite=$row;break;}
 $hasConnector=false;
+$base=(isset($this)&&isset($this->app)?\Joomla\CMS\Uri\Uri::root().'administrator/':'').'components/com_nicodewebmonitor/tmpl/';
 if(isset($this)&&isset($this->app)){
-    $assets=$this->app->getDocument()->getWebAssetManager();$base=\Joomla\CMS\Uri\Uri::root().'administrator/components/com_nicodewebmonitor/tmpl/';
+    $assets=$this->app->getDocument()->getWebAssetManager();
+    $assets->registerAndUseStyle('nwm.central.brand',$base.'brand/brand.css',['version'=>$uiVersion]);
     $assets->registerAndUseStyle('nwm.central',$base.'central.css',['version'=>$uiVersion]);
     $assets->registerAndUseScript('nwm.central',$base.'central.js',['version'=>$uiVersion],['defer'=>true]);
     if($canBackup)$assets->registerAndUseScript('nwm.backup.runner',$base.'backup-runner.js',['version'=>$uiVersion],['defer'=>true]);
@@ -35,7 +37,7 @@ if(isset($this)&&isset($this->app)){
 }
 ?>
 <div class="nwm-central" data-nwm-page="<?= $selectedSiteId?'site':$escape($viewPage) ?>">
-<header class="nwm-central-header"><span class="nwm-brand-mark"><?= $icon('monitor') ?></span><div class="nwm-header-copy"><p class="nwm-eyebrow">Nicode Web Monitor</p><h1 aria-label="Nicode Web Monitor — Central">Central</h1><p><?= $selectedSiteId?'La información de un sitio, organizada por secciones.':'Todos tus Joomla, en un único lugar.' ?></p></div><div class="nwm-header-end"><span class="nwm-release">En desarrollo <small><?= $escape($uiVersion) ?> · No definitiva</small></span><?php if($canCreate&&!$selectedSiteId&&$viewPage!=='add'): ?><a class="nwm-button nwm-button--light" href="<?= $escape($pageUrl('add')) ?>"><?= $icon('plus') ?>Añadir sitio</a><?php endif; ?></div></header>
+<header class="nwm-central-header"><span class="nwm-brand-mark"><img class="nwm-brand-symbol" src="<?= $escape($base.'brand/isotipo-dark.svg') ?>" alt="Nicode Studio" width="40" height="40"></span><div class="nwm-header-copy"><p class="nwm-eyebrow">Nicode Web Monitor</p><h1 aria-label="Nicode Web Monitor — Central">Central</h1><p><?= $selectedSiteId?'La información de un sitio, organizada por secciones.':'Todos tus Joomla, en un único lugar.' ?></p></div><div class="nwm-header-end"><span class="nwm-release">En desarrollo <small><?= $escape($uiVersion) ?> · No definitiva</small></span><?php if($canCreate&&!$selectedSiteId&&$viewPage!=='add'): ?><a class="nwm-button nwm-button--light" href="<?= $escape($pageUrl('add')) ?>"><?= $icon('plus') ?>Añadir sitio</a><?php endif; ?></div></header>
 <nav class="nwm-nav" aria-label="Navegación de Central"><?php foreach(['sites'=>'Sitios','monitoring'=>'Comprobaciones']+($canMaintain?['maintenance'=>'Mantenimiento']:[]) as $key=>$label): ?><a href="<?= $escape($pageUrl($key)) ?>" <?= !$selectedSiteId&&$viewPage===$key?'aria-current="page"':'' ?>><?= $icon(['sites'=>'server','monitoring'=>'clock','maintenance'=>'settings'][$key]) ?><?= $label ?></a><?php endforeach; ?><?php if($hasConnector): ?><a class="nwm-nav-connector" href="index.php?option=com_nicodeconnector">Conector de este Joomla<?= $icon('arrow') ?></a><?php endif; ?></nav>
 <?php if($selectedSiteId): ?>
     <?php if(!$selectedSite||!isset($siteLabels[$viewSection])): ?><section class="nwm-panel nwm-detail-panel"><h2>Sitio o sección no disponible</h2><p>El registro puede haberse eliminado o la dirección no corresponde a una sección disponible.</p><a class="nwm-button nwm-button--primary" href="<?= $escape($pageUrl('sites')) ?>">Volver a sitios</a></section>

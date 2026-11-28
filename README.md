@@ -3,17 +3,17 @@
 Monitorización de inventario y mantenimiento experimental de varios Joomla desde
 un Joomla central. Software libre, GPL-2.0-or-later; desarrollo público.
 
-**1.1.1-dev.9: desarrollo previo a beta.** La validación en los hostings del propietario
+**1.1.1-dev.10: desarrollo previo a beta.** La validación en los hostings del propietario
 está pendiente. No se promete compatibilidad con versiones anteriores de desarrollo.
 
 ## Instalar y conectar
 
-Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.9).
+Descarga los dos ZIP `pkg_` de la [prerelease de desarrollo](https://github.com/nicolauroca/nicode-web-monitor/releases/tag/v1.1.1-dev.10).
 Los archivos automáticos «Source code» de GitHub no son instaladores Joomla.
 Para construir desde el repositorio: `python tools/build.py`.
 
-1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.9.zip` en el Joomla central.
-2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.9.zip` en cada Joomla supervisado.
+1. Instala `dist/pkg_nicodemonitor-1.1.1-dev.10.zip` en el Joomla central.
+2. Instala `dist/pkg_nicodeconnector-1.1.1-dev.10.zip` en cada Joomla supervisado.
 3. En **Componentes → Nicode Web Monitor — Central**, pulsa **Añadir sitio**, indica su nombre y genera un código.
 4. En **Componentes → Nicode Web Monitor — Conector** del supervisado, introduce la dirección del
    central, pega el código y pulsa **Conectar**.
@@ -77,6 +77,9 @@ y la preparación local experimental. El [catálogo de acciones](docs/central-ac
 distingue lo disponible de la configuración, caché y automatizaciones propuestas.
 
 ## Documentación y pruebas
+
+La interfaz aplica la [marca Nicode Studio](docs/brand/README.md), con Sora y
+recursos locales, conservando las convenciones de Joomla y sin publicidad añadida.
 
 Toda la documentación vigente comienza en [docs/README.md](docs/README.md).
 Consulta [instalación](docs/installation-from-zero.txt),

@@ -112,6 +112,18 @@ def check(ok,name):
     if not ok: raise AssertionError(name)
     checks.append(name)
 
+def check_brand(page,selector):
+    page.evaluate('document.fonts.ready')
+    root=page.locator(selector)
+    check(root.evaluate("e=>getComputedStyle(e).fontFamily.includes('Nicode Sora')") and page.evaluate("[...document.fonts].some(f=>f.family.includes('Nicode Sora')&&f.status==='loaded')"),selector+': bundled Sora is actually loaded')
+    check(root.locator('.nwm-brand-symbol').evaluate("e=>e.complete&&e.naturalWidth>0&&e.alt==='Nicode Studio'&&new URL(e.src).origin===location.origin&&e.parentElement.getBoundingClientRect().width>=e.getBoundingClientRect().width*1.5"),selector+': original local symbol has its clear space')
+    pairs=root.evaluate('''e=>{
+        const s=getComputedStyle(e), c=document.createElement('canvas').getContext('2d');
+        const lum=name=>{c.clearRect(0,0,1,1);c.fillStyle=s.getPropertyValue(name).trim();c.fillRect(0,0,1,1);const v=[...c.getImageData(0,0,1,1).data].slice(0,3).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4});return v[0]*.2126+v[1]*.7152+v[2]*.0722};
+        return [['--nwm-ink','--nwm-surface'],['--nwm-muted','--nwm-surface'],['--nwm-action-ink','--nwm-accent'],['--nwm-action-ink','--nwm-accent-hover'],['--nwm-positive','--nwm-positive-soft'],['--nwm-warn','--nwm-warn-bg'],['--nwm-danger','--nwm-danger-bg']].map(([a,b])=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)})
+    }''')
+    check(min(pairs)>=4.5,selector+': text/action/status palette reaches 4.5:1 in current theme')
+
 try:
     snapshot=fixture({'action':'begin'})
     route='/index.php?option=com_nicodewebmonitor&task=connection.claim'
@@ -157,6 +169,7 @@ try:
         central=base+'/administrator/index.php?option=com_nicodewebmonitor'
         connector=base+'/administrator/index.php?option=com_nicodeconnector'
         page.goto(central); page.wait_for_load_state('networkidle')
+        check_brand(page,'.nwm-central')
         check(context.request.get(central+'&task=refreshReferences').status==403,'official references cannot be refreshed through GET')
         check(context.request.post(central,form={'task':'refreshReferences'}).status==403,'official reference refresh requires native CSRF')
         if page.get_by_role('link',name='Añadir sitio',exact=True).count()!=1:
@@ -182,6 +195,7 @@ try:
             check(page.evaluate('window.nwmTestClipboard')==base,'central copies the detected address')
         page.screenshot(path=str(a.output/'central-desktop.png'),full_page=True)
         page.goto(connector); page.wait_for_load_state('networkidle')
+        check_brand(page,'.nwm-connector')
         page.screenshot(path=str(a.output/'connector-setup-desktop.png'),full_page=True)
         check(page.locator('#connection-code').get_attribute('type')=='password','pairing code is masked by default')
         if not a.without_js:
@@ -222,7 +236,8 @@ try:
                         if width in [1440,390]:page.locator('.nwm-connector').screenshot(path=str(a.output/f'connector-{state}-{enabled}-{width}.png'))
                 page.set_viewport_size({'width':1440,'height':1000})
                 page.evaluate("document.documentElement.dataset.bsTheme='dark'")
-                check(page.locator('.nwm-panel').first.evaluate("e=>getComputedStyle(e).backgroundColor === 'rgb(27, 43, 55)'"),'connector adapts to native dark theme')
+                check(page.locator('.nwm-panel').first.evaluate("e=>getComputedStyle(e).backgroundColor === 'rgb(36, 24, 47)'"),'connector adapts to native dark theme')
+                check_brand(page,'.nwm-connector')
                 page.locator('.nwm-connector').screenshot(path=str(a.output/'connector-dark.png'))
             finally:
                 fixture({'action':'ui_restore',**ui})
@@ -258,6 +273,11 @@ try:
                 exercise_dashboard(page,central,a.output,check,not a.without_js)
             finally:
                 dashboard_fixture('clean')
+            if not a.without_js:
+                page.goto(central);page.wait_for_load_state('networkidle')
+                page.evaluate("document.documentElement.dataset.bsTheme='dark'")
+                check_brand(page,'.nwm-central')
+                page.evaluate("delete document.documentElement.dataset.bsTheme")
         for width in [1440,390]:
             page.set_viewport_size({'width':width,'height':1000}); page.goto(central); page.wait_for_load_state('networkidle')
             check(page.get_by_role('link',name='Entrar en Self monitored central',exact=True).count()==1,f'{width}: enrolled site appears in dashboard')

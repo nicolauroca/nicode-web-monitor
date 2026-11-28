@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory(prefix='nwm-build-') as tmp:
             shutil.copytree(repo/directory,root/directory)
         shutil.copy2(repo/'LICENSE',root/'LICENSE')
         for file in root.rglob('*'):
-            if file.is_file() and (file.suffix in {'.php','.xml','.sql','.ini','.txt','.css','.js','.json','.md'} or file.name=='LICENSE'):
+            if file.is_file() and (file.suffix in {'.php','.xml','.sql','.ini','.txt','.css','.js','.json','.md','.svg'} or file.name=='LICENSE'):
                 data=file.read_bytes().replace(b'\r\n',b'\n')
                 file.write_bytes(data if root.name=='lf' else data.replace(b'\n',b'\r\n'))
         (root/'extensions/com_nicodewebmonitor/binary-fixture.png').write_bytes(binary)
@@ -34,9 +34,13 @@ with tempfile.TemporaryDirectory(prefix='nwm-build-') as tmp:
             assert len(z.namelist())==len(set(z.namelist()))
             for name in z.namelist():
                 if name.endswith('.png'):assert z.read(name)==binary
+                elif name.endswith('.woff2'):assert z.read(name)==(repo/'tools/brand/fuentes/Sora-variable.woff2').read_bytes()
                 elif name.endswith('.zip'):
                     with zipfile.ZipFile(io.BytesIO(z.read(name))) as child:
                         assert child.testzip() is None
+                        if name.endswith(('com_nicodeconnector.zip','com_nicodewebmonitor.zip')):
+                            assert child.read('administrator/tmpl/brand/Sora-variable.woff2')==(repo/'tools/brand/fuentes/Sora-variable.woff2').read_bytes()
+                            assert child.read('administrator/tmpl/brand/isotipo-dark.svg')==(repo/'tools/brand/logos/isotipo-dark.svg').read_bytes().replace(b'\r\n',b'\n')
                 else:assert b'\r\n' not in z.read(name),name
     assert len(hashes)==7
 a.output.write_text(json.dumps({'equivalent_packages':7,'binary_preserved':True,'fixture_hashes':hashes,

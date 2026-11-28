@@ -13,7 +13,7 @@ de migración o conservación de formularios antiguos por ese motivo. El esquema
 de referencia es administrator/sql/install.mysql.utf8.sql. Los SQL históricos de
 updates conservados sirven a fixtures antiguos; no constituyen una promesa de
 migración. Eliminar fixtures históricos cuando se sustituya su cobertura actual.
-La versión actual es 1.1.1-dev.9 y la verificación vigente está en verification.txt.
+La versión actual es 1.1.1-dev.10 y la verificación vigente está en verification.txt.
 
 Invariante del instalador
 Los dos pkg_ tienen su propio script de preflight, incluido expresamente por
@@ -90,6 +90,13 @@ El maintenance gate y los diarios impiden reejecutar efectos inciertos a ciegas.
 No sacrificar esas propiedades al simplificar futuras pantallas de mantenimiento.
 
 Documentación
+El propietario exige respetar Nicode Studio en toda la capa visual sin publicidad
+añadida. docs/brand/README.md y su manual 1.0 son la referencia vigente; tools/brand
+contiene los recursos originales necesarios y los tokens compartidos. Cada pkg_
+instala su propia copia de la fuente, licencia, isotipo y CSS; no crear dependencia
+entre propietarios ni cargar recursos externos. Sora solo dentro del componente,
+acciones violetas y estados semánticos separados. Los endpoints JSON y avisos de
+texto plano no reciben decoración. Toda nueva vista de front/back sigue esta marca.
 docs/README.md es el índice único. Actualizar guías, contexto y verificación en
 la misma revisión que el código. Los informes y manuales superados están en Git,
 no en docs. No añadir validaciones históricas como evidencia de esta versión.

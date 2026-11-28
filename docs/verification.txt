@@ -1,49 +1,45 @@
-Nicode Web Monitor 1.1.1-dev.9 — verificación vigente
+Nicode Web Monitor 1.1.1-dev.10 — verificación vigente
 
-Fecha: 27 de noviembre de 2026 (Europe/Madrid).
+Fecha: 28 de noviembre de 2026 (Europe/Madrid).
 Prerelease de DESARROLLO, no definitiva ni beta final.
 Entorno desechable: Joomla 6.2.0, PHP 8.5.8 Windows, MariaDB 10.4.28,
 HTTPS/CGI local y Chrome. Ambos paquetes instalados en el mismo Joomla.
 No se utiliza la instalación ni las credenciales del propietario.
 
-Alcance de esta revisión
-Separación de Mantenimiento en selector y páginas Copias/Extensiones/Joomla,
-ayuda contextual, credenciales plegables, avisos de riesgo y operaciones con
-estado/fecha. No se añaden proveedores de actualización, escrituras de
-configuración, limpieza de caché, lotes ni un transporte local de mantenimiento.
-central-actions.md distingue funciones experimentales y propuestas.
+Alcance
+Aplicación de marca Nicode Studio 1.0: recursos originales locales, tipografía,
+acciones, superficies, cabeceras, foco, estados y tema oscuro. Las reglas y sus
+adaptaciones al producto se mantienen en brand/README.md y el manual adjunto.
+No cambia cifrado, permisos, transporte, inventario ni motores de mantenimiento.
+El requisito de Sodium nativo sigue siendo el de esta versión.
 
 Ejecutado
-- registry: 40 comprobaciones; history: 24; self_monitoring: 13.
-  Vinculación e inventario del propio Central, revocación, identidad y rechazo
-  de versiones instaladas diferentes; sin necesitar DNS propio.
-- backup_coordinator: 46 comprobaciones; maintenance_history: 20;
-  inventory_permissions: 68. Credenciales/ACL independientes y conservación
-  de los permisos de consulta del Conector.
-- Navegador: 193 comprobaciones con JavaScript y 163 sin JavaScript.
-  Selector sin formularios de ejecución,
-  una herramienta por página, retorno y migas, ayuda por teclado, confirmación
-  requerida y inicialmente desmarcada, avisos visibles y resultado incierto sin
-  ejecución ciega. Anchos de 1440, 390 y 320 píxeles; sin desbordamiento global.
-  El registro local ofrece herramientas nativas y no formularios remotos de inicio
-  o ejecución. Los diarios listos/inciertos de diseño son datos sintéticos; esta
-  comprobación visual no ejecuta instalaciones ni acredita recuperación.
-- backup_roles_http: 28 comprobaciones; backup_admin_http: 45. Verifican
-  roles y formularios contra Joomla
-  real, CSRF, confirmación, respuestas y acceso a operaciones por su sitio real.
-- Sintaxis de 141 PHP, 11 XML, 31 Python y 3 JavaScript; enlaces de docs y
-  git diff --check. Siete ZIP reproducibles entre LF/CRLF, conservando binarios.
+- Verificación SHA256 de las 41 entradas del manifiesto del ZIP de marca del
+  propietario antes de importar. Fuente, licencia y SVG originales conservados.
+- Instalación de ambos paquetes en el Joomla desechable existente; cada componente
+  contiene su propia fuente, licencia OFL, CSS y símbolo, con nombres/versiones
+  coherentes. No se requiere una conexión a un proveedor de fuentes.
+- Navegador con JavaScript: 272 comprobaciones con estados de Conector, permisos
+  de consulta y diseño de Central. Sin JavaScript: 172 comprobaciones de recorrido,
+  navegación y formularios. Anchos 1440/390/320 px, tema oscuro, direcciones largas,
+  ayudas, confirmaciones y monitorización del propio Joomla Central.
+- Carga real de Sora y del SVG desde el mismo origen, área libre del símbolo y
+  ausencia de desbordamiento global. Pares de texto, texto secundario, acción
+  normal/hover y estados con contraste medido mínimo 4,5:1 en claro y oscuro.
+  El cuerpo del administrador mantiene su tipografía nativa. Sin errores JS.
+- inventory_view.php: 8 comprobaciones; el inventario no confiable continúa
+  escapado, sin mezclar categorías ni sustituir fallos por datos anteriores.
+- Sintaxis de 141 PHP, 11 XML, 31 Python y 3 JavaScript; enlaces de docs.
+- Siete ZIP reproducibles entre LF/CRLF. Se verifica también la fuente binaria y
+  la inclusión de los recursos en los componentes dentro de los paquetes pkg_.
 
 Límites
-Los motores de mantenimiento conservan preparación local y precondiciones; esta
-revisión no acredita actualizaciones reales de extensiones o core ni restauración
-de copias después del rediseño. No convierte la credencial registrada en permiso
-remoto comprobado. Las pruebas de lectura y UI no prometen paridad con plataformas
-comerciales ni una instalación en un clic.
-
-No se repite aquí toda la matriz de instalación sin módulos de la revisión
-anterior ni todos los fixtures de actualización. Los cambios de sus números de
-versión no implican una nueva ejecución. No se afirma una matriz completa de
-PHP, bases de datos, plantillas, proveedores o alojamientos. Los perfiles,
-instalaciones, inventarios, capturas y diarios generados quedan fuera de Git.
-Las sustituciones del fixture HTTPS se restauran al finalizar cada ensayo.
+La aplicación de una paleta no equivale a una auditoría WCAG completa. Las
+mediciones de contraste cubren pares concretos de texto, acciones y estados;
+no acreditan cualquier combinación creada por una plantilla o una extensión.
+No se repite la matriz de instalación sin módulos ni los fixtures de efectos
+reales de actualización o recuperación. Sus cambios de número de versión no
+implican una nueva ejecución. No se promete compatibilidad con todas las
+plantillas administrativas o alojamientos. Capturas, inventarios, instalaciones,
+perfiles y diarios de prueba permanecen fuera de Git; las sustituciones de los
+fixtures HTTPS se restauran al finalizar cada ensayo.
